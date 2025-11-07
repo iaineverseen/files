@@ -304,17 +304,26 @@ function UILibrary:SwitchTab(tab)
 	}, 0.15)
 
 	-- Auto-scroll to make active tab visible
-	local canvasPosition = self.TabScrollingFrame.CanvasPosition
-	local tabAbsolutePosition = tab.Button.AbsolutePosition.X
-	local tabAbsoluteSize = tab.Button.AbsoluteSize.X
-	local frameAbsoluteSize = self.TabScrollingFrame.AbsoluteSize.X
+	local canvasPositionX = self.TabScrollingFrame.CanvasPosition.X
+	local tabAbsolutePositionX = tab.Button.AbsolutePosition.X
+	local tabAbsoluteSizeX = tab.Button.AbsoluteSize.X
+	local frameAbsoluteSizeX = self.TabScrollingFrame.AbsoluteSize.X
+	local scrollingFrameAbsolutePositionX = self.TabScrollingFrame.AbsolutePosition.X
 
-	if tabAbsolutePosition < canvasPosition then
-		-- Tab is to the left of visible area
-		self.TabScrollingFrame.CanvasPosition = Vector2.new(tabAbsolutePosition - 8, 0)
-	elseif tabAbsolutePosition + tabAbsoluteSize > canvasPosition + frameAbsoluteSize then
-		-- Tab is to the right of visible area
-		self.TabScrollingFrame.CanvasPosition = Vector2.new(tabAbsolutePosition + tabAbsoluteSize - frameAbsoluteSize + 8, 0)
+	-- Calculate the visible area bounds
+	local visibleLeft = scrollingFrameAbsolutePositionX
+	local visibleRight = visibleLeft + frameAbsoluteSizeX
+
+	-- Calculate tab bounds
+	local tabLeft = tabAbsolutePositionX
+	local tabRight = tabLeft + tabAbsoluteSizeX
+
+	if tabLeft < visibleLeft then
+		-- Tab is to the left of visible area, scroll left
+		self.TabScrollingFrame.CanvasPosition = Vector2.new(canvasPositionX - (visibleLeft - tabLeft) - 8, 0)
+	elseif tabRight > visibleRight then
+		-- Tab is to the right of visible area, scroll right
+		self.TabScrollingFrame.CanvasPosition = Vector2.new(canvasPositionX + (tabRight - visibleRight) + 8, 0)
 	end
 end
 
