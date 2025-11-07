@@ -625,7 +625,7 @@ function UILibrary:AddTextBox(tab, config)
 	return container
 end
 
--- FIXED: Dropdown Element with proper positioning
+-- FIXED: Dropdown Element with proper z-indexing to appear above all UI elements
 function UILibrary:AddDropdown(tab, config)
 	config = config or {}
 	local label = config.Label or "Dropdown"
@@ -637,7 +637,7 @@ function UILibrary:AddDropdown(tab, config)
 	container.Size = UDim2.new(1, 0, 0, UILibrary.Theme.ElementHeight)
 	container.BackgroundColor3 = UILibrary.Theme.ElementBackground
 	container.BorderSizePixel = 0
-	container.ClipsDescendants = false -- Changed to false to allow dropdown to show outside
+	container.ClipsDescendants = false
 	container.Parent = tab.Container
 	createCorner(container, UILibrary.Theme.CornerRadius)
 
@@ -657,7 +657,7 @@ function UILibrary:AddDropdown(tab, config)
 	dropdownFrame.Position = UDim2.new(0.6, 8, 0.5, -13)
 	dropdownFrame.BackgroundColor3 = UILibrary.Theme.TertiaryBackground
 	dropdownFrame.BorderSizePixel = 0
-	dropdownFrame.ClipsDescendants = false -- Changed to false
+	dropdownFrame.ClipsDescendants = false
 	dropdownFrame.Parent = container
 	createCorner(dropdownFrame, UILibrary.Theme.ButtonCornerRadius)
 
@@ -688,16 +688,16 @@ function UILibrary:AddDropdown(tab, config)
 	dropdownButton.Text = ""
 	dropdownButton.Parent = dropdownFrame
 
-	-- Dropdown list - FIXED: Position relative to container instead of dropdownFrame
+	-- FIXED: Create dropdown list as a direct child of ScreenGui to ensure it appears above everything
 	local listFrame = Instance.new("Frame")
-	listFrame.Size = UDim2.new(1, 0, 0, 0)
-	listFrame.Position = UDim2.new(0, 0, 1, 2) -- FIXED: Position below the dropdown
+	listFrame.Size = UDim2.new(0, dropdownFrame.AbsoluteSize.X, 0, 0)
+	listFrame.Position = UDim2.new(0, dropdownFrame.AbsolutePosition.X, 0, dropdownFrame.AbsolutePosition.Y + dropdownFrame.AbsoluteSize.Y + 2)
 	listFrame.BackgroundColor3 = UILibrary.Theme.TertiaryBackground
 	listFrame.BorderSizePixel = 0
 	listFrame.Visible = false
 	listFrame.ClipsDescendants = true
-	listFrame.ZIndex = 5 -- Ensure it appears above other elements
-	listFrame.Parent = dropdownFrame -- Keep parent as dropdownFrame but position below
+	listFrame.ZIndex = 1000 -- Very high z-index to ensure it's above everything
+	listFrame.Parent = self.ScreenGui -- Parent to ScreenGui instead of dropdownFrame
 	createCorner(listFrame, UILibrary.Theme.ButtonCornerRadius)
 	createStroke(listFrame, UILibrary.Theme.StrokeColor, 1)
 
@@ -711,12 +711,20 @@ function UILibrary:AddDropdown(tab, config)
 
 	local function updateListSize()
 		local count = #options
-		listFrame.Size = UDim2.new(1, 0, 0, math.min(count * 26, 130)) -- Max 5 items visible
+		listFrame.Size = UDim2.new(0, dropdownFrame.AbsoluteSize.X, 0, math.min(count * 26, 130))
+	end
+
+	local function updateListPosition()
+		-- Update position whenever the dropdown moves
+		listFrame.Position = UDim2.new(
+			0, dropdownFrame.AbsolutePosition.X,
+			0, dropdownFrame.AbsolutePosition.Y + dropdownFrame.AbsoluteSize.Y + 2
+		)
 	end
 
 	local function closeDropdown()
 		isOpen = false
-		tween(listFrame, { Size = UDim2.new(1, 0, 0, 0) }, 0.2)
+		tween(listFrame, { Size = UDim2.new(0, dropdownFrame.AbsoluteSize.X, 0, 0) }, 0.2)
 		tween(arrow, { Rotation = 0 }, 0.2)
 		task.wait(0.2)
 		listFrame.Visible = false
@@ -725,9 +733,15 @@ function UILibrary:AddDropdown(tab, config)
 	local function openDropdown()
 		if isOpen then return end
 		isOpen = true
+		
+		-- Update position before showing
+		updateListPosition()
 		listFrame.Visible = true
 		updateListSize()
-		tween(listFrame, { Size = UDim2.new(1, 0, 0, math.min(#options * 26, 130)) }, 0.2)
+		
+		tween(listFrame, { 
+			Size = UDim2.new(0, dropdownFrame.AbsoluteSize.X, 0, math.min(#options * 26, 130)) 
+		}, 0.2)
 		tween(arrow, { Rotation = 180 }, 0.2)
 	end
 
@@ -749,7 +763,7 @@ function UILibrary:AddDropdown(tab, config)
 		optionButton.TextSize = 13
 		optionButton.AutoButtonColor = false
 		optionButton.BorderSizePixel = 0
-		optionButton.ZIndex = 6 -- Higher zindex to appear above
+		optionButton.ZIndex = 1001 -- Even higher z-index
 		optionButton.Parent = listFrame
 
 		optionButton.MouseEnter:Connect(function()
@@ -772,12 +786,20 @@ function UILibrary:AddDropdown(tab, config)
 		end
 	end)
 
+	-- Update dropdown position when main frame moves
+	local positionConnection
+	positionConnection = self.MainFrame:GetPropertyChangedSignal("Position"):Connect(function()
+		if isOpen then
+			updateListPosition()
+		end
+	end)
+
 	-- Close dropdown when clicking outside
 	local closeConnection
 	closeConnection = UIS.InputBegan:Connect(function(input)
 		if isOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
 			local target = input.Parent
-			if target and not dropdownFrame:IsAncestorOf(target) then
+			if target and not dropdownFrame:IsAncestorOf(target) and not listFrame:IsAncestorOf(target) then
 				closeDropdown()
 			end
 		end
@@ -791,10 +813,16 @@ function UILibrary:AddDropdown(tab, config)
 		tween(container, { BackgroundColor3 = UILibrary.Theme.ElementBackground }, 0.15)
 	end)
 
-	-- Clean up connection when container is destroyed
+	-- Clean up connections when container is destroyed
 	container.Destroying:Connect(function()
 		if closeConnection then
 			closeConnection:Disconnect()
+		end
+		if positionConnection then
+			positionConnection:Disconnect()
+		end
+		if listFrame then
+			listFrame:Destroy()
 		end
 	end)
 
