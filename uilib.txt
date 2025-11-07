@@ -367,8 +367,23 @@ function UILibrary:AddSlider(tab, config)
 	local max = config.Max or 100
 	local default = config.Default or min
 	local increment = config.Increment or 1
-	local decimals = config.Decimals
 	local callback = config.Callback or function() end
+
+	-- Auto-detect decimals based on increment
+	local function getDecimals()
+		if increment >= 1 then
+			return 0
+		end
+		
+		local incrementStr = tostring(increment)
+		local decimalPart = incrementStr:match("%.(%d+)")
+		if decimalPart then
+			return #decimalPart
+		end
+		return 0
+	end
+
+	local decimals = getDecimals()
 
 	local function snap(v)
 		local s = math.floor((v / increment) + 0.5) * increment
@@ -376,8 +391,14 @@ function UILibrary:AddSlider(tab, config)
 	end
 
 	local function format(v)
-		if decimals then
-			return string.format("%." .. decimals .. "f", v)
+		if decimals > 0 then
+			-- Remove trailing zeros and unnecessary decimal point
+			local formatted = string.format("%." .. decimals .. "f", v)
+			-- Remove trailing zeros
+			formatted = formatted:gsub("0+$", "")
+			-- Remove trailing decimal point if no decimals left
+			formatted = formatted:gsub("%.$", "")
+			return formatted
 		else
 			return tostring(math.floor(v))
 		end
@@ -417,7 +438,8 @@ function UILibrary:AddSlider(tab, config)
 	valueLabel.TextSize = 13
 	valueLabel.TextXAlignment = Enum.TextXAlignment.Right
 	valueLabel.Parent = labelFrame
-local barBack = Instance.new("Frame")
+
+	local barBack = Instance.new("Frame")
 	barBack.Size = UDim2.new(1, -24, 0, 8)
 	barBack.Position = UDim2.new(0, 12, 1, -16)
 	barBack.BackgroundColor3 = UILibrary.Theme.TertiaryBackground
