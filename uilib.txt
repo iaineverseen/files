@@ -1,4 +1,3 @@
-
 local UILibrary = {}
 UILibrary.__index = UILibrary
 
@@ -67,7 +66,7 @@ function UILibrary:CreateWindow(config)
 	config = config or {}
 
 	w.Title = config.Title or "UI Panel"
-	w.Size = config.Size or UDim2.fromOffset(340, 380)
+	w.Size = UDim2.fromOffset(360, 450) -- Fixed size
 	w.MinimizeKey = config.MinimizeKey or Enum.KeyCode.RightControl
 	w.Connections, w.Elements, w.Tabs = {}, {}, {}
 	w.ActiveTab, w.IsMinimized = nil, false
@@ -86,13 +85,9 @@ function UILibrary:CreateWindow(config)
 	w.ScreenGui.DisplayOrder = 100
 	w.ScreenGui.Parent = parent
 
-	local cam = workspace.CurrentCamera
-	local maxH = math.min(cam.ViewportSize.Y * 0.75, w.Size.Y.Offset)
-	local fSize = UDim2.fromOffset(w.Size.X.Offset, maxH)
-
 	w.MainFrame = Instance.new("Frame")
-	w.MainFrame.Size = fSize
-	w.MainFrame.Position = UDim2.new(0.5, -fSize.X.Offset / 2, 0.5, -fSize.Y.Offset / 2)
+	w.MainFrame.Size = w.Size -- Use fixed size directly
+	w.MainFrame.Position = UDim2.new(0.5, -w.Size.X.Offset / 2, 0.5, -w.Size.Y.Offset / 2)
 	w.MainFrame.BackgroundColor3 = UILibrary.Theme.MainBackground
 	w.MainFrame.BorderSizePixel = 0
 	w.MainFrame.ClipsDescendants = true
@@ -640,11 +635,10 @@ function UILibrary:ToggleMinimize()
 		if self.ActiveTab then self.ActiveTab.Container.Visible = false end
 		self.TabBar.Visible = false
 	else
-		local cam = workspace.CurrentCamera
-		local nh = math.min(cam.ViewportSize.Y * 0.75, 380)
+		-- Restore to fixed size
 		tween(self.MainFrame, {
-			Size = UDim2.fromOffset(self.MainFrame.Size.X.Offset, nh),
-			Position = UDim2.new(0.5, -self.MainFrame.Size.X.Offset / 2, 0.5, -nh / 2)
+			Size = UDim2.fromOffset(360, 450),
+			Position = UDim2.new(0.5, -180, 0.5, -225)
 		}, 0.25)
 		if self.ActiveTab then self.ActiveTab.Container.Visible = true end
 		self.TabBar.Visible = true
