@@ -9,7 +9,6 @@ local CoreGui = cloneref(game:GetService("CoreGui"))
 local TweenService = cloneref(game:GetService("TweenService"))
 local TextService = cloneref(game:GetService("TextService"))
 
--- Use a more fancy font (Gotham is already quite nice, but we'll make it consistent)
 local FancyFont = Enum.Font.Gotham
 local FancyFontSemibold = Enum.Font.GothamSemibold
 local FancyFontBold = Enum.Font.GothamBold
@@ -67,7 +66,7 @@ function UILibrary:CreateWindow(config)
 	config = config or {}
 
 	w.Title = config.Title or "UI Panel"
-	w.Size = UDim2.fromOffset(360, 320) -- Changed from 333 to 320
+	w.Size = UDim2.fromOffset(360, 320)
 	w.MinimizeKey = config.MinimizeKey or Enum.KeyCode.RightControl
 	w.ToggleKey = config.ToggleKey or Enum.KeyCode.X
 	w.Connections, w.Elements, w.Tabs = {}, {}, {}
@@ -99,7 +98,7 @@ function UILibrary:CreateWindow(config)
 	w:CreateTabBar()
 	w:SetupDragging()
 	if w.MinimizeKey then w:SetupMinimizeKeybind() end
-	w:SetupToggleVisibility() -- Add toggle visibility functionality
+	w:SetupToggleVisibility()
 	return w
 end
 
@@ -183,7 +182,6 @@ function UILibrary:CreateTabBar()
 end
 
 function UILibrary:SetupToggleVisibility()
-	-- Mobile: Create toggle button
 	if UIS.TouchEnabled then
 		self.ToggleButton = Instance.new("TextButton")
 		self.ToggleButton.Size = UDim2.fromOffset(40, 40)
@@ -200,10 +198,8 @@ function UILibrary:SetupToggleVisibility()
 		createCorner(self.ToggleButton, 8)
 		createStroke(self.ToggleButton, UILibrary.Theme.StrokeColor, 1)
 
-		-- Make the button draggable
 		self:SetupToggleButtonDragging()
 
-		-- Add hover effects
 		self.ToggleButton.MouseEnter:Connect(function()
 			tween(self.ToggleButton, { BackgroundColor3 = UILibrary.Theme.AccentHover }, 0.15)
 		end)
@@ -211,12 +207,10 @@ function UILibrary:SetupToggleVisibility()
 			tween(self.ToggleButton, { BackgroundColor3 = UILibrary.Theme.AccentColor }, 0.15)
 		end)
 
-		-- Toggle visibility on click
 		self.ToggleButton.MouseButton1Click:Connect(function()
 			self:ToggleVisibility()
 		end)
 	else
-		-- PC: Setup keybind
 		table.insert(self.Connections, UIS.InputBegan:Connect(function(input, gameProcessed)
 			if not gameProcessed and input.KeyCode == self.ToggleKey then
 				self:ToggleVisibility()
@@ -264,7 +258,6 @@ function UILibrary:ToggleVisibility()
 	self.IsVisible = not self.IsVisible
 	self.MainFrame.Visible = self.IsVisible
 	
-	-- Update mobile button text to show current state
 	if self.ToggleButton then
 		self.ToggleButton.Text = self.IsVisible and "−" or "+"
 	end
@@ -465,7 +458,6 @@ function UILibrary:AddSlider(tab, config)
 	local increment = config.Increment or 1
 	local callback = config.Callback or function() end
 
-	-- Auto-detect decimals based on increment
 	local function getDecimals()
 		if increment >= 1 then
 			return 0
@@ -488,11 +480,8 @@ function UILibrary:AddSlider(tab, config)
 
 	local function format(v)
 		if decimals > 0 then
-			-- Remove trailing zeros and unnecessary decimal point
 			local formatted = string.format("%." .. decimals .. "f", v)
-			-- Remove trailing zeros
 			formatted = formatted:gsub("0+$", "")
-			-- Remove trailing decimal point if no decimals left
 			formatted = formatted:gsub("%.$", "")
 			return formatted
 		else
@@ -551,18 +540,17 @@ function UILibrary:AddSlider(tab, config)
 	createCorner(fill, 4)
 
 	local handle = Instance.new("Frame")
-	handle.Size = UDim2.new(0, 12, 0, 12) -- Changed from 16x16 to 12x12
+	handle.Size = UDim2.new(0, 12, 0, 12)
 	handle.BackgroundColor3 = UILibrary.Theme.PrimaryText
 	handle.BorderSizePixel = 0
 	handle.Parent = barBack
-	createCorner(handle, 6) -- Changed from 8 to 6 to match smaller size
-	-- Removed the createStroke line
+	createCorner(handle, 6)
 
 	local function updateDisplay()
 		valueLabel.Text = format(currentValue)
 		local p = (currentValue - min) / (max - min)
 		fill.Size = UDim2.new(p, 0, 1, 0)
-		handle.Position = UDim2.new(p, -6, 0.5, -6) -- Changed from -8 to -6 to center the smaller handle
+		handle.Position = UDim2.new(p, -6, 0.5, -6)
 	end
 
 	local dragging = false
@@ -794,8 +782,8 @@ function UILibrary:ToggleMinimize()
 		self.TabBar.Visible = false
 	else
 		tween(self.MainFrame, {
-			Size = UDim2.fromOffset(360, 320), -- Changed from 333 to 320
-			Position = UDim2.new(0.5, -180, 0.5, -160) -- Updated Y position calculation for 320 height
+			Size = UDim2.fromOffset(360, 320),
+			Position = UDim2.new(0.5, -180, 0.5, -160)
 		}, 0.25)
 		if self.ActiveTab then self.ActiveTab.Container.Visible = true end
 		self.TabBar.Visible = true
