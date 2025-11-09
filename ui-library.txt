@@ -730,7 +730,7 @@ function UILibrary:AddTextBox(tab, config)
 	return container
 end
 
--- Improved Notification System (Fixed - Progress Bar Inside Notification)
+-- Improved Notification System (Fixed - No Corners)
 function UILibrary:Notify(titleText, description, duration)
     duration = duration or 3
     
@@ -762,7 +762,7 @@ function UILibrary:Notify(titleText, description, duration)
     notification.Size = UDim2.new(0, notificationWidth, 0, notificationHeight)
     notification.ZIndex = 200
     notification.ClipsDescendants = true
-    createCorner(notification, UILibrary.Theme.CornerRadius)
+    -- No corners on notification
     createStroke(notification, UILibrary.Theme.StrokeColor, 1)
 
     -- Progress bar at bottom (INSIDE the notification)
@@ -773,7 +773,7 @@ function UILibrary:Notify(titleText, description, duration)
     line.Position = UDim2.new(0, 0, 1, -2) -- Position inside at bottom
     line.Size = UDim2.new(0, 0, 0, 2)
     line.ZIndex = 201
-    createCorner(line, 1)
+    -- No corners on progress bar
 
     -- Close button
     closeBtn.Name = "CloseButton"
