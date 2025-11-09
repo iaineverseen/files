@@ -113,10 +113,22 @@ end
 
 function ConnectionManager:Add(connection)
     if self.Disconnected then
-        connection:Disconnect()
+        if connection and type(connection) == "userdata" and connection.Disconnect then
+            connection:Disconnect()
+        end
         return
     end
-    table.insert(self.Connections, connection)
+    
+    if connection then
+        table.insert(self.Connections, connection)
+    end
+end
+
+function ConnectionManager:AddFunction(func)
+    if self.Disconnected then
+        return
+    end
+    table.insert(self.Connections, func)
 end
 
 function ConnectionManager:DisconnectAll()
@@ -125,9 +137,11 @@ function ConnectionManager:DisconnectAll()
     
     for _, connection in ipairs(self.Connections) do
         if type(connection) == "function" then
-            connection()
-        elseif connection and connection.Disconnect then
-            pcall(connection.Disconnect, connection)
+            pcall(connection)
+        elseif connection and type(connection) == "userdata" and connection.Disconnect then
+            pcall(function()
+                connection:Disconnect()
+            end)
         end
     end
     self.Connections = {}
