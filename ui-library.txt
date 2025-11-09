@@ -69,8 +69,9 @@ function UILibrary:CreateWindow(config)
 	w.Title = config.Title or "UI Panel"
 	w.Size = UDim2.fromOffset(360, 320) -- Changed from 333 to 320
 	w.MinimizeKey = config.MinimizeKey or Enum.KeyCode.RightControl
+	w.ToggleKey = config.ToggleKey or Enum.KeyCode.X
 	w.Connections, w.Elements, w.Tabs = {}, {}, {}
-	w.ActiveTab, w.IsMinimized = nil, false
+	w.ActiveTab, w.IsMinimized, w.IsVisible = nil, false, true
 
 	local parent = gethui() or CoreGui
 
@@ -98,6 +99,7 @@ function UILibrary:CreateWindow(config)
 	w:CreateTabBar()
 	w:SetupDragging()
 	if w.MinimizeKey then w:SetupMinimizeKeybind() end
+	w:SetupToggleVisibility() -- Add toggle visibility functionality
 	return w
 end
 
@@ -178,6 +180,56 @@ function UILibrary:CreateTabBar()
 	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		self.TabScrollingFrame.CanvasSize = UDim2.new(0, layout.AbsoluteContentSize.X, 0, 0)
 	end)
+end
+
+function UILibrary:SetupToggleVisibility()
+	-- Mobile: Create toggle button
+	if UIS.TouchEnabled then
+		self.ToggleButton = Instance.new("TextButton")
+		self.ToggleButton.Size = UDim2.fromOffset(50, 50)
+		self.ToggleButton.Position = UDim2.new(0, 10, 0.5, -25)
+		self.ToggleButton.BackgroundColor3 = UILibrary.Theme.AccentColor
+		self.ToggleButton.Text = "☰"
+		self.ToggleButton.TextColor3 = UILibrary.Theme.PrimaryText
+		self.ToggleButton.Font = FancyFontBold
+		self.ToggleButton.TextSize = 16
+		self.ToggleButton.AutoButtonColor = false
+		self.ToggleButton.BorderSizePixel = 0
+		self.ToggleButton.ZIndex = 101
+		self.ToggleButton.Parent = self.ScreenGui
+		createCorner(self.ToggleButton, 8)
+		createStroke(self.ToggleButton, UILibrary.Theme.StrokeColor, 1)
+
+		-- Add hover effects
+		self.ToggleButton.MouseEnter:Connect(function()
+			tween(self.ToggleButton, { BackgroundColor3 = UILibrary.Theme.AccentHover }, 0.15)
+		end)
+		self.ToggleButton.MouseLeave:Connect(function()
+			tween(self.ToggleButton, { BackgroundColor3 = UILibrary.Theme.AccentColor }, 0.15)
+		end)
+
+		-- Toggle visibility on click
+		self.ToggleButton.MouseButton1Click:Connect(function()
+			self:ToggleVisibility()
+		end)
+	else
+		-- PC: Setup keybind
+		table.insert(self.Connections, UIS.InputBegan:Connect(function(input, gameProcessed)
+			if not gameProcessed and input.KeyCode == self.ToggleKey then
+				self:ToggleVisibility()
+			end
+		end))
+	end
+end
+
+function UILibrary:ToggleVisibility()
+	self.IsVisible = not self.IsVisible
+	self.MainFrame.Visible = self.IsVisible
+	
+	-- Update mobile button text
+	if self.ToggleButton then
+		self.ToggleButton.Text = self.IsVisible and "☰" or "☰"
+	end
 end
 
 function UILibrary:AddTab(name)
@@ -720,6 +772,9 @@ function UILibrary:Destroy()
 	end
 	if self.ScreenGui then
 		self.ScreenGui:Destroy()
+	end
+	if self.ToggleButton then
+		self.ToggleButton:Destroy()
 	end
 	self.Connections, self.Elements, self.Tabs = {}, {}, {}
 end
