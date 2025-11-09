@@ -186,13 +186,13 @@ function UILibrary:SetupToggleVisibility()
 	-- Mobile: Create toggle button
 	if UIS.TouchEnabled then
 		self.ToggleButton = Instance.new("TextButton")
-		self.ToggleButton.Size = UDim2.fromOffset(60, 60)
+		self.ToggleButton.Size = UDim2.fromOffset(40, 40)
 		self.ToggleButton.Position = UDim2.new(0, 20, 0, 20)
 		self.ToggleButton.BackgroundColor3 = UILibrary.Theme.AccentColor
-		self.ToggleButton.Text = "☰"
+		self.ToggleButton.Text = "+"
 		self.ToggleButton.TextColor3 = UILibrary.Theme.PrimaryText
-		self.ToggleButton.Font = Enum.Font.GothamBold
-		self.ToggleButton.TextSize = 20
+		self.ToggleButton.Font = FancyFontBold
+		self.ToggleButton.TextSize = 18
 		self.ToggleButton.AutoButtonColor = false
 		self.ToggleButton.BorderSizePixel = 0
 		self.ToggleButton.ZIndex = 101
@@ -266,7 +266,7 @@ function UILibrary:ToggleVisibility()
 	
 	-- Update mobile button text to show current state
 	if self.ToggleButton then
-		self.ToggleButton.Text = self.IsVisible and "✕" or "☰"
+		self.ToggleButton.Text = self.IsVisible and "−" or "+"
 	end
 end
 
