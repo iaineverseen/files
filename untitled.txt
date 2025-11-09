@@ -162,13 +162,19 @@ function UILibrary:CreateTitleBar()
     
     -- Button interactions
     local function setupButtonInteraction(button, hoverProps, leaveProps, clickFunc)
-        table.insert(self.Connections, button.MouseEnter:Connect(function()
+        local enterConn = button.MouseEnter:Connect(function()
             tween(button, hoverProps)
-        end))
-        table.insert(self.Connections, button.MouseLeave:Connect(function()
+        end)
+        
+        local leaveConn = button.MouseLeave:Connect(function()
             tween(button, leaveProps)
-        end))
-        table.insert(self.Connections, button.MouseButton1Click:Connect(clickFunc))
+        end)
+        
+        local clickConn = button.MouseButton1Click:Connect(clickFunc)
+        
+        table.insert(self.Connections, enterConn)
+        table.insert(self.Connections, leaveConn)
+        table.insert(self.Connections, clickConn)
     end
     
     setupButtonInteraction(
@@ -216,9 +222,11 @@ function UILibrary:CreateTabBar()
     })
     
     -- Auto-size canvas
-    table.insert(self.Connections, layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    local canvasConn = layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         self.TabScrollingFrame.CanvasSize = UDim2.new(0, layout.AbsoluteContentSize.X, 0, 0)
-    end))
+    end)
+    
+    table.insert(self.Connections, canvasConn)
 end
 
 function UILibrary:SetupToggleVisibility()
@@ -243,23 +251,29 @@ function UILibrary:SetupToggleVisibility()
         self:SetupToggleButtonDragging()
         
         -- Toggle button interactions
-        self.ToggleButton.MouseEnter:Connect(function()
+        local enterConn = self.ToggleButton.MouseEnter:Connect(function()
             tween(self.ToggleButton, {BackgroundColor3 = UILibrary.Theme.AccentHover}, 0.15)
         end)
         
-        self.ToggleButton.MouseLeave:Connect(function()
+        local leaveConn = self.ToggleButton.MouseLeave:Connect(function()
             tween(self.ToggleButton, {BackgroundColor3 = UILibrary.Theme.AccentColor}, 0.15)
         end)
         
-        self.ToggleButton.MouseButton1Click:Connect(function()
+        local clickConn = self.ToggleButton.MouseButton1Click:Connect(function()
             self:ToggleVisibility()
         end)
+        
+        table.insert(self.Connections, enterConn)
+        table.insert(self.Connections, leaveConn)
+        table.insert(self.Connections, clickConn)
     else
-        table.insert(self.Connections, UIS.InputBegan:Connect(function(input, gameProcessed)
+        local keyConn = UIS.InputBegan:Connect(function(input, gameProcessed)
             if not gameProcessed and input.KeyCode == self.ToggleKey then
                 self:ToggleVisibility()
             end
-        end))
+        end)
+        
+        table.insert(self.Connections, keyConn)
     end
 end
 
@@ -274,7 +288,7 @@ function UILibrary:SetupToggleButtonDragging()
         )
     end
     
-    self.ToggleButton.InputBegan:Connect(function(input)
+    local beginConn = self.ToggleButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
@@ -283,17 +297,22 @@ function UILibrary:SetupToggleButtonDragging()
             local connEnd = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
-                    connEnd:Disconnect()
+                    if connEnd then
+                        connEnd:Disconnect()
+                    end
                 end
             end)
         end
     end)
     
-    UIS.InputChanged:Connect(function(input)
+    local changeConn = UIS.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             update(input)
         end
     end)
+    
+    table.insert(self.Connections, beginConn)
+    table.insert(self.Connections, changeConn)
 end
 
 function UILibrary:ToggleVisibility()
@@ -370,21 +389,25 @@ function UILibrary:AddTab(name)
     })
     
     -- Tab interactions
-    tab.Button.MouseEnter:Connect(function()
+    local enterConn = tab.Button.MouseEnter:Connect(function()
         if self.ActiveTab ~= tab then
             tween(tab.Button, {BackgroundColor3 = UILibrary.Theme.HoverColor}, 0.15)
         end
     end)
     
-    tab.Button.MouseLeave:Connect(function()
+    local leaveConn = tab.Button.MouseLeave:Connect(function()
         if self.ActiveTab ~= tab then
             tween(tab.Button, {BackgroundColor3 = UILibrary.Theme.ElementBackground}, 0.15)
         end
     end)
     
-    tab.Button.MouseButton1Click:Connect(function()
+    local clickConn = tab.Button.MouseButton1Click:Connect(function()
         self:SwitchTab(tab)
     end)
+    
+    table.insert(self.Connections, enterConn)
+    table.insert(self.Connections, leaveConn)
+    table.insert(self.Connections, clickConn)
     
     table.insert(self.Tabs, tab)
     if not self.ActiveTab then
@@ -494,19 +517,23 @@ function UILibrary:AddToggle(tab, config)
     end
     
     -- Interactions
-    button.MouseEnter:Connect(function()
+    local enterConn = button.MouseEnter:Connect(function()
         tween(container, {BackgroundColor3 = UILibrary.Theme.HoverColor}, 0.15)
     end)
     
-    button.MouseLeave:Connect(function()
+    local leaveConn = button.MouseLeave:Connect(function()
         tween(container, {BackgroundColor3 = UILibrary.Theme.ElementBackground}, 0.15)
     end)
     
-    button.MouseButton1Click:Connect(function()
+    local clickConn = button.MouseButton1Click:Connect(function()
         val = not val
         update()
         callback(val)
     end)
+    
+    table.insert(self.Connections, enterConn)
+    table.insert(self.Connections, leaveConn)
+    table.insert(self.Connections, clickConn)
     
     update()
     return container
@@ -637,27 +664,35 @@ function UILibrary:AddSlider(tab, config)
         local endConn = UIS.InputEnded:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
                 dragging = false
-                moveConn:Disconnect()
-                endConn:Disconnect()
+                if moveConn then
+                    moveConn:Disconnect()
+                end
+                if endConn then
+                    endConn:Disconnect()
+                end
             end
         end)
     end
     
-    barBack.InputBegan:Connect(function(i)
+    local barConn = barBack.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
             startDrag(i)
         end
     end)
     
-    container.MouseEnter:Connect(function()
+    local enterConn = container.MouseEnter:Connect(function()
         tween(container, {BackgroundColor3 = UILibrary.Theme.HoverColor}, 0.15)
     end)
     
-    container.MouseLeave:Connect(function()
+    local leaveConn = container.MouseLeave:Connect(function()
         if not dragging then
             tween(container, {BackgroundColor3 = UILibrary.Theme.ElementBackground}, 0.15)
         end
     end)
+    
+    table.insert(self.Connections, barConn)
+    table.insert(self.Connections, enterConn)
+    table.insert(self.Connections, leaveConn)
     
     updateDisplay()
     return container
@@ -681,20 +716,24 @@ function UILibrary:AddButton(tab, config)
     
     createCorner(b)
     
-    b.MouseEnter:Connect(function()
+    local enterConn = b.MouseEnter:Connect(function()
         tween(b, {BackgroundColor3 = UILibrary.Theme.AccentHover}, 0.15)
     end)
     
-    b.MouseLeave:Connect(function()
+    local leaveConn = b.MouseLeave:Connect(function()
         tween(b, {BackgroundColor3 = UILibrary.Theme.AccentColor}, 0.15)
     end)
     
-    b.MouseButton1Click:Connect(function()
+    local clickConn = b.MouseButton1Click:Connect(function()
         tween(b, {BackgroundColor3 = UILibrary.Theme.AccentDark}, 0.05)
         task.wait(0.05)
         tween(b, {BackgroundColor3 = UILibrary.Theme.AccentColor}, 0.1)
         callback()
     end)
+    
+    table.insert(self.Connections, enterConn)
+    table.insert(self.Connections, leaveConn)
+    table.insert(self.Connections, clickConn)
     
     return b
 end
@@ -772,12 +811,12 @@ function UILibrary:AddTextBox(tab, config)
         ClearTextOnFocus = clearOnFocus
     })
     
-    textBox.Focused:Connect(function()
+    local focusConn = textBox.Focused:Connect(function()
         tween(textBoxFrame, {BackgroundColor3 = UILibrary.Theme.HoverColor}, 0.15)
         createStroke(textBoxFrame, UILibrary.Theme.AccentColor, 1)
     end)
     
-    textBox.FocusLost:Connect(function(enterPressed)
+    local focusLostConn = textBox.FocusLost:Connect(function(enterPressed)
         tween(textBoxFrame, {BackgroundColor3 = UILibrary.Theme.TertiaryBackground}, 0.15)
         
         -- Remove stroke
@@ -792,13 +831,18 @@ function UILibrary:AddTextBox(tab, config)
         end
     end)
     
-    container.MouseEnter:Connect(function()
+    local enterConn = container.MouseEnter:Connect(function()
         tween(container, {BackgroundColor3 = UILibrary.Theme.HoverColor}, 0.15)
     end)
     
-    container.MouseLeave:Connect(function()
+    local leaveConn = container.MouseLeave:Connect(function()
         tween(container, {BackgroundColor3 = UILibrary.Theme.ElementBackground}, 0.15)
     end)
+    
+    table.insert(self.Connections, focusConn)
+    table.insert(self.Connections, focusLostConn)
+    table.insert(self.Connections, enterConn)
+    table.insert(self.Connections, leaveConn)
     
     return container
 end
@@ -903,11 +947,11 @@ function UILibrary:Notify(titleText, description, duration)
     end
     
     -- Close button interactions
-    closeBtn.MouseEnter:Connect(function()
+    local closeEnterConn = closeBtn.MouseEnter:Connect(function()
         tween(closeBtn, {TextColor3 = UILibrary.Theme.PrimaryText}, 0.1)
     end)
     
-    closeBtn.MouseLeave:Connect(function()
+    local closeLeaveConn = closeBtn.MouseLeave:Connect(function()
         tween(closeBtn, {TextColor3 = UILibrary.Theme.TertiaryText}, 0.1)
     end)
     
@@ -935,14 +979,22 @@ function UILibrary:Notify(titleText, description, duration)
         end
     end
     
-    closeBtn.MouseButton1Click:Connect(destroyNotification)
+    local closeClickConn = closeBtn.MouseButton1Click:Connect(destroyNotification)
     
     local clickConn = notification.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             destroyNotification()
-            clickConn:Disconnect()
+            if clickConn then
+                clickConn:Disconnect()
+            end
         end
     end)
+    
+    -- Store connections for cleanup
+    table.insert(self.Connections, closeEnterConn)
+    table.insert(self.Connections, closeLeaveConn)
+    table.insert(self.Connections, closeClickConn)
+    table.insert(self.Connections, clickConn)
     
     -- Animation
     tween(notification, {Position = UDim2.new(1, -notificationWidth - 5, 0, 10)}, 0.3)
@@ -968,7 +1020,7 @@ function UILibrary:SetupDragging()
         )
     end
     
-    self.TitleBar.InputBegan:Connect(function(input)
+    local beginConn = self.TitleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
@@ -977,25 +1029,32 @@ function UILibrary:SetupDragging()
             local connEnd = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
-                    connEnd:Disconnect()
+                    if connEnd then
+                        connEnd:Disconnect()
+                    end
                 end
             end)
         end
     end)
     
-    UIS.InputChanged:Connect(function(input)
+    local changeConn = UIS.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             update(input)
         end
     end)
+    
+    table.insert(self.Connections, beginConn)
+    table.insert(self.Connections, changeConn)
 end
 
 function UILibrary:SetupMinimizeKeybind()
-    table.insert(self.Connections, UIS.InputBegan:Connect(function(i, g)
+    local keyConn = UIS.InputBegan:Connect(function(i, g)
         if not g and i.KeyCode == self.MinimizeKey then
             self:ToggleMinimize()
         end
-    end))
+    end)
+    
+    table.insert(self.Connections, keyConn)
 end
 
 function UILibrary:ToggleMinimize()
@@ -1018,7 +1077,9 @@ end
 
 function UILibrary:Destroy()
     for _, c in ipairs(self.Connections) do
-        if c and c.Disconnect then
+        if type(c) == "table" and c.Disconnect then
+            pcall(c.Disconnect, c)
+        elseif type(c) == "userdata" and c.Disconnect then
             pcall(c.Disconnect, c)
         end
     end
