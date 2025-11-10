@@ -1,4 +1,3 @@
-
 local lib = {
     RainbowColorValue = 0,
     HueSelectionPosition = 0
@@ -173,7 +172,7 @@ function lib:Window(text, preset, closebind)
         BackgroundColor3 = Color3.fromRGB(30, 30, 30),
         BorderSizePixel = 0,
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(0, 560, 0, 319),
         ClipsDescendants = true,
         Visible = true
     })
@@ -230,8 +229,6 @@ function lib:Window(text, preset, closebind)
         Parent = Main
     })
 
-    -- Animate window opening
-    Main:TweenSize(UDim2.new(0, 560, 0, 319), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.6, true)
     MakeDraggable(DragFrame, Main)
 
     -- Toggle UI visibility
@@ -243,16 +240,13 @@ function lib:Window(text, preset, closebind)
             uitoggled = not uitoggled
             
             if uitoggled then
-                Main:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.6, true, function()
-                    Main.Visible = false
-                end)
+                Main.Visible = false
                 MobileToggleButton.Text = "+"  -- Plus symbol for unminimize
                 TweenService:Create(MobileToggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = Color3.fromRGB(44, 120, 224)
                 }):Play()
             else
                 Main.Visible = true
-                Main:TweenSize(UDim2.new(0, 560, 0, 319), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.6, true)
                 MobileToggleButton.Text = "−"  -- Minus symbol for minimize
                 TweenService:Create(MobileToggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = Color3.fromRGB(34, 34, 34)
@@ -267,15 +261,12 @@ function lib:Window(text, preset, closebind)
             uitoggled = not uitoggled
             
             if uitoggled then
-                Main:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.6, true, function()
-                    Main.Visible = false
-                end)
+                Main.Visible = false
                 if DeviceType == "Mobile" and MobileToggleButton then
                     MobileToggleButton.Text = "+"
                 end
             else
                 Main.Visible = true
-                Main:TweenSize(UDim2.new(0, 560, 0, 319), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.6, true)
                 if DeviceType == "Mobile" and MobileToggleButton then
                     MobileToggleButton.Text = "−"
                 end
@@ -644,13 +635,13 @@ function lib:Window(text, preset, closebind)
         CornerRadius = UDim.new(1, 0)
     })
 
-    -- Optimized slider handle for mobile
+    -- Smaller slider handle (reduced from 20x20 to 16x16)
     local SlideCircle = CreateInstance("ImageButton", {
         Name = "SlideCircle",
         Parent = SlideFrame,
         BackgroundTransparency = 1,
-        Position = UDim2.new((start or 0) / max, -10, 0.5, -10),
-        Size = UDim2.new(0, 20, 0, 20),
+        Position = UDim2.new((start or 0) / max, -8, 0.5, -8),  -- Adjusted for smaller handle
+        Size = UDim2.new(0, 16, 0, 16),  -- Smaller handle size
         Image = "rbxassetid://3570695787",
         ImageColor3 = PresetColor,
         ScaleType = Enum.ScaleType.Fit,
@@ -681,7 +672,7 @@ function lib:Window(text, preset, closebind)
     local function updateSlider(value)
         value = math.clamp(value, min, max)
         local posX = value / max
-        local pos = UDim2.new(posX, -10, 0.5, -10)
+        local pos = UDim2.new(posX, -8, 0.5, -8)  -- Adjusted for smaller handle
         local pos1 = UDim2.new(posX, 0, 0, 5)
         
         CurrentValueFrame:TweenSize(pos1, "Out", "Sine", 0.1, true)
