@@ -1,7 +1,6 @@
 local UILibrary = {}
 UILibrary.__index = UILibrary
 
--- Cache services and functions
 local cloneref = cloneref or function(x) return x end
 local gethui = gethui or function() return nil end
 
@@ -10,14 +9,12 @@ local CoreGui = cloneref(game:GetService("CoreGui"))
 local TweenService = cloneref(game:GetService("TweenService"))
 local TextService = cloneref(game:GetService("TextService"))
 
--- Font cache
 local Fonts = {
     Regular = Enum.Font.Gotham,
     Semibold = Enum.Font.GothamSemibold,
     Bold = Enum.Font.GothamBold
 }
 
--- Theme cache
 UILibrary.Theme = {
     MainBackground = Color3.fromRGB(18, 18, 22),
     SecondaryBackground = Color3.fromRGB(28, 28, 35),
@@ -34,8 +31,8 @@ UILibrary.Theme = {
     ScrollBarColor = Color3.fromRGB(100, 100, 110),
     StrokeColor = Color3.fromRGB(70, 70, 80),
     NotificationAccent = Color3.fromRGB(241, 196, 15),
-    CornerRadius = 0, -- Changed to 0 for no rounded corners
-    ButtonCornerRadius = 0, -- Changed to 0 for no rounded corners
+    CornerRadius = 0,
+    ButtonCornerRadius = 0,
     TitleBarHeight = 36,
     TabBarHeight = 38,
     ElementHeight = 32,
@@ -43,7 +40,6 @@ UILibrary.Theme = {
     ContainerPadding = 10
 }
 
--- Reusable instance creation functions
 local function createInstance(className, props)
     local obj = Instance.new(className)
     for prop, value in pairs(props) do
@@ -51,8 +47,6 @@ local function createInstance(className, props)
     end
     return obj
 end
-
--- Removed createCorner function completely since we don't want rounded corners
 
 local function tween(obj, props, duration, style, direction)
     local t = TweenService:Create(obj, TweenInfo.new(
@@ -68,14 +62,12 @@ function UILibrary:CreateWindow(config)
     local w = setmetatable({}, UILibrary)
     config = config or {}
     
-    -- Initialize window properties
     w.Title = config.Title or "UI Panel"
     w.Size = UDim2.fromOffset(360, 320)
     w.ToggleKey = config.ToggleKey or Enum.KeyCode.X
     w.Connections, w.Elements, w.Tabs = {}, {}, {}
     w.ActiveTab, w.IsMinimized, w.IsVisible = nil, false, true
     
-    -- Create UI hierarchy
     local parent = gethui() or CoreGui
     local existing = parent:FindFirstChild("67Library")
     if existing then existing:Destroy() end
@@ -98,9 +90,6 @@ function UILibrary:CreateWindow(config)
         ClipsDescendants = true
     })
     
-    -- Removed corner creation
-    
-    -- Initialize window components
     w:CreateTitleBar()
     w:CreateTabBar()
     w:SetupDragging()
@@ -117,8 +106,6 @@ function UILibrary:CreateTitleBar()
         BorderSizePixel = 0,
         ClipsDescendants = true
     })
-    
-    -- Removed corner creation
     
     self.TitleLabel = createInstance("TextLabel", {
         Parent = self.TitleBar,
@@ -145,7 +132,6 @@ function UILibrary:CreateTitleBar()
         BorderSizePixel = 0
     })
     
-    -- Button interactions
     local function setupButtonInteraction(button, hoverProps, leaveProps, clickFunc)
         local enterConn = button.MouseEnter:Connect(function()
             tween(button, hoverProps)
@@ -206,7 +192,6 @@ function UILibrary:CreateTabBar()
         PaddingRight = UDim.new(0, 8)
     })
     
-    -- Auto-size canvas
     local canvasConn = layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         self.TabScrollingFrame.CanvasSize = UDim2.new(0, layout.AbsoluteContentSize.X, 0, 0)
     end)
@@ -230,11 +215,8 @@ function UILibrary:SetupToggleVisibility()
             ZIndex = 101
         })
         
-        -- Removed corner creation
-        
         self:SetupToggleButtonDragging()
         
-        -- Toggle button interactions
         local enterConn = self.ToggleButton.MouseEnter:Connect(function()
             tween(self.ToggleButton, {BackgroundColor3 = UILibrary.Theme.AccentHover}, 0.15)
         end)
@@ -314,7 +296,6 @@ function UILibrary:AddTab(name)
         Elements = {}
     }
     
-    -- Tab button
     tab.Button = createInstance("TextButton", {
         Parent = self.TabScrollingFrame,
         Size = UDim2.new(0, 110, 0, UILibrary.Theme.TabBarHeight - 10),
@@ -327,9 +308,6 @@ function UILibrary:AddTab(name)
         BorderSizePixel = 0
     })
     
-    -- Removed corner creation
-    
-    -- Tab indicator
     tab.Indicator = createInstance("Frame", {
         Parent = tab.Button,
         Size = UDim2.new(0.8, 0, 0, 2),
@@ -339,9 +317,6 @@ function UILibrary:AddTab(name)
         Visible = false
     })
     
-    -- Removed corner creation
-    
-    -- Tab container
     tab.Container = createInstance("ScrollingFrame", {
         Parent = self.MainFrame,
         Size = UDim2.new(1, 0, 1, -(UILibrary.Theme.TitleBarHeight + UILibrary.Theme.TabBarHeight)),
@@ -356,7 +331,6 @@ function UILibrary:AddTab(name)
         CanvasSize = UDim2.new(0, 0, 0, 0)
     })
     
-    -- Container layout
     createInstance("UIListLayout", {
         Parent = tab.Container,
         Padding = UDim.new(0, UILibrary.Theme.ElementPadding),
@@ -372,7 +346,6 @@ function UILibrary:AddTab(name)
         PaddingBottom = UDim.new(0, UILibrary.Theme.ContainerPadding)
     })
     
-    -- Tab interactions
     local enterConn = tab.Button.MouseEnter:Connect(function()
         if self.ActiveTab ~= tab then
             tween(tab.Button, {BackgroundColor3 = UILibrary.Theme.HoverColor}, 0.15)
@@ -422,7 +395,6 @@ function UILibrary:SwitchTab(tab)
         TextColor3 = UILibrary.Theme.PrimaryText
     }, 0.15)
     
-    -- Auto-scroll to make tab visible
     local canvasPos = self.TabScrollingFrame.CanvasPosition.X
     local tabPos = tab.Button.AbsolutePosition.X
     local tabSize = tab.Button.AbsoluteSize.X
@@ -451,8 +423,6 @@ function UILibrary:AddToggle(tab, config)
         BorderSizePixel = 0
     })
     
-    -- Removed corner creation
-    
     local textLabel = createInstance("TextLabel", {
         Parent = container,
         Size = UDim2.new(1, -60, 1, 0),
@@ -472,16 +442,12 @@ function UILibrary:AddToggle(tab, config)
         BackgroundColor3 = UILibrary.Theme.TertiaryBackground
     })
     
-    -- Removed corner creation
-    
     local knob = createInstance("Frame", {
         Parent = toggleFrame,
         Size = UDim2.fromOffset(18, 18),
         Position = UDim2.fromOffset(2, 2),
         BackgroundColor3 = UILibrary.Theme.MutedText
     })
-    
-    -- Removed corner creation
     
     local button = createInstance("TextButton", {
         Parent = container,
@@ -500,7 +466,6 @@ function UILibrary:AddToggle(tab, config)
         end
     end
     
-    -- Interactions
     local enterConn = button.MouseEnter:Connect(function()
         tween(container, {BackgroundColor3 = UILibrary.Theme.HoverColor}, 0.15)
     end)
@@ -528,7 +493,6 @@ function UILibrary:AddSlider(tab, config)
     local label, min, max = config.Label or "Slider", config.Min or 0, config.Max or 100
     local default, increment, callback = config.Default or min, config.Increment or 1, config.Callback or function() end
     
-    -- Decimal calculation
     local function getDecimals()
         if increment >= 1 then return 0 end
         local decimalPart = tostring(increment):match("%.(%d+)")
@@ -557,8 +521,6 @@ function UILibrary:AddSlider(tab, config)
         BackgroundColor3 = UILibrary.Theme.ElementBackground,
         BorderSizePixel = 0
     })
-    
-    -- Removed corner creation
     
     local labelFrame = createInstance("Frame", {
         Parent = container,
@@ -597,8 +559,6 @@ function UILibrary:AddSlider(tab, config)
         BorderSizePixel = 0
     })
     
-    -- Removed corner creation
-    
     local fill = createInstance("Frame", {
         Parent = barBack,
         Size = UDim2.new(0, 0, 1, 0),
@@ -606,16 +566,12 @@ function UILibrary:AddSlider(tab, config)
         BorderSizePixel = 0
     })
     
-    -- Removed corner creation
-    
     local handle = createInstance("Frame", {
         Parent = barBack,
         Size = UDim2.new(0, 12, 0, 12),
         BackgroundColor3 = UILibrary.Theme.PrimaryText,
         BorderSizePixel = 0
     })
-    
-    -- Removed corner creation
     
     local function updateDisplay()
         valueLabel.Text = format(currentValue)
@@ -698,8 +654,6 @@ function UILibrary:AddButton(tab, config)
         BorderSizePixel = 0
     })
     
-    -- Removed corner creation
-    
     local enterConn = b.MouseEnter:Connect(function()
         tween(b, {BackgroundColor3 = UILibrary.Theme.AccentHover}, 0.15)
     end)
@@ -734,8 +688,6 @@ function UILibrary:AddLabel(tab, text)
         TextXAlignment = Enum.TextXAlignment.Left
     })
     
-    -- Removed corner creation
-    
     createInstance("UIPadding", {
         Parent = l,
         PaddingLeft = UDim.new(0, 12)
@@ -756,8 +708,6 @@ function UILibrary:AddTextBox(tab, config)
         BorderSizePixel = 0
     })
     
-    -- Removed corner creation
-    
     local textLabel = createInstance("TextLabel", {
         Parent = container,
         Size = UDim2.new(0.4, -6, 1, 0),
@@ -777,8 +727,6 @@ function UILibrary:AddTextBox(tab, config)
         BackgroundColor3 = UILibrary.Theme.TertiaryBackground,
         BorderSizePixel = 0
     })
-    
-    -- Removed corner creation
     
     local textBox = createInstance("TextBox", {
         Parent = textBoxFrame,
@@ -842,8 +790,6 @@ function UILibrary:Notify(titleText, description, duration)
         ClipsDescendants = true
     })
     
-    -- Removed corner creation
-    
     local closeBtn = createInstance("TextButton", {
         Parent = notification,
         Name = "CloseButton",
@@ -893,7 +839,6 @@ function UILibrary:Notify(titleText, description, duration)
         ZIndex = 201
     })
     
-    -- Timer label below the description
     local timerLabel = createInstance("TextLabel", {
         Parent = notification,
         Name = "TimerLabel",
@@ -909,7 +854,6 @@ function UILibrary:Notify(titleText, description, duration)
         ZIndex = 201
     })
     
-    -- Handle text wrapping
     if description then
         local textSize = TextService:GetTextSize(description, fontSize - 1, Fonts.Regular, Vector2.new(desc.AbsoluteSize.X, 1000))
         if textSize.Y > desc.AbsoluteSize.Y then
@@ -917,7 +861,6 @@ function UILibrary:Notify(titleText, description, duration)
         end
     end
     
-    -- Close button interactions
     local closeEnterConn = closeBtn.MouseEnter:Connect(function()
         tween(closeBtn, {TextColor3 = UILibrary.Theme.PrimaryText}, 0.1)
     end)
@@ -932,7 +875,6 @@ function UILibrary:Notify(titleText, description, duration)
         if destroyed then return end
         destroyed = true
         
-        -- Cancel existing tweens
         for _, child in pairs(notification:GetChildren()) do
             if child:IsA("Tween") then
                 child:Cancel()
@@ -961,16 +903,13 @@ function UILibrary:Notify(titleText, description, duration)
         end
     end)
     
-    -- Store connections for cleanup
     table.insert(self.Connections, closeEnterConn)
     table.insert(self.Connections, closeLeaveConn)
     table.insert(self.Connections, closeClickConn)
     table.insert(self.Connections, clickConn)
     
-    -- Animation and timer
     tween(notification, {Position = UDim2.new(1, -notificationWidth - 5, 0, 10)}, 0.3)
     
-    -- Timer countdown
     local remaining = duration
     local timerConnection
     timerConnection = game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
