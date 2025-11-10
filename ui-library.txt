@@ -807,21 +807,16 @@ function UILibrary:Notify(titleText, description, duration)
         BorderSizePixel = 0
     })
     
-    local titleFrame = createInstance("Frame", {
-        Parent = notification,
-        Name = "TitleFrame",
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 15, 0, 10),
-        Size = UDim2.new(1, -50, 0, 20),
-        ZIndex = 201
-    })
+    -- Calculate title text size to position timer dynamically
+    local titleTextSize = TextService:GetTextSize(titleText or "Notification", titleFontSize, Fonts.Bold, Vector2.new(1000, 1000))
+    local titleWidth = math.min(titleTextSize.X + 10, notificationWidth - 100) -- Reserve space for timer and close button
     
     local title = createInstance("TextLabel", {
-        Parent = titleFrame,
+        Parent = notification,
         Name = "Title",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 0, 0, 0),
-        Size = UDim2.new(0.7, 0, 1, 0),
+        Position = UDim2.new(0, 15, 0, 10),
+        Size = UDim2.new(0, titleWidth, 0, 20),
         Font = Fonts.Bold,
         Text = titleText or "Notification",
         TextColor3 = UILibrary.Theme.PrimaryText,
@@ -834,16 +829,16 @@ function UILibrary:Notify(titleText, description, duration)
     })
     
     local timerLabel = createInstance("TextLabel", {
-        Parent = titleFrame,
+        Parent = notification,
         Name = "TimerLabel",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0.7, 5, 0, 0),
-        Size = UDim2.new(0.3, -5, 1, 0),
+        Position = UDim2.new(0, 20 + titleWidth, 0, 10), -- Position after title with spacing
+        Size = UDim2.new(0, 40, 0, 20),
         Font = Fonts.Semibold,
         Text = tostring(duration),
         TextColor3 = UILibrary.Theme.NotificationAccent,
-        TextSize = titleFontSize - 1,
-        TextXAlignment = Enum.TextXAlignment.Right,
+        TextSize = titleFontSize,
+        TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
         ZIndex = 201
     })
