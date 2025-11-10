@@ -167,8 +167,8 @@ local function RefreshESP()
 end
 
 local function CreateToggleGroup(tab, title, filter)
-    -- Add spacing between groups
-    tab:Button(title, function() end) -- Using button as section header
+    -- Add spacing between groups using labels
+    tab:Label(title)
     
     for name, config in pairs(FNAF_ESP_CONFIG) do
         if config.Type == filter then
@@ -192,7 +192,7 @@ CreateToggleGroup(Tabs.FNAF2, "Toy Animatronics", "Toy")
 CreateToggleGroup(Tabs.FNAF2, "Other Animatronics", "Other")
 
 -- FNAF 3 Tab
-Tabs.FNAF3:Button("Springtrap", function() end) -- Section header
+Tabs.FNAF3:Label("Springtrap") -- Section header
 Tabs.FNAF3:Toggle("Springtrap Highlight", false, function(state)
     ToggleESP("Springtrap", FNAF_ESP_CONFIG.Springtrap, state, "Highlight")
 end)
@@ -207,7 +207,7 @@ CreateToggleGroup(Tabs.FNAF4, "Nightmare Animatronics", "FNAF4")
 CreateToggleGroup(Tabs.FNAF5, "Sister Location", "FNAF5")
 
 -- Misc Tab
-Tabs.Misc:Button("Utilities", function() end) -- Section header
+Tabs.Misc:Label("Utilities") -- Section header
 Tabs.Misc:Button("Refresh All ESP", function()
     RefreshESP()
 end)
