@@ -1,7 +1,7 @@
 local UILibrary = {}
 UILibrary.__index = UILibrary
 
--- Cache services and function
+-- Cache services and functions
 local cloneref = cloneref or function(x) return x end
 local gethui = gethui or function() return nil end
 
@@ -859,32 +859,20 @@ function UILibrary:Notify(titleText, description, duration)
     createCorner(notification)
     -- Removed stroke from notification
     
-    -- Timer display container at the bottom of the notification
-    local timerContainer = createInstance("Frame", {
+    -- Timer label in the top right corner
+    local timerLabel = createInstance("TextLabel", {
         Parent = notification,
-        Name = "TimerContainer",
-        BackgroundColor3 = UILibrary.Theme.TertiaryBackground,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 0, 1, -3), -- Positioned at the bottom with small gap
-        Size = UDim2.new(1, 0, 0, 3), -- Thin timer bar
-        ZIndex = 201,
-        ClipsDescendants = true
-    })
-    
-    -- Timer text display
-    local timerText = createInstance("TextLabel", {
-        Parent = timerContainer,
-        Name = "TimerText",
+        Name = "TimerLabel",
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(1, -40, 0, 8),
+        Size = UDim2.new(0, 35, 0, 18),
         Font = Fonts.Bold,
         Text = tostring(duration),
         TextColor3 = UILibrary.Theme.NotificationAccent,
-        TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Center,
-        TextYAlignment = Enum.TextYAlignment.Center,
-        ZIndex = 202
+        TextSize = titleFontSize - 1,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        TextYAlignment = Enum.TextYAlignment.Top,
+        ZIndex = 201
     })
     
     local closeBtn = createInstance("TextButton", {
@@ -906,7 +894,7 @@ function UILibrary:Notify(titleText, description, duration)
         Name = "Title",
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 12, 0, 8),
-        Size = UDim2.new(1, -45, 0, 18),
+        Size = UDim2.new(1, -80, 0, 18), -- Adjusted size to make room for timer
         Font = Fonts.Bold,
         Text = titleText or "Notification",
         TextColor3 = UILibrary.Theme.PrimaryText,
@@ -994,36 +982,25 @@ function UILibrary:Notify(titleText, description, duration)
     table.insert(self.Connections, closeClickConn)
     table.insert(self.Connections, clickConn)
     
-    -- Animation
+    -- Animation and timer
     tween(notification, {Position = UDim2.new(1, -notificationWidth - 5, 0, 10)}, 0.3)
     
     -- Timer countdown
-    local startTime = tick()
-    local endTime = startTime + duration
-    
+    local remaining = duration
     local timerConnection
-    timerConnection = game:GetService("RunService").Heartbeat:Connect(function()
+    timerConnection = game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
         if destroyed then
             timerConnection:Disconnect()
             return
         end
         
-        local currentTime = tick()
-        local timeLeft = math.max(0, endTime - currentTime)
-        local secondsLeft = math.ceil(timeLeft)
-        
-        -- Update timer text
-        timerText.Text = tostring(secondsLeft)
-        
-        -- Update timer bar width based on time remaining
-        local progress = timeLeft / duration
-        timerContainer.Size = UDim2.new(progress, 0, 0, 3)
-        
-        if timeLeft <= 0 then
+        remaining = remaining - deltaTime
+        if remaining <= 0 then
+            timerLabel.Text = "0"
+            destroyNotification()
             timerConnection:Disconnect()
-            if not destroyed then
-                destroyNotification()
-            end
+        else
+            timerLabel.Text = tostring(math.ceil(remaining))
         end
     end)
     
