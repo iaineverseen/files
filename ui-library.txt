@@ -777,9 +777,9 @@ function UILibrary:Notify(titleText, description, duration)
     duration = duration or 3
     
     local isMobile = UIS.TouchEnabled
-    local notificationWidth = isMobile and 280 or 320
-    local notificationHeight = isMobile and 60 or 70
-    local fontSize, titleFontSize = isMobile and 12 or 13, isMobile and 13 or 14
+    local notificationWidth = isMobile and 320 or 360  -- Increased width
+    local notificationHeight = isMobile and 80 or 90   -- Increased height
+    local fontSize, titleFontSize = isMobile and 14 or 15, isMobile and 15 or 16  -- Increased font sizes
     
     local notification = createInstance("Frame", {
         Parent = self.ScreenGui,
@@ -796,12 +796,12 @@ function UILibrary:Notify(titleText, description, duration)
         Parent = notification,
         Name = "CloseButton",
         BackgroundTransparency = 1,
-        Position = UDim2.new(1, -25, 0, 5),
-        Size = UDim2.new(0, 20, 0, 20),
+        Position = UDim2.new(1, -30, 0, 8),  -- Adjusted position
+        Size = UDim2.new(0, 24, 0, 24),      -- Larger close button
         Font = Fonts.Bold,
         Text = "×",
         TextColor3 = UILibrary.Theme.TertiaryText,
-        TextSize = 16,
+        TextSize = 20,                       -- Larger close button text
         AutoButtonColor = false,
         ZIndex = 201,
         BorderSizePixel = 0
@@ -811,12 +811,12 @@ function UILibrary:Notify(titleText, description, duration)
         Parent = notification,
         Name = "Title",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 12, 0, 8),
-        Size = UDim2.new(1, -45, 0, 16),
+        Position = UDim2.new(0, 15, 0, 10),  -- More padding
+        Size = UDim2.new(1, -50, 0, 20),     -- Adjusted size
         Font = Fonts.Bold,
         Text = titleText or "Notification",
         TextColor3 = UILibrary.Theme.PrimaryText,
-        TextSize = titleFontSize - 1,
+        TextSize = titleFontSize,            -- Larger title text
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top,
         TextTruncate = Enum.TextTruncate.AtEnd,
@@ -828,12 +828,12 @@ function UILibrary:Notify(titleText, description, duration)
         Parent = notification,
         Name = "Description",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 12, 0, isMobile and 24 or 26),
-        Size = UDim2.new(1, -45, 0, isMobile and 20 or 22),
+        Position = UDim2.new(0, 15, 0, isMobile and 32 or 35),  -- Adjusted position
+        Size = UDim2.new(1, -50, 0, isMobile and 28 or 32),     -- More space for description
         Font = Fonts.Regular,
         Text = description or "",
         TextColor3 = UILibrary.Theme.SecondaryText,
-        TextSize = fontSize - 1,
+        TextSize = fontSize,                 -- Larger description text
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top,
         TextWrapped = true,
@@ -846,19 +846,19 @@ function UILibrary:Notify(titleText, description, duration)
         Parent = notification,
         Name = "TimerLabel",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 12, 0, isMobile and 44 or 48),
-        Size = UDim2.new(1, -45, 0, 12),
+        Position = UDim2.new(0, 15, 0, isMobile and 60 or 67),  -- Adjusted position
+        Size = UDim2.new(1, -50, 0, 16),     -- More space for timer
         Font = Fonts.Semibold,
         Text = tostring(duration),
         TextColor3 = UILibrary.Theme.NotificationAccent,
-        TextSize = fontSize - 2,
+        TextSize = fontSize,                 -- Larger timer text
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top,
         ZIndex = 201
     })
     
     if description then
-        local textSize = TextService:GetTextSize(description, fontSize - 1, Fonts.Regular, Vector2.new(desc.AbsoluteSize.X, 1000))
+        local textSize = TextService:GetTextSize(description, fontSize, Fonts.Regular, Vector2.new(desc.AbsoluteSize.X, 1000))
         if textSize.Y > desc.AbsoluteSize.Y then
             desc.TextWrapped = true
         end
