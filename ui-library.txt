@@ -842,7 +842,7 @@ function UILibrary:Notify(titleText, description, duration)
     
     local isMobile = UIS.TouchEnabled
     local notificationWidth = isMobile and 280 or 320
-    local notificationHeight = isMobile and 60 or 70
+    local notificationHeight = isMobile and 85 or 90  -- Increased height to accommodate timer
     local fontSize, titleFontSize = isMobile and 12 or 13, isMobile and 13 or 14
     
     local notification = createInstance("Frame", {
@@ -858,22 +858,6 @@ function UILibrary:Notify(titleText, description, duration)
     
     createCorner(notification)
     -- Removed stroke from notification
-    
-    -- Timer label in the top right corner
-    local timerLabel = createInstance("TextLabel", {
-        Parent = notification,
-        Name = "TimerLabel",
-        BackgroundTransparency = 1,
-        Position = UDim2.new(1, -40, 0, 8),
-        Size = UDim2.new(0, 35, 0, 18),
-        Font = Fonts.Bold,
-        Text = tostring(duration),
-        TextColor3 = UILibrary.Theme.NotificationAccent,
-        TextSize = titleFontSize - 1,
-        TextXAlignment = Enum.TextXAlignment.Right,
-        TextYAlignment = Enum.TextYAlignment.Top,
-        ZIndex = 201
-    })
     
     local closeBtn = createInstance("TextButton", {
         Parent = notification,
@@ -894,7 +878,7 @@ function UILibrary:Notify(titleText, description, duration)
         Name = "Title",
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 12, 0, 8),
-        Size = UDim2.new(1, -80, 0, 18), -- Adjusted size to make room for timer
+        Size = UDim2.new(1, -45, 0, 18),
         Font = Fonts.Bold,
         Text = titleText or "Notification",
         TextColor3 = UILibrary.Theme.PrimaryText,
@@ -921,6 +905,22 @@ function UILibrary:Notify(titleText, description, duration)
         TextWrapped = true,
         TextTruncate = Enum.TextTruncate.AtEnd,
         ClipsDescendants = true,
+        ZIndex = 201
+    })
+    
+    -- Timer label below the description
+    local timerLabel = createInstance("TextLabel", {
+        Parent = notification,
+        Name = "TimerLabel",
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 12, 0, isMobile and 56 or 62), -- Positioned below description
+        Size = UDim2.new(1, -45, 0, 16),
+        Font = Fonts.Semibold,
+        Text = tostring(duration),
+        TextColor3 = UILibrary.Theme.NotificationAccent,
+        TextSize = fontSize - 1,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Top,
         ZIndex = 201
     })
     
