@@ -567,164 +567,176 @@ function lib:Window(text, preset, closebind)
             end
         end
 
-        function tabcontent:Slider(text, min, max, increment, start, callback, options)
-            local dragging = false
-            start = start or min
-            local options = options or {}
-            local precise = options.precise or false
+        function tabcontent:Slider(text, min, max, increment, precise, start, callback, options)
+    local dragging = false
+    start = start or min
+    local options = options or {}
+    
+    -- Increased slider height for better touch interaction
+    local Slider = CreateInstance("TextButton", {
+        Name = "Slider",
+        Parent = Tab,
+        BackgroundColor3 = Color3.fromRGB(34, 34, 34),
+        Size = UDim2.new(0, 363, 0, 70),  -- Increased height from 60 to 70
+        AutoButtonColor = false,
+        Font = Enum.Font.SourceSans,
+        Text = "",
+        TextColor3 = Color3.fromRGB(0, 0, 0),
+        TextSize = 14
+    })
 
-            -- Increased slider height for better touch interaction
-            local Slider = CreateInstance("TextButton", {
-                Name = "Slider",
-                Parent = Tab,
-                BackgroundColor3 = Color3.fromRGB(34, 34, 34),
-                Size = UDim2.new(0, 363, 0, 70),  -- Increased height from 60 to 70
-                AutoButtonColor = false,
-                Font = Enum.Font.SourceSans,
-                Text = "",
-                TextColor3 = Color3.fromRGB(0, 0, 0),
-                TextSize = 14
-            })
+    CreateInstance("UICorner", {
+        Parent = Slider,
+        CornerRadius = UDim.new(0, 5)
+    })
 
-            CreateInstance("UICorner", {
-                Parent = Slider,
-                CornerRadius = UDim.new(0, 5)
-            })
+    local SliderTitle = CreateInstance("TextLabel", {
+        Name = "SliderTitle",
+        Parent = Slider,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0.036, 0, 0, 0),
+        Size = UDim2.new(0, 187, 0, 42),
+        Font = Enum.Font.Gotham,
+        Text = text,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
 
-            local SliderTitle = CreateInstance("TextLabel", {
-                Name = "SliderTitle",
-                Parent = Slider,
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0.036, 0, 0, 0),
-                Size = UDim2.new(0, 187, 0, 42),
-                Font = Enum.Font.Gotham,
-                Text = text,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 14,
-                TextXAlignment = Enum.TextXAlignment.Left
-            })
+    local SliderValue = CreateInstance("TextLabel", {
+        Name = "SliderValue",
+        Parent = Slider,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0.036, 0, 0, 0),
+        Size = UDim2.new(0, 335, 0, 42),
+        Font = Enum.Font.Gotham,
+        Text = tostring(start),
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Right
+    })
 
-            local SliderValue = CreateInstance("TextLabel", {
-                Name = "SliderValue",
-                Parent = Slider,
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0.036, 0, 0, 0),
-                Size = UDim2.new(0, 335, 0, 42),
-                Font = Enum.Font.Gotham,
-                Text = tostring(precise and start or math.floor(start)),
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 14,
-                TextXAlignment = Enum.TextXAlignment.Right
-            })
+    -- Larger slider track
+    local SlideFrame = CreateInstance("Frame", {
+        Name = "SlideFrame",
+        Parent = Slider,
+        BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+        BorderSizePixel = 0,
+        Position = UDim2.new(0.034, 0, 0.686, 0),
+        Size = UDim2.new(0, 335, 0, 6)  -- Increased height from 3 to 6
+    })
 
-            -- Larger slider track
-            local SlideFrame = CreateInstance("Frame", {
-                Name = "SlideFrame",
-                Parent = Slider,
-                BackgroundColor3 = Color3.fromRGB(50, 50, 50),
-                BorderSizePixel = 0,
-                Position = UDim2.new(0.034, 0, 0.686, 0),
-                Size = UDim2.new(0, 335, 0, 6)  -- Increased height from 3 to 6
-            })
+    CreateInstance("UICorner", {
+        Parent = SlideFrame,
+        CornerRadius = UDim.new(1, 0)  -- Rounded ends for better appearance
+    })
 
-            CreateInstance("UICorner", {
-                Parent = SlideFrame,
-                CornerRadius = UDim.new(1, 0)  -- Rounded ends for better appearance
-            })
+    local CurrentValueFrame = CreateInstance("Frame", {
+        Name = "CurrentValueFrame",
+        Parent = SlideFrame,
+        BackgroundColor3 = PresetColor,
+        BorderSizePixel = 0,
+        Size = UDim2.new((start or 0) / max, 0, 1, 0)
+    })
 
-            local CurrentValueFrame = CreateInstance("Frame", {
-                Name = "CurrentValueFrame",
-                Parent = SlideFrame,
-                BackgroundColor3 = PresetColor,
-                BorderSizePixel = 0,
-                Size = UDim2.new((start or 0) / max, 0, 1, 0)
-            })
+    CreateInstance("UICorner", {
+        Parent = CurrentValueFrame,
+        CornerRadius = UDim.new(1, 0)  -- Rounded ends for better appearance
+    })
 
-            CreateInstance("UICorner", {
-                Parent = CurrentValueFrame,
-                CornerRadius = UDim.new(1, 0)  -- Rounded ends for better appearance
-            })
+    -- Larger slider handle for better touch interaction - properly positioned on track
+    local SlideCircle = CreateInstance("ImageButton", {
+        Name = "SlideCircle",
+        Parent = SlideFrame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new((start or 0) / max, -12, 0.5, -12),  -- Properly centered on track
+        Size = UDim2.new(0, 24, 0, 24),  -- Increased size from 11 to 24
+        Image = "rbxassetid://3570695787",
+        ImageColor3 = PresetColor,
+        ScaleType = Enum.ScaleType.Fit,
+        ZIndex = 2
+    })
 
-            -- Larger slider handle for better touch interaction - properly positioned on track
-            local SlideCircle = CreateInstance("ImageButton", {
-                Name = "SlideCircle",
-                Parent = SlideFrame,
-                BackgroundTransparency = 1,
-                Position = UDim2.new((start or 0) / max, -12, 0.5, -12),  -- Properly centered on track
-                Size = UDim2.new(0, 24, 0, 24),  -- Increased size from 11 to 24
-                Image = "rbxassetid://3570695787",
-                ImageColor3 = PresetColor,
-                ScaleType = Enum.ScaleType.Fit,
-                ZIndex = 2
-            })
-
-            -- Preset color sync
-            coroutine.wrap(function()
-                while RunService.Heartbeat:Wait() do
-                    CurrentValueFrame.BackgroundColor3 = PresetColor
-                    SlideCircle.ImageColor3 = PresetColor
-                end
-            end)()
-
-            local function updateSlider(value)
-                value = math.clamp(value, min, max)
-                local posX = value / max
-                local pos = UDim2.new(posX, -12, 0.5, -12)  -- Properly centered on track
-                local pos1 = UDim2.new(posX, 0, 0, 6)  -- Adjusted for taller track
-                
-                CurrentValueFrame:TweenSize(pos1, "Out", "Sine", 0.1, true)
-                SlideCircle:TweenPosition(pos, "Out", "Sine", 0.1, true)
-                
-                local displayValue = precise and value or math.floor(value)
-                SliderValue.Text = tostring(displayValue)
-                pcall(callback, value)
-            end
-
-            local function move(input)
-                local posX = math.clamp((input.Position.X - SlideFrame.AbsolutePosition.X) / SlideFrame.AbsoluteSize.X, 0, 1)
-                local value = min + (posX * (max - min))
-                
-                -- Apply increment if specified
-                if increment > 0 then
-                    value = math.floor(value / increment) * increment
-                end
-                
-                updateSlider(value)
-            end
-
-            -- Input handling for slider handle
-            local function beginDrag(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = true
-                    if input.UserInputType == Enum.UserInputType.Touch then
-                        move(input)
-                    end
-                end
-            end
-
-            local function endDrag(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = false
-                end
-            end
-
-            -- Connect input to slider handle
-            SlideCircle.InputBegan:Connect(beginDrag)
-            SlideCircle.InputEnded:Connect(endDrag)
-            
-            -- Connect input to slider track for direct tapping
-            SlideFrame.InputBegan:Connect(beginDrag)
-            SlideFrame.InputEnded:Connect(endDrag)
-
-            UserInputService.InputChanged:Connect(function(input)
-                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    move(input)
-                end
-            end)
-
-            -- Set initial value
-            updateSlider(start)
+    -- Preset color sync
+    coroutine.wrap(function()
+        while RunService.Heartbeat:Wait() do
+            CurrentValueFrame.BackgroundColor3 = PresetColor
+            SlideCircle.ImageColor3 = PresetColor
         end
+    end)()
+
+    local function formatNumber(value)
+        if precise then
+            -- Remove trailing zeros and unnecessary decimal places
+            local formatted = string.format("%.10f", value)
+            formatted = formatted:gsub("%.(%d-)0*$", function(decimal)
+                return decimal == "" and "" or "." .. decimal
+            end)
+            formatted = formatted:gsub("%.$", "")  -- Remove trailing dot
+            return formatted
+        else
+            return tostring(math.floor(value))
+        end
+    end
+
+    local function updateSlider(value)
+        value = math.clamp(value, min, max)
+        local posX = value / max
+        local pos = UDim2.new(posX, -12, 0.5, -12)  -- Properly centered on track
+        local pos1 = UDim2.new(posX, 0, 0, 6)  -- Adjusted for taller track
+        
+        CurrentValueFrame:TweenSize(pos1, "Out", "Sine", 0.1, true)
+        SlideCircle:TweenPosition(pos, "Out", "Sine", 0.1, true)
+        
+        SliderValue.Text = formatNumber(value)
+        pcall(callback, value)
+    end
+
+    local function move(input)
+        local posX = math.clamp((input.Position.X - SlideFrame.AbsolutePosition.X) / SlideFrame.AbsoluteSize.X, 0, 1)
+        local value = min + (posX * (max - min))
+        
+        -- Apply increment if specified
+        if increment > 0 then
+            value = math.floor(value / increment) * increment
+        end
+        
+        updateSlider(value)
+    end
+
+    -- Input handling for slider handle
+    local function beginDrag(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            if input.UserInputType == Enum.UserInputType.Touch then
+                move(input)
+            end
+        end
+    end
+
+    local function endDrag(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end
+
+    -- Connect input to slider handle
+    SlideCircle.InputBegan:Connect(beginDrag)
+    SlideCircle.InputEnded:Connect(endDrag)
+    
+    -- Connect input to slider track for direct tapping
+    SlideFrame.InputBegan:Connect(beginDrag)
+    SlideFrame.InputEnded:Connect(endDrag)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            move(input)
+        end
+    end)
+
+    -- Set initial value
+    updateSlider(start)
+end
 
         function tabcontent:Dropdown(text, list, callback)
             local droptog = false
