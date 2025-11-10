@@ -28,13 +28,13 @@ local MobileToggleButton
 if DeviceType == "Mobile" then
     MobileToggleButton = Instance.new("TextButton")
     MobileToggleButton.Name = "MobileToggle"
-    MobileToggleButton.Size = UDim2.new(0, 50, 0, 50)
-    MobileToggleButton.Position = UDim2.new(0, 10, 0.5, -25)
+    MobileToggleButton.Size = UDim2.new(0, 40, 0, 40)  -- Changed from 50,50 to 40,40
+    MobileToggleButton.Position = UDim2.new(0, 10, 0.5, -20)  -- Adjusted position for new size
     MobileToggleButton.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
     MobileToggleButton.Text = "−"
     MobileToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     MobileToggleButton.Font = Enum.Font.GothamBold
-    MobileToggleButton.TextSize = 24
+    MobileToggleButton.TextSize = 20  -- Reduced text size from 24 to 20
     MobileToggleButton.AutoButtonColor = false
     MobileToggleButton.Parent = ui
     
