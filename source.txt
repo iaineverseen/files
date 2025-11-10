@@ -1,18 +1,24 @@
 local lib = {}
 
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
+local cloneref = (cloneref or function(x) return x end)
+local UserInputService = cloneref(game:GetService("UserInputService"))
+local TweenService = cloneref(game:GetService("TweenService"))
+local RunService = cloneref(game:GetService("RunService"))
+local Players = cloneref(game:GetService("Players"))
+local CoreGui = cloneref(game:GetService("CoreGui"))
 
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local PresetColor = Color3.fromRGB(44, 120, 224)
 local CloseBind = Enum.KeyCode.RightControl
 
+-- Delete existing instance of the GUI before creating a new one
+if CoreGui:FindFirstChild("67Library") then
+    CoreGui:FindFirstChild("67Library"):Destroy()
+end
+
 local ui = Instance.new("ScreenGui")
-ui.Name = "OptimizedUI"
+ui.Name = "67Library"
 ui.Parent = CoreGui
 ui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
