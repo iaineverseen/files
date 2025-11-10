@@ -698,11 +698,9 @@ function lib:Window(text, preset, closebind)
                             endConn:Disconnect()
                         end
                         
-                        if not Slider:IsMouseOver() then
-                            TweenService:Create(Slider, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                                BackgroundColor3 = Color3.fromRGB(34, 34, 34)
-                            }):Play()
-                        end
+                        TweenService:Create(Slider, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                            BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+                        }):Play()
                     end
                 end)
             end
