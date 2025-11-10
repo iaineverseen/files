@@ -620,8 +620,8 @@ function lib:Window(text, preset, closebind)
         Name = "SlideCircle",
         Parent = SlideFrame,
         BackgroundTransparency = 1,
-        Position = UDim2.new((start - min) / (max - min), -8, 0.5, -8),
-        Size = UDim2.new(0, 16, 0, 16),
+        Position = UDim2.new((start - min) / (max - min), -6, 0.5, -6), -- Changed from -8 to -6
+        Size = UDim2.new(0, 12, 0, 12), -- Changed from 16 to 12 (25% smaller)
         Image = "rbxassetid://3570695787",
         ImageColor3 = PresetColor,
         ScaleType = Enum.ScaleType.Fit,
@@ -651,7 +651,7 @@ function lib:Window(text, preset, closebind)
     local function updateSlider(value)
         value = math.clamp(value, min, max)
         local normalizedValue = (value - min) / (max - min)
-        local circlePos = UDim2.new(normalizedValue, -8, 0.5, -8)
+        local circlePos = UDim2.new(normalizedValue, -6, 0.5, -6) -- Changed from -8 to -6
         local frameSize = UDim2.new(normalizedValue, 0, 1, 0)
         
         -- Update both elements simultaneously
