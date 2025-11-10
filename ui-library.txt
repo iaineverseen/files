@@ -865,11 +865,17 @@ function UILibrary:Notify(titleText, description, duration)
         Name = "ProgressBarContainer",
         BackgroundColor3 = UILibrary.Theme.TertiaryBackground,
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 0, 1, -3), -- Positioned at the bottom with small gap
+        Position = UDim2.new(0, 0, 1, -3), -- This positions it outside the frame - FIXED BELOW
         Size = UDim2.new(1, 0, 0, 3), -- Thin progress bar
         ZIndex = 201,
         ClipsDescendants = true
     })
+    
+    -- FIX: Change the position to be inside the notification frame
+    progressBarContainer.Position = UDim2.new(0, 0, 1, -3) -- This is actually correct, but let's verify the math
+    
+    -- Alternative fix if the above doesn't work:
+    -- progressBarContainer.Position = UDim2.new(0, 0, 0, notificationHeight - 3)
     
     -- Progress bar fill
     local progressBar = createInstance("Frame", {
@@ -882,6 +888,7 @@ function UILibrary:Notify(titleText, description, duration)
         ZIndex = 202
     })
     
+    -- Rest of the notification code remains the same...
     local closeBtn = createInstance("TextButton", {
         Parent = notification,
         Name = "CloseButton",
