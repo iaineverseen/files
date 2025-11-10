@@ -777,9 +777,9 @@ function UILibrary:Notify(titleText, description, duration)
     duration = duration or 3
     
     local isMobile = UIS.TouchEnabled
-    local notificationWidth = isMobile and 320 or 360  -- Increased width
-    local notificationHeight = isMobile and 80 or 90   -- Increased height
-    local fontSize, titleFontSize = isMobile and 14 or 15, isMobile and 15 or 16  -- Increased font sizes
+    local notificationWidth = isMobile and 320 or 360
+    local notificationHeight = isMobile and 80 or 90
+    local fontSize, titleFontSize = isMobile and 14 or 15, isMobile and 15 or 16
     
     local notification = createInstance("Frame", {
         Parent = self.ScreenGui,
@@ -796,31 +796,55 @@ function UILibrary:Notify(titleText, description, duration)
         Parent = notification,
         Name = "CloseButton",
         BackgroundTransparency = 1,
-        Position = UDim2.new(1, -30, 0, 8),  -- Adjusted position
-        Size = UDim2.new(0, 24, 0, 24),      -- Larger close button
+        Position = UDim2.new(1, -30, 0, 8),
+        Size = UDim2.new(0, 24, 0, 24),
         Font = Fonts.Bold,
         Text = "×",
         TextColor3 = UILibrary.Theme.TertiaryText,
-        TextSize = 20,                       -- Larger close button text
+        TextSize = 20,
         AutoButtonColor = false,
         ZIndex = 201,
         BorderSizePixel = 0
     })
     
-    local title = createInstance("TextLabel", {
+    local titleFrame = createInstance("Frame", {
         Parent = notification,
+        Name = "TitleFrame",
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 15, 0, 10),
+        Size = UDim2.new(1, -50, 0, 20),
+        ZIndex = 201
+    })
+    
+    local title = createInstance("TextLabel", {
+        Parent = titleFrame,
         Name = "Title",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 15, 0, 10),  -- More padding
-        Size = UDim2.new(1, -50, 0, 20),     -- Adjusted size
+        Position = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(0.7, 0, 1, 0),
         Font = Fonts.Bold,
         Text = titleText or "Notification",
         TextColor3 = UILibrary.Theme.PrimaryText,
-        TextSize = titleFontSize,            -- Larger title text
+        TextSize = titleFontSize,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextYAlignment = Enum.TextYAlignment.Top,
+        TextYAlignment = Enum.TextYAlignment.Center,
         TextTruncate = Enum.TextTruncate.AtEnd,
         ClipsDescendants = true,
+        ZIndex = 201
+    })
+    
+    local timerLabel = createInstance("TextLabel", {
+        Parent = titleFrame,
+        Name = "TimerLabel",
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0.7, 5, 0, 0),
+        Size = UDim2.new(0.3, -5, 1, 0),
+        Font = Fonts.Semibold,
+        Text = tostring(duration),
+        TextColor3 = UILibrary.Theme.NotificationAccent,
+        TextSize = titleFontSize - 1,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        TextYAlignment = Enum.TextYAlignment.Center,
         ZIndex = 201
     })
     
@@ -828,32 +852,17 @@ function UILibrary:Notify(titleText, description, duration)
         Parent = notification,
         Name = "Description",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 15, 0, isMobile and 32 or 35),  -- Adjusted position
-        Size = UDim2.new(1, -50, 0, isMobile and 28 or 32),     -- More space for description
+        Position = UDim2.new(0, 15, 0, isMobile and 32 or 35),
+        Size = UDim2.new(1, -50, 0, isMobile and 28 or 32),
         Font = Fonts.Regular,
         Text = description or "",
         TextColor3 = UILibrary.Theme.SecondaryText,
-        TextSize = fontSize,                 -- Larger description text
+        TextSize = fontSize,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top,
         TextWrapped = true,
         TextTruncate = Enum.TextTruncate.AtEnd,
         ClipsDescendants = true,
-        ZIndex = 201
-    })
-    
-    local timerLabel = createInstance("TextLabel", {
-        Parent = notification,
-        Name = "TimerLabel",
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 15, 0, isMobile and 60 or 67),  -- Adjusted position
-        Size = UDim2.new(1, -50, 0, 16),     -- More space for timer
-        Font = Fonts.Semibold,
-        Text = tostring(duration),
-        TextColor3 = UILibrary.Theme.NotificationAccent,
-        TextSize = fontSize,                 -- Larger timer text
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextYAlignment = Enum.TextYAlignment.Top,
         ZIndex = 201
     })
     
