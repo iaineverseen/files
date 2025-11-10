@@ -29,10 +29,7 @@ UILibrary.Theme = {
     TertiaryText = Color3.fromRGB(180, 180, 190),
     MutedText = Color3.fromRGB(140, 140, 150),
     ScrollBarColor = Color3.fromRGB(100, 100, 110),
-    StrokeColor = Color3.fromRGB(70, 70, 80),
     NotificationAccent = Color3.fromRGB(241, 196, 15),
-    CornerRadius = 0,
-    ButtonCornerRadius = 0,
     TitleBarHeight = 36,
     TabBarHeight = 38,
     ElementHeight = 32,
@@ -439,21 +436,24 @@ function UILibrary:AddToggle(tab, config)
         Parent = container,
         Size = UDim2.fromOffset(44, 22),
         Position = UDim2.new(1, -52, 0.5, -11),
-        BackgroundColor3 = UILibrary.Theme.TertiaryBackground
+        BackgroundColor3 = UILibrary.Theme.TertiaryBackground,
+        BorderSizePixel = 0
     })
     
     local knob = createInstance("Frame", {
         Parent = toggleFrame,
         Size = UDim2.fromOffset(18, 18),
         Position = UDim2.fromOffset(2, 2),
-        BackgroundColor3 = UILibrary.Theme.MutedText
+        BackgroundColor3 = UILibrary.Theme.MutedText,
+        BorderSizePixel = 0
     })
     
     local button = createInstance("TextButton", {
         Parent = container,
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
-        Text = ""
+        Text = "",
+        BorderSizePixel = 0
     })
     
     local function update()
@@ -685,7 +685,8 @@ function UILibrary:AddLabel(tab, text)
         Font = Fonts.Regular,
         Text = text or "Label",
         TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left
+        TextXAlignment = Enum.TextXAlignment.Left,
+        BorderSizePixel = 0
     })
     
     createInstance("UIPadding", {
@@ -740,7 +741,8 @@ function UILibrary:AddTextBox(tab, config)
         PlaceholderColor3 = UILibrary.Theme.MutedText,
         TextSize = 13,
         ClipsDescendants = true,
-        ClearTextOnFocus = clearOnFocus
+        ClearTextOnFocus = clearOnFocus,
+        BorderSizePixel = 0
     })
     
     local focusConn = textBox.Focused:Connect(function()
@@ -801,7 +803,8 @@ function UILibrary:Notify(titleText, description, duration)
         TextColor3 = UILibrary.Theme.TertiaryText,
         TextSize = 16,
         AutoButtonColor = false,
-        ZIndex = 201
+        ZIndex = 201,
+        BorderSizePixel = 0
     })
     
     local title = createInstance("TextLabel", {
