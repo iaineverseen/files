@@ -572,12 +572,12 @@ function lib:Window(text, preset, closebind)
     start = start or min
     local options = options or {}
     
-    -- Increased slider height for better touch interaction
+    -- Optimized slider height for mobile
     local Slider = CreateInstance("TextButton", {
         Name = "Slider",
         Parent = Tab,
         BackgroundColor3 = Color3.fromRGB(34, 34, 34),
-        Size = UDim2.new(0, 363, 0, 70),  -- Increased height from 60 to 70
+        Size = UDim2.new(0, 363, 0, 62),  -- Reduced from 70 to 62 for better fit
         AutoButtonColor = false,
         Font = Enum.Font.SourceSans,
         Text = "",
@@ -595,7 +595,7 @@ function lib:Window(text, preset, closebind)
         Parent = Slider,
         BackgroundTransparency = 1,
         Position = UDim2.new(0.036, 0, 0, 0),
-        Size = UDim2.new(0, 187, 0, 42),
+        Size = UDim2.new(0, 187, 0, 30),  -- Adjusted height
         Font = Enum.Font.Gotham,
         Text = text,
         TextColor3 = Color3.fromRGB(255, 255, 255),
@@ -608,7 +608,7 @@ function lib:Window(text, preset, closebind)
         Parent = Slider,
         BackgroundTransparency = 1,
         Position = UDim2.new(0.036, 0, 0, 0),
-        Size = UDim2.new(0, 335, 0, 42),
+        Size = UDim2.new(0, 335, 0, 30),  -- Adjusted height
         Font = Enum.Font.Gotham,
         Text = tostring(start),
         TextColor3 = Color3.fromRGB(255, 255, 255),
@@ -616,19 +616,19 @@ function lib:Window(text, preset, closebind)
         TextXAlignment = Enum.TextXAlignment.Right
     })
 
-    -- Larger slider track
+    -- Optimized slider track
     local SlideFrame = CreateInstance("Frame", {
         Name = "SlideFrame",
         Parent = Slider,
         BackgroundColor3 = Color3.fromRGB(50, 50, 50),
         BorderSizePixel = 0,
-        Position = UDim2.new(0.034, 0, 0.686, 0),
-        Size = UDim2.new(0, 335, 0, 6)  -- Increased height from 3 to 6
+        Position = UDim2.new(0.034, 0, 0.645, 0),  -- Adjusted position
+        Size = UDim2.new(0, 335, 0, 5)  -- Slightly thinner track
     })
 
     CreateInstance("UICorner", {
         Parent = SlideFrame,
-        CornerRadius = UDim.new(1, 0)  -- Rounded ends for better appearance
+        CornerRadius = UDim.new(1, 0)
     })
 
     local CurrentValueFrame = CreateInstance("Frame", {
@@ -641,16 +641,16 @@ function lib:Window(text, preset, closebind)
 
     CreateInstance("UICorner", {
         Parent = CurrentValueFrame,
-        CornerRadius = UDim.new(1, 0)  -- Rounded ends for better appearance
+        CornerRadius = UDim.new(1, 0)
     })
 
-    -- Larger slider handle for better touch interaction - properly positioned on track
+    -- Optimized slider handle for mobile
     local SlideCircle = CreateInstance("ImageButton", {
         Name = "SlideCircle",
         Parent = SlideFrame,
         BackgroundTransparency = 1,
-        Position = UDim2.new((start or 0) / max, -12, 0.5, -12),  -- Properly centered on track
-        Size = UDim2.new(0, 24, 0, 24),  -- Increased size from 11 to 24
+        Position = UDim2.new((start or 0) / max, -10, 0.5, -10),  -- Better centering
+        Size = UDim2.new(0, 20, 0, 20),  -- Reduced from 24 to 20
         Image = "rbxassetid://3570695787",
         ImageColor3 = PresetColor,
         ScaleType = Enum.ScaleType.Fit,
@@ -667,12 +667,11 @@ function lib:Window(text, preset, closebind)
 
     local function formatNumber(value)
         if precise then
-            -- Remove trailing zeros and unnecessary decimal places
             local formatted = string.format("%.10f", value)
             formatted = formatted:gsub("%.(%d-)0*$", function(decimal)
                 return decimal == "" and "" or "." .. decimal
             end)
-            formatted = formatted:gsub("%.$", "")  -- Remove trailing dot
+            formatted = formatted:gsub("%.$", "")
             return formatted
         else
             return tostring(math.floor(value))
@@ -682,8 +681,8 @@ function lib:Window(text, preset, closebind)
     local function updateSlider(value)
         value = math.clamp(value, min, max)
         local posX = value / max
-        local pos = UDim2.new(posX, -12, 0.5, -12)  -- Properly centered on track
-        local pos1 = UDim2.new(posX, 0, 0, 6)  -- Adjusted for taller track
+        local pos = UDim2.new(posX, -10, 0.5, -10)  -- Adjusted handle position
+        local pos1 = UDim2.new(posX, 0, 0, 5)  -- Adjusted track size
         
         CurrentValueFrame:TweenSize(pos1, "Out", "Sine", 0.1, true)
         SlideCircle:TweenPosition(pos, "Out", "Sine", 0.1, true)
@@ -696,7 +695,6 @@ function lib:Window(text, preset, closebind)
         local posX = math.clamp((input.Position.X - SlideFrame.AbsolutePosition.X) / SlideFrame.AbsoluteSize.X, 0, 1)
         local value = min + (posX * (max - min))
         
-        -- Apply increment if specified
         if increment > 0 then
             value = math.floor(value / increment) * increment
         end
@@ -704,10 +702,11 @@ function lib:Window(text, preset, closebind)
         updateSlider(value)
     end
 
-    -- Input handling for slider handle
+    -- Improved input handling for mobile
     local function beginDrag(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
+            -- Immediate response for mobile
             if input.UserInputType == Enum.UserInputType.Touch then
                 move(input)
             end
@@ -720,14 +719,14 @@ function lib:Window(text, preset, closebind)
         end
     end
 
-    -- Connect input to slider handle
+    -- Connect to both handle and track for better mobile experience
     SlideCircle.InputBegan:Connect(beginDrag)
     SlideCircle.InputEnded:Connect(endDrag)
     
-    -- Connect input to slider track for direct tapping
     SlideFrame.InputBegan:Connect(beginDrag)
     SlideFrame.InputEnded:Connect(endDrag)
 
+    -- Improved input handling
     UserInputService.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             move(input)
