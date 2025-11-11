@@ -1,8 +1,3 @@
---[[
-    Arizon UI Library
-    Cleaned and organized version with search functionality removed
---]]
-
 local arizon = Instance.new("ScreenGui")
 arizon.Name = "arizon"
 arizon.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -110,6 +105,7 @@ function Library:Create(config)
 
     local uICorner12 = Instance.new("UICorner")
     uICorner12.Name = "uICorner12"
+    uICorner12.CornerRadius = UDim.new(0, 6)
     uICorner12.Parent = frame3
 
     local close1 = Instance.new("ImageButton")
@@ -157,7 +153,7 @@ function Library:Create(config)
     frame3.Parent = tabContainer
     tabContainer.Parent = main
 
-    -- Shadow
+    -- Shadow with proper corners
     local shadow = Instance.new("ImageLabel")
     shadow.Name = "shadow"
     shadow.Image = "rbxassetid://297774371"
@@ -172,6 +168,12 @@ function Library:Create(config)
     shadow.ZIndex = -1
     shadow.AnchorPoint = Vector2.new(0.5, 0.5)
     shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+    
+    -- Add corner to shadow to match main frame
+    local shadowCorner = Instance.new("UICorner")
+    shadowCorner.CornerRadius = UDim.new(0, 6)
+    shadowCorner.Parent = shadow
+    
     shadow.Parent = arizon
 
     main.Parent = arizon
@@ -215,38 +217,50 @@ function Library:Create(config)
             arizon:Destroy()
         end)
 
-        -- Drag Functionality (Permission from Mercury Lib Developers)
-        topBar.MouseEnter:Connect(function()
-            local inputConnection
-            inputConnection = topBar.InputBegan:Connect(function(key)
-                if key.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local objectPosition = Vector2.new(Mouse.X - main.AbsolutePosition.X, Mouse.Y - main.AbsolutePosition.Y)
-                    local renderConnection
-                    renderConnection = RunService.RenderStepped:Connect(function()
-                        if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-                            local frameX = math.clamp(Mouse.X - objectPosition.X, 0, arizon.AbsoluteSize.X - main.AbsoluteSize.X)
-                            local frameY = math.clamp(Mouse.Y - objectPosition.Y, 0, arizon.AbsoluteSize.Y - main.AbsoluteSize.Y)
-                            
-                            TweenService:Create(main, TweenInfo.new(0.1), {
-                                Position = UDim2.fromOffset(
-                                    frameX + (main.Size.X.Offset * main.AnchorPoint.X), 
-                                    frameY + (main.Size.Y.Offset * main.AnchorPoint.Y)
-                                )
-                            }):Play()
-                            
-                            TweenService:Create(shadow, TweenInfo.new(0.1), {
-                                Position = UDim2.fromOffset(
-                                    frameX + (main.Size.X.Offset * main.AnchorPoint.X), 
-                                    frameY + (main.Size.Y.Offset * main.AnchorPoint.Y)
-                                )
-                            }):Play()
-                        else
-                            renderConnection:Disconnect()
-                            inputConnection:Disconnect()
-                        end
-                    end)
-                end
-            end)
+        -- Drag Functionality (Fixed for mobile)
+        local dragToggle = nil
+        local dragInput = nil
+        local dragStart = nil
+        local startPos = nil
+
+        local function update(input)
+            local delta = input.Position - dragStart
+            local frameX = math.clamp(startPos.X.Offset + delta.X, 0, arizon.AbsoluteSize.X - main.AbsoluteSize.X)
+            local frameY = math.clamp(startPos.Y.Offset + delta.Y, 0, arizon.AbsoluteSize.Y - main.AbsoluteSize.Y)
+            
+            TweenService:Create(main, TweenInfo.new(0.1), {
+                Position = UDim2.new(startPos.X.Scale, frameX, startPos.Y.Scale, frameY)
+            }):Play()
+            
+            TweenService:Create(shadow, TweenInfo.new(0.1), {
+                Position = UDim2.new(startPos.X.Scale, frameX, startPos.Y.Scale, frameY)
+            }):Play()
+        end
+
+        topBar.InputBegan:Connect(function(input)
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                dragToggle = true
+                dragStart = input.Position
+                startPos = main.Position
+                
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragToggle = false
+                    end
+                end)
+            end
+        end)
+
+        topBar.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                dragInput = input
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragToggle then
+                update(input)
+            end
         end)
     end
 
@@ -440,7 +454,7 @@ function Library:Create(config)
                 end)
             end
 
-            -- Slider Element (Fixed Bug)
+            -- Slider Element (Fixed for Mobile)
             function elementHandler:Slider(title, min, max, start, inc, callback)
                 local slider = Instance.new("Frame")
                 slider.Name = "slider"
@@ -509,50 +523,45 @@ function Library:Create(config)
 
                 slider.Parent = section
 
-                -- Slider Logic (Fixed Division Bug)
+                -- Improved Slider Logic (Mobile Compatible)
                 local Slider = {Value = start}
                 local dragging = false
 
-                local function move(input)
-                    local xSize = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+                local function updateSlider(input)
+                    local pos = UDim2.fromScale(math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1), 0.5)
+                    local scale = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
                     
-                    -- Fixed: Ensure increment is a valid number
-                    local increment = inc or 1
-                    if type(increment) == "function" then
-                        increment = 1
-                    end
+                    TweenService:Create(progressBar, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(scale, 0, 1, 0)
+                    }):Play()
                     
-                    local sizeRounded = UDim2.new((math.round(xSize * ((max / increment) * 4)) / ((max / increment) * 4)), 0, 1, 0)
-                    
-                    TweenService:Create(progressBar, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = sizeRounded}):Play()
-                    
-                    local value = math.round((((sizeRounded.X.Scale * max) / max) * (max - min) + min) * 20) / 20
+                    local value = math.floor((min + (max - min) * scale) * 10) / 10
                     valueLabel.Text = tostring(value)
                     Slider.Value = value
                     callback(Slider.Value)
                 end
 
                 bar.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                         dragging = true
+                        updateSlider(input)
                     end
                 end)
 
                 bar.InputEnded:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                         dragging = false
                     end
                 end)
 
                 UserInputService.InputChanged:Connect(function(input)
-                    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                        move(input)
+                    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                        updateSlider(input)
                     end
                 end)
 
                 function Slider:Set(value)
-                    -- Fixed: Handle nil values and ensure proper calculation
-                    local normalizedValue = value or start
+                    local normalizedValue = math.clamp(value or start, min, max)
                     local displayValue = tostring(normalizedValue)
                     valueLabel.Text = displayValue
                     
