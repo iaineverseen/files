@@ -120,6 +120,9 @@ local function RemoveNotification(object, index)
     for _, obj in next, InstructionObjects do
         obj[2], obj[3] = 0, false
     end
+    
+    -- Destroy the object after removing it
+    object:Destroy()
 end
 
 local function FindNotificationIndex(target)
