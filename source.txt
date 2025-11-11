@@ -21,6 +21,14 @@ ui.Name = "67Library"
 ui.Parent = CoreGui
 ui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+-- Apply protection immediately after creation
+if setsecureinstance then
+    setsecureinstance(ui)
+end
+if protectinstance then
+    protectinstance(ui)
+end
+
 local DeviceType = UserInputService.TouchEnabled and "Mobile" or "PC"
 
 local MobileToggleButton
@@ -36,6 +44,14 @@ if DeviceType == "Mobile" then
     MobileToggleButton.TextSize = 20
     MobileToggleButton.AutoButtonColor = false
     MobileToggleButton.Parent = ui
+    
+    -- Protect mobile toggle button
+    if setsecureinstance then
+        setsecureinstance(MobileToggleButton)
+    end
+    if protectinstance then
+        protectinstance(MobileToggleButton)
+    end
     
     local corner = Instance.new("UICorner", MobileToggleButton)
     corner.CornerRadius = UDim.new(0, 8)
@@ -115,6 +131,15 @@ local function CreateInstance(className, properties)
     for property, value in pairs(properties) do
         instance[property] = value
     end
+    
+    -- Auto-protect all created instances
+    if setsecureinstance then
+        setsecureinstance(instance)
+    end
+    if protectinstance then
+        protectinstance(instance)
+    end
+    
     return instance
 end
 
@@ -378,18 +403,18 @@ function lib:Window(text, preset, closebind)
         local tabcontent = {}
         
         function tabcontent:Label(text)
-    local Label = CreateInstance("TextLabel", {
-        Name = "Label",
-        Parent = Tab,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(0, 363, 0, 30),
-        Font = Enum.Font.Gotham,
-        Text = text,
-        TextColor3 = Color3.fromRGB(200, 200, 200),
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Center
-    })
-end
+            local Label = CreateInstance("TextLabel", {
+                Name = "Label",
+                Parent = Tab,
+                BackgroundTransparency = 1,
+                Size = UDim2.new(0, 363, 0, 30),
+                Font = Enum.Font.Gotham,
+                Text = text,
+                TextColor3 = Color3.fromRGB(200, 200, 200),
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Center
+            })
+        end
         
         function tabcontent:Button(text, callback)
             local Button = CreateInstance("TextButton", {
