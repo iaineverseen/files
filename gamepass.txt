@@ -7,169 +7,165 @@ local localPlayer = Players.LocalPlayer
 
 local Window = lib:Window("Free Product Finder", Color3.fromRGB(44, 120, 224), Enum.KeyCode.RightControl)
 
-local state = {
-    selectedGamePass = nil,
-    gamePassesList = {},
-    loopPurchaseEnabled = false,
-    loopPurchaseTask = nil,
-    loopSpeed = 0.01,
-    lastPurchaseTime = 0
-}
+local selectedGamePass = nil
+local gamePassesList = {}
+local loopPurchaseEnabled = false
+local loopPurchaseTask = nil
+local loopPurchaseSpeed = 0.1
+
+-- Safe clipboard function
+local function SafeSetClipboard(text)
+    if setclipboard then
+        pcall(setclipboard, tostring(text))
+    end
+end
 
 local function GetGamePasses()
-    state.gamePassesList = {}
+    gamePassesList = {}
     
-    local success, result = pcall(function()
+    local success, productsPage = pcall(function()
         return MarketplaceService:GetDeveloperProductsAsync()
     end)
 
-    if success and result then
-        local currentPage = result:GetCurrentPage()
-        for _, productInfo in ipairs(currentPage) do
-            table.insert(state.gamePassesList, {
-                Name = productInfo.Name,
-                ID = productInfo.ProductId,
-                Description = productInfo.Description,
-                Price = productInfo.PriceInRobux or 0
-            })
+    if success and productsPage then
+        local currentPage = productsPage:GetCurrentPage()
+        if currentPage then
+            for _, productInfo in ipairs(currentPage) do
+                if productInfo and productInfo.ProductId then
+                    table.insert(gamePassesList, {
+                        Name = productInfo.Name or "Unnamed",
+                        ID = productInfo.ProductId,
+                        Description = productInfo.Description or "",
+                        Price = productInfo.PriceInRobux or 0
+                    })
+                end
+            end
         end
     end
     
-    if #state.gamePassesList == 0 then
-        return {"No GamePasses Found"}
+    local passNames = {}
+    for _, pass in ipairs(gamePassesList) do
+        if pass.Name then
+            table.insert(passNames, pass.Name)
+        end
     end
     
-    local passNames = {}
-    for _, pass in ipairs(state.gamePassesList) do
-        table.insert(passNames, pass.Name)
+    if #passNames == 0 then
+        table.insert(passNames, "No GamePasses Found")
     end
     
     return passNames
 end
 
 local function PurchaseGamePass(gamePassId)
-    local success, err = pcall(function()
+    if not gamePassId then
+        return false, "Invalid GamePass ID"
+    end
+    
+    local success, message = pcall(function()
         MarketplaceService:SignalPromptProductPurchaseFinished(localPlayer.UserId, gamePassId, true)
+        return true
     end)
-    return success, err
+    
+    return success, message
 end
 
 local function PurchaseAllGamePasses()
     GetGamePasses()
-    local results = {success = 0, failed = 0}
     
-    for _, gamePass in ipairs(state.gamePassesList) do
-        local success = PurchaseGamePass(gamePass.ID)
-        if success then
-            results.success = results.success + 1
-        else
-            results.failed = results.failed + 1
+    for _, gamePass in ipairs(gamePassesList) do
+        if gamePass.ID then
+            PurchaseGamePass(gamePass.ID)
         end
-        task.wait(0.3)
     end
-    
-    return results
-end
-
-local function StopLoopPurchase()
-    if state.loopPurchaseTask then
-        state.loopPurchaseTask:Disconnect()
-        state.loopPurchaseTask = nil
-    end
-    state.loopPurchaseEnabled = false
 end
 
 local function StartLoopPurchase()
-    StopLoopPurchase()
+    if loopPurchaseTask then
+        loopPurchaseTask:Disconnect()
+        loopPurchaseTask = nil
+    end
     
-    if not state.selectedGamePass or type(state.selectedGamePass) == "string" or not state.selectedGamePass.ID then
+    if not selectedGamePass or not selectedGamePass.ID then
+        loopPurchaseEnabled = false
         return
     end
     
-    state.loopPurchaseEnabled = true
-    state.lastPurchaseTime = tick()
-    
-    state.loopPurchaseTask = RunService.Heartbeat:Connect(function()
-        if not state.loopPurchaseEnabled then
-            StopLoopPurchase()
-            return
-        end
-        
-        local currentTime = tick()
-        if currentTime - state.lastPurchaseTime >= state.loopSpeed then
-            state.lastPurchaseTime = currentTime
-            
-            if state.selectedGamePass and type(state.selectedGamePass) ~= "string" and state.selectedGamePass.ID then
-                PurchaseGamePass(state.selectedGamePass.ID)
-            end
+    loopPurchaseTask = RunService.Heartbeat:Connect(function()
+        if loopPurchaseEnabled and selectedGamePass and selectedGamePass.ID then
+            PurchaseGamePass(selectedGamePass.ID)
+            task.wait(loopPurchaseSpeed)
+        elseif not loopPurchaseEnabled and loopPurchaseTask then
+            loopPurchaseTask:Disconnect()
+            loopPurchaseTask = nil
         end
     end)
 end
 
-local function FindGamePassByName(name)
-    for _, pass in ipairs(state.gamePassesList) do
-        if pass.Name == name then
-            return pass
-        end
+local function StopLoopPurchase()
+    loopPurchaseEnabled = false
+    if loopPurchaseTask then
+        loopPurchaseTask:Disconnect()
+        loopPurchaseTask = nil
     end
-    return nil
 end
 
+local function RefreshGamePassList()
+    GetGamePasses()
+    StopLoopPurchase()
+end
+
+-- Create UI
 local MainTab = Window:Tab("Main")
 
 local dropdownOptions = GetGamePasses()
+
 MainTab:Dropdown("Select Game Pass", dropdownOptions, function(selected)
-    state.selectedGamePass = FindGamePassByName(selected)
-    
-    if state.loopPurchaseEnabled then
-        StopLoopPurchase()
+    selectedGamePass = nil
+    for _, pass in ipairs(gamePassesList) do
+        if pass.Name == selected then
+            selectedGamePass = pass
+            break
+        end
     end
+    
+    StopLoopPurchase()
 end)
 
 MainTab:Button("Buy Selected Game Pass", function()
-    if not state.selectedGamePass or type(state.selectedGamePass) == "string" or not state.selectedGamePass.ID then
-        return
+    if selectedGamePass and selectedGamePass.ID then
+        PurchaseGamePass(selectedGamePass.ID)
     end
-    
-    PurchaseGamePass(state.selectedGamePass.ID)
 end)
 
 MainTab:Button("Buy All Game Passes", function()
     PurchaseAllGamePasses()
 end)
 
-MainTab:Slider("Loop Speed (seconds)", 0.01, 1, state.loopSpeed, function(value)
-    state.loopSpeed = value
-end)
-
-MainTab:Toggle("Loop Buy Selected Game Pass", false, function(enabled)
-    if enabled then
-        if not state.selectedGamePass or type(state.selectedGamePass) == "string" or not state.selectedGamePass.ID then
-            return
+MainTab:Toggle("Loop Buy Selected Game Pass", false, function(state)
+    loopPurchaseEnabled = state
+    
+    if state then
+        if selectedGamePass and selectedGamePass.ID then
+            StartLoopPurchase()
+        else
+            loopPurchaseEnabled = false
         end
-        
-        StartLoopPurchase()
     else
         StopLoopPurchase()
     end
 end)
 
+MainTab:Slider("Loop Buy Speed", 0.01, 1, 0.01, function(value)
+    loopPurchaseSpeed = value
+end)
+
 MainTab:Button("Refresh Game Pass List", function()
-    GetGamePasses()
-    
-    if state.loopPurchaseEnabled then
-        StopLoopPurchase()
-    end
+    RefreshGamePassList()
 end)
 
 MainTab:Button("Copy Selected Game Pass ID", function()
-    if not state.selectedGamePass or type(state.selectedGamePass) == "string" or not state.selectedGamePass.ID then
-        return
-    end
-    
-    if setclipboard then
-        setclipboard(tostring(state.selectedGamePass.ID))
+    if selectedGamePass and selectedGamePass.ID then
+        SafeSetClipboard(tostring(selectedGamePass.ID))
     end
 end)
-
-GetGamePasses()
