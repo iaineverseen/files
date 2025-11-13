@@ -22,14 +22,6 @@ local OrionLib = {
     SelectedTheme = "Default",
 }
 
--- Cache frequently used values
-local WHITELISTED_MOUSE = {Enum.UserInputType.MouseButton1, Enum.UserInputType.MouseButton2, Enum.UserInputType.MouseButton3}
-local BLACKLISTED_KEYS = {
-    Enum.KeyCode.Unknown, Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D,
-    Enum.KeyCode.Up, Enum.KeyCode.Left, Enum.KeyCode.Down, Enum.KeyCode.Right,
-    Enum.KeyCode.Slash, Enum.KeyCode.Tab, Enum.KeyCode.Backspace, Enum.KeyCode.Escape
-}
-
 -- Device detection
 local DeviceType = UserInputService.TouchEnabled and "Mobile" or "PC"
 
@@ -108,23 +100,6 @@ local function AddThemeObject(Object, Type)
     table.insert(OrionLib.ThemeObjects[Type], Object)
     Object[ReturnProperty(Object)] = OrionLib.Themes[OrionLib.SelectedTheme][Type]
     return Object
-end
-
-local function SetTheme()
-    for Name, Objects in pairs(OrionLib.ThemeObjects) do
-        for _, Object in ipairs(Objects) do
-            Object[ReturnProperty(Object)] = OrionLib.Themes[OrionLib.SelectedTheme][Name]
-        end
-    end
-end
-
-local function CheckKey(Table, Key)
-    for _, v in ipairs(Table) do
-        if v == Key then
-            return true
-        end
-    end
-    return false
 end
 
 -- UI Elements
@@ -211,13 +186,6 @@ CreateElement("Image", function(ImageID)
     end
     
     return ImageNew
-end)
-
-CreateElement("ImageButton", function(ImageID)
-    return Create("ImageButton", {
-        Image = ImageID,
-        BackgroundTransparency = 1
-    })
 end)
 
 CreateElement("Label", function(Text, TextSize, Transparency)
@@ -341,17 +309,6 @@ if DeviceType == "Mobile" then
     AddDraggingFunctionality(MobileToggleButton, MobileToggleButton)
 end
 
--- Function to update mobile toggle button icon
-local function UpdateMobileToggleIcon(isVisible)
-    if DeviceType == "Mobile" and MobileToggleIcon then
-        if isVisible then
-            MobileToggleIcon.Image = "rbxassetid://7072719338" -- Hamburger icon
-        else
-            MobileToggleIcon.Image = "rbxassetid://7072720870" -- Plus icon
-        end
-    end
-end
-
 -- PC Keybind to Hide/Unhide GUI
 if DeviceType == "PC" then
     AddConnection(UserInputService.InputBegan, function(input, gameProcessed)
@@ -451,7 +408,9 @@ function OrionLib:MakeNotification(NotificationConfig)
         wait(0.05)
         NotificationFrame:TweenPosition(UDim2.new(1, 20, 0, 0), 'In', 'Quint', 0.8, true)
         wait(1.35)
+        -- Destroy both the frame and its parent to fully clean up
         NotificationFrame:Destroy()
+        NotificationParent:Destroy()
     end)
 end
 
@@ -511,14 +470,6 @@ function OrionLib:MakeWindow(WindowConfig)
         Size = UDim2.new(0, 150, 1, -50),
         Position = UDim2.new(0, 0, 0, 50)
     }), {
-        AddThemeObject(SetProps(MakeElement("Frame"), {
-            Size = UDim2.new(1, 0, 0, 10),
-            Position = UDim2.new(0, 0, 0, 0)
-        }), "Second"),
-        AddThemeObject(SetProps(MakeElement("Frame"), {
-            Size = UDim2.new(0, 10, 1, 0),
-            Position = UDim2.new(1, -10, 0, 0)
-        }), "Second"),
         AddThemeObject(SetProps(MakeElement("Frame"), {
             Size = UDim2.new(0, 1, 1, 0),
             Position = UDim2.new(1, -1, 0, 0)
@@ -619,7 +570,12 @@ function OrionLib:MakeWindow(WindowConfig)
         if toggleBtn then
             AddConnection(toggleBtn.MouseButton1Click, function()
                 MainWindow.Visible = not MainWindow.Visible
-                UpdateMobileToggleIcon(MainWindow.Visible)
+                -- Update mobile toggle icon directly
+                if MainWindow.Visible then
+                    MobileToggleIcon.Image = "rbxassetid://7072719338" -- Hamburger icon
+                else
+                    MobileToggleIcon.Image = "rbxassetid://7072720870" -- Plus icon
+                end
                 
                 OrionLib:MakeNotification({
                     Name = "Interface " .. (MainWindow.Visible and "Shown" or "Hidden"),
@@ -634,7 +590,10 @@ function OrionLib:MakeWindow(WindowConfig)
     AddConnection(CloseBtn.MouseButton1Up, function()
         MainWindow.Visible = false
         UIHidden = true
-        UpdateMobileToggleIcon(false) -- Change to plus icon when closed
+        -- Update mobile toggle icon directly
+        if DeviceType == "Mobile" and MobileToggleIcon then
+            MobileToggleIcon.Image = "rbxassetid://7072720870" -- Plus icon when closed
+        end
         OrionLib:MakeNotification({
             Name = "Interface Hidden",
             Content = DeviceType == "PC" and "Press X to reopen the interface" or "Tap the button to reopen the interface",
@@ -647,7 +606,10 @@ function OrionLib:MakeWindow(WindowConfig)
         if Input.KeyCode == Enum.KeyCode.RightShift and UIHidden and DeviceType == "PC" then
             MainWindow.Visible = true
             UIHidden = false
-            UpdateMobileToggleIcon(true) -- Change back to hamburger icon when shown
+            -- Update mobile toggle icon directly (only if on mobile)
+            if DeviceType == "Mobile" and MobileToggleIcon then
+                MobileToggleIcon.Image = "rbxassetid://7072719338" -- Hamburger icon when shown
+            end
         end
     end)
 
@@ -790,9 +752,10 @@ function OrionLib:MakeWindow(WindowConfig)
                 end
 
                 local ParagraphFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 5), {
-                    Size = UDim2.new(1, 0, 0, 30),
+                    Size = UDim2.new(1, 0, 0, 0),
                     BackgroundTransparency = 0.7,
-                    Parent = ItemParent
+                    Parent = ItemParent,
+                    AutomaticSize = Enum.AutomaticSize.Y
                 }), {
                     AddThemeObject(SetProps(MakeElement("Label", Text, 15), {
                         Size = UDim2.new(1, -12, 0, 14),
@@ -805,17 +768,28 @@ function OrionLib:MakeWindow(WindowConfig)
                         Position = UDim2.new(0, 12, 0, 26),
                         Font = Enum.Font.GothamSemibold,
                         Name = "Content",
-                        TextWrapped = true
+                        TextWrapped = true,
+                        AutomaticSize = Enum.AutomaticSize.Y
                     }), "TextDark"),
-                    AddThemeObject(MakeElement("Stroke"), "Stroke")
+                    AddThemeObject(MakeElement("Stroke"), "Stroke"),
+                    MakeElement("Padding", 10, 12, 12, 10) -- Added padding to prevent text from touching edges
                 }), "Second")
 
-                AddConnection(ParagraphFrame.Content:GetPropertyChangedSignal("Text"), function()
-                    ParagraphFrame.Content.Size = UDim2.new(1, -24, 0, ParagraphFrame.Content.TextBounds.Y)
-                    ParagraphFrame.Size = UDim2.new(1, 0, 0, ParagraphFrame.Content.TextBounds.Y + 35)
-                end)
+                -- Fixed paragraph content sizing
+                local function UpdateParagraphSize()
+                    local textBounds = ParagraphFrame.Content.TextBounds
+                    local contentHeight = math.max(textBounds.Y, 14) -- Minimum height
+                    ParagraphFrame.Content.Size = UDim2.new(1, -24, 0, contentHeight)
+                    ParagraphFrame.Size = UDim2.new(1, 0, 0, contentHeight + 45) -- Total height calculation
+                end
 
+                -- Update size when text changes
+                AddConnection(ParagraphFrame.Content:GetPropertyChangedSignal("Text"), UpdateParagraphSize)
+                AddConnection(ParagraphFrame.Content:GetPropertyChangedSignal("TextBounds"), UpdateParagraphSize)
+
+                -- Set initial content and size
                 ParagraphFrame.Content.Text = Content
+                UpdateParagraphSize()
 
                 local ParagraphFunction = {}
                 function ParagraphFunction:Set(ToChange)
