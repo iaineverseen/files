@@ -606,7 +606,7 @@ function OrionLib:MakeWindow(WindowConfig)
         if Input.KeyCode == Enum.KeyCode.RightShift and UIHidden and DeviceType == "PC" then
             MainWindow.Visible = true
             UIHidden = false
-            -- Update mobile toggle icon directly (only if on mobile)
+            -- Update mobile toggle icon directly
             if DeviceType == "Mobile" and MobileToggleIcon then
                 MobileToggleIcon.Image = "rbxassetid://7072719338" -- Hamburger icon when shown
             end
@@ -752,10 +752,9 @@ function OrionLib:MakeWindow(WindowConfig)
                 end
 
                 local ParagraphFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 5), {
-                    Size = UDim2.new(1, 0, 0, 0),
+                    Size = UDim2.new(1, 0, 0, 30),
                     BackgroundTransparency = 0.7,
-                    Parent = ItemParent,
-                    AutomaticSize = Enum.AutomaticSize.Y
+                    Parent = ItemParent
                 }), {
                     AddThemeObject(SetProps(MakeElement("Label", Text, 15), {
                         Size = UDim2.new(1, -12, 0, 14),
@@ -768,28 +767,29 @@ function OrionLib:MakeWindow(WindowConfig)
                         Position = UDim2.new(0, 12, 0, 26),
                         Font = Enum.Font.GothamSemibold,
                         Name = "Content",
-                        TextWrapped = true,
-                        AutomaticSize = Enum.AutomaticSize.Y
+                        TextWrapped = true
                     }), "TextDark"),
-                    AddThemeObject(MakeElement("Stroke"), "Stroke"),
-                    MakeElement("Padding", 10, 12, 12, 10) -- Added padding to prevent text from touching edges
+                    AddThemeObject(MakeElement("Stroke"), "Stroke")
                 }), "Second")
 
-                -- Fixed paragraph content sizing
+                -- Only expand if content exceeds single line
                 local function UpdateParagraphSize()
                     local textBounds = ParagraphFrame.Content.TextBounds
-                    local contentHeight = math.max(textBounds.Y, 14) -- Minimum height
-                    ParagraphFrame.Content.Size = UDim2.new(1, -24, 0, contentHeight)
-                    ParagraphFrame.Size = UDim2.new(1, 0, 0, contentHeight + 45) -- Total height calculation
+                    local needsExpansion = textBounds.Y > 20 -- If text height exceeds ~1 line
+                    
+                    if needsExpansion then
+                        ParagraphFrame.Content.Size = UDim2.new(1, -24, 0, textBounds.Y)
+                        ParagraphFrame.Size = UDim2.new(1, 0, 0, textBounds.Y + 35)
+                    else
+                        -- Single line - fixed size
+                        ParagraphFrame.Content.Size = UDim2.new(1, -24, 0, 20)
+                        ParagraphFrame.Size = UDim2.new(1, 0, 0, 55)
+                    end
                 end
 
-                -- Update size when text changes
                 AddConnection(ParagraphFrame.Content:GetPropertyChangedSignal("Text"), UpdateParagraphSize)
-                AddConnection(ParagraphFrame.Content:GetPropertyChangedSignal("TextBounds"), UpdateParagraphSize)
-
-                -- Set initial content and size
                 ParagraphFrame.Content.Text = Content
-                UpdateParagraphSize()
+                UpdateParagraphSize() -- Initial size calculation
 
                 local ParagraphFunction = {}
                 function ParagraphFunction:Set(ToChange)
