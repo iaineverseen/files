@@ -347,7 +347,7 @@ if DeviceType == "PC" then
                     child.Visible = not child.Visible
                     
                     OrionLib:MakeNotification({
-                        Name = "Interface " .. (child.Visible and "Shown" : "Hidden"),
+                        Name = "Interface " .. (child.Visible and "Shown" or "Hidden"),
                         Content = child.Visible and "Interface is now visible" or "Press X to show interface",
                         Time = 3
                     })
@@ -422,7 +422,7 @@ function OrionLib:MakeNotification(NotificationConfig)
         wait(NotificationConfig.Time - 0.88)
         
         local tweens = {
-            TweenService:Create(NotificationFrame.Ico, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {ImageTransparency = 1}),
+            TweenService:Create(NotificationFrame.Icon, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {ImageTransparency = 1}),
             TweenService:Create(NotificationFrame, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.6}),
             TweenService:Create(NotificationFrame.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Transparency = 0.9}),
             TweenService:Create(NotificationFrame.Title, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 0.4}),
