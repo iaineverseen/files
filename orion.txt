@@ -51,7 +51,12 @@ end
 local function Create(Name, Properties, Children)
     local Object = Instance.new(Name)
     for i, v in pairs(Properties or {}) do
-        Object[i] = v
+        if i == "Text" and type(v) == "table" then
+            warn("Attempted to assign table to Text property. Converting to string.")
+            Object[i] = tostring(v)
+        else
+            Object[i] = v
+        end
     end
     for i, v in pairs(Children or {}) do
         v.Parent = Object
@@ -69,7 +74,12 @@ end
 
 local function SetProps(Element, Props)
     for Property, Value in pairs(Props) do
-        Element[Property] = Value
+        if Property == "Text" and type(Value) == "table" then
+            warn("Attempted to assign table to Text property. Converting to string.")
+            Element[Property] = tostring(Value)
+        else
+            Element[Property] = Value
+        end
     end
     return Element
 end
@@ -222,7 +232,7 @@ end)
 
 CreateElement("Label", function(Text, TextSize, Transparency)
     return Create("TextLabel", {
-        Text = Text or "",
+        Text = tostring(Text or ""),
         TextColor3 = Color3.fromRGB(240, 240, 240),
         TextTransparency = Transparency or 0,
         TextSize = TextSize or 15,
@@ -309,6 +319,9 @@ local function AddDraggingFunctionality(DragPoint, Main)
     end)
 end
 
+-- Store reference to the main window for toggle functionality
+local MainWindowRef = nil
+
 -- Mobile Toggle Button
 if DeviceType == "Mobile" then
     local ToggleButton = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(25, 25, 25), 0, 8), {
@@ -335,37 +348,18 @@ if DeviceType == "Mobile" then
     -- Add dragging functionality to the toggle button
     AddDraggingFunctionality(ToggleButton, ToggleButton)
     
-    -- Store reference to the main window for toggle functionality
-    local MainWindowRef = nil
-    
-    -- Modified MakeWindow function to handle mobile toggle
-    local originalMakeWindow = OrionLib.MakeWindow
-    function OrionLib:MakeWindow(WindowConfig)
-        local window = originalMakeWindow(self, WindowConfig)
-        
-        -- Find the main window
-        for _, child in ipairs(Orion:GetChildren()) do
-            if child:IsA("Frame") and child ~= ToggleButton then
-                MainWindowRef = child
-                break
+    -- Set up toggle functionality
+    ToggleButton:FindFirstChildOfClass("TextButton").MouseButton1Click:Connect(function()
+        if MainWindowRef then
+            MainWindowRef.Visible = not MainWindowRef.Visible
+            
+            -- Update icon based on visibility
+            local icon = ToggleButton:FindFirstChildOfClass("ImageLabel")
+            if icon then
+                icon.Image = MainWindowRef.Visible and "rbxassetid://7072719338" or "rbxassetid://7072720870"
             end
         end
-        
-        -- Set up toggle functionality
-        ToggleButton:FindFirstChildOfClass("TextButton").MouseButton1Click:Connect(function()
-            if MainWindowRef then
-                MainWindowRef.Visible = not MainWindowRef.Visible
-                
-                -- Update icon based on visibility
-                local icon = ToggleButton:FindFirstChildOfClass("ImageLabel")
-                if icon then
-                    icon.Image = MainWindowRef.Visible and "rbxassetid://7072719338" or "rbxassetid://7072720870"
-                end
-            end
-        end)
-        
-        return window
-    end
+    end)
 end
 
 -- PC Keybind to Hide/Unhide GUI
@@ -373,16 +367,14 @@ if DeviceType == "PC" then
     AddConnection(UserInputService.InputBegan, function(input, gameProcessed)
         if gameProcessed then return end
         if input.KeyCode == Enum.KeyCode.X then
-            for _, child in ipairs(Orion:GetChildren()) do
-                if child:IsA("Frame") then
-                    child.Visible = not child.Visible
-                    
-                    OrionLib:MakeNotification({
-                        Name = "Interface " .. (child.Visible and "Shown" or "Hidden"),
-                        Content = child.Visible and "Interface is now visible" or "Press X to show interface",
-                        Time = 3
-                    })
-                end
+            if MainWindowRef then
+                MainWindowRef.Visible = not MainWindowRef.Visible
+                
+                OrionLib:MakeNotification({
+                    Name = "Interface " .. (MainWindowRef.Visible and "Shown" or "Hidden"),
+                    Content = MainWindowRef.Visible and "Interface is now visible" or "Press X to show interface",
+                    Time = 3
+                })
             end
         end
     end)
@@ -452,7 +444,7 @@ function OrionLib:MakeNotification(NotificationConfig)
         wait(NotificationConfig.Time - 0.88)
         
         local tweens = {
-            TweenService:Create(NotificationFrame.Icon, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {ImageTransparency = 1}),
+            TweenService:Create(NotificationFrame.Ico, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {ImageTransparency = 1}),
             TweenService:Create(NotificationFrame, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.6}),
             TweenService:Create(NotificationFrame.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Transparency = 0.9}),
             TweenService:Create(NotificationFrame.Title, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 0.4}),
@@ -619,6 +611,9 @@ function OrionLib:MakeWindow(WindowConfig)
         DragPoint,
         WindowStuff
     }), "Main")
+
+    -- Store reference to main window for toggle functionality
+    MainWindowRef = MainWindow
 
     if WindowConfig.ShowIcon then
         WindowName.Position = UDim2.new(0, 50, 0, -24)
@@ -794,7 +789,7 @@ function OrionLib:MakeWindow(WindowConfig)
                     BackgroundTransparency = 0.7,
                     Parent = ItemParent
                 }), {
-                    AddThemeObject(SetProps(MakeElement("Label", Text, 15), {
+                    AddThemeObject(SetProps(MakeElement("Label", tostring(Text), 15), {
                         Size = UDim2.new(1, -12, 1, 0),
                         Position = UDim2.new(0, 12, 0, 0),
                         Font = Enum.Font.GothamBold,
@@ -805,7 +800,7 @@ function OrionLib:MakeWindow(WindowConfig)
 
                 local LabelFunction = {}
                 function LabelFunction:Set(ToChange)
-                    LabelFrame.Content.Text = ToChange
+                    LabelFrame.Content.Text = tostring(ToChange)
                 end
                 return LabelFunction
             end
@@ -819,13 +814,13 @@ function OrionLib:MakeWindow(WindowConfig)
                     BackgroundTransparency = 0.7,
                     Parent = ItemParent
                 }), {
-                    AddThemeObject(SetProps(MakeElement("Label", Text, 15), {
+                    AddThemeObject(SetProps(MakeElement("Label", tostring(Text), 15), {
                         Size = UDim2.new(1, -12, 0, 14),
                         Position = UDim2.new(0, 12, 0, 10),
                         Font = Enum.Font.GothamBold,
                         Name = "Title"
                     }), "Text"),
-                    AddThemeObject(SetProps(MakeElement("Label", "", 13), {
+                    AddThemeObject(SetProps(MakeElement("Label", tostring(Content), 13), {
                         Size = UDim2.new(1, -24, 0, 0),
                         Position = UDim2.new(0, 12, 0, 26),
                         Font = Enum.Font.GothamSemibold,
@@ -840,11 +835,9 @@ function OrionLib:MakeWindow(WindowConfig)
                     ParagraphFrame.Size = UDim2.new(1, 0, 0, ParagraphFrame.Content.TextBounds.Y + 35)
                 end)
 
-                ParagraphFrame.Content.Text = Content
-
                 local ParagraphFunction = {}
                 function ParagraphFunction:Set(ToChange)
-                    ParagraphFrame.Content.Text = ToChange
+                    ParagraphFrame.Content.Text = tostring(ToChange)
                 end
                 return ParagraphFunction
             end
@@ -865,7 +858,7 @@ function OrionLib:MakeWindow(WindowConfig)
                     Size = UDim2.new(1, 0, 0, 33),
                     Parent = ItemParent
                 }), {
-                    AddThemeObject(SetProps(MakeElement("Label", ButtonConfig.Name, 15), {
+                    AddThemeObject(SetProps(MakeElement("Label", tostring(ButtonConfig.Name), 15), {
                         Size = UDim2.new(1, -12, 1, 0),
                         Position = UDim2.new(0, 12, 0, 0),
                         Font = Enum.Font.GothamBold,
@@ -907,7 +900,7 @@ function OrionLib:MakeWindow(WindowConfig)
                 end)
 
                 function Button:Set(ButtonText)
-                    ButtonFrame.Content.Text = ButtonText
+                    ButtonFrame.Content.Text = tostring(ButtonText)
                 end
 
                 return Button
@@ -949,7 +942,7 @@ function OrionLib:MakeWindow(WindowConfig)
                     Size = UDim2.new(1, 0, 0, 38),
                     Parent = ItemParent
                 }), {
-                    AddThemeObject(SetProps(MakeElement("Label", ToggleConfig.Name, 15), {
+                    AddThemeObject(SetProps(MakeElement("Label", tostring(ToggleConfig.Name), 15), {
                         Size = UDim2.new(1, -12, 1, 0),
                         Position = UDim2.new(0, 12, 0, 0),
                         Font = Enum.Font.GothamBold,
@@ -1056,7 +1049,7 @@ function OrionLib:MakeWindow(WindowConfig)
                     Size = UDim2.new(1, 0, 0, 65),
                     Parent = ItemParent
                 }), {
-                    AddThemeObject(SetProps(MakeElement("Label", SliderConfig.Name, 15), {
+                    AddThemeObject(SetProps(MakeElement("Label", tostring(SliderConfig.Name), 15), {
                         Size = UDim2.new(1, -12, 0, 14),
                         Position = UDim2.new(0, 12, 0, 10),
                         Font = Enum.Font.GothamBold,
@@ -1146,7 +1139,7 @@ function OrionLib:MakeWindow(WindowConfig)
                 }), {
                     DropdownContainer,
                     SetProps(SetChildren(MakeElement("TFrame"), {
-                        AddThemeObject(SetProps(MakeElement("Label", DropdownConfig.Name, 15), {
+                        AddThemeObject(SetProps(MakeElement("Label", tostring(DropdownConfig.Name), 15), {
                             Size = UDim2.new(1, -12, 1, 0),
                             Position = UDim2.new(0, 12, 0, 0),
                             Font = Enum.Font.GothamBold,
@@ -1189,7 +1182,7 @@ function OrionLib:MakeWindow(WindowConfig)
                     for _, Option in ipairs(Options) do
                         local OptionBtn = AddThemeObject(SetProps(SetChildren(MakeElement("Button", Color3.fromRGB(40, 40, 40)), {
                             MakeElement("Corner", 0, 6),
-                            AddThemeObject(SetProps(MakeElement("Label", Option, 13, 0.4), {
+                            AddThemeObject(SetProps(MakeElement("Label", tostring(Option), 13, 0.4), {
                                 Position = UDim2.new(0, 8, 0, 0),
                                 Size = UDim2.new(1, -8, 1, 0),
                                 Name = "Title"
@@ -1236,7 +1229,7 @@ function OrionLib:MakeWindow(WindowConfig)
                     DropdownFrame.F.Selected.Text = Dropdown.Value
 
                     for _, v in pairs(Dropdown.Buttons) do
-                        TweenService:Create(v, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+                        TweenService:Create(v, TweenService:Create(v, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
                         TweenService:Create(v.Title, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0.4}):Play()
                     end
                     
@@ -1305,7 +1298,7 @@ function OrionLib:MakeWindow(WindowConfig)
                     Size = UDim2.new(1, 0, 0, 38),
                     Parent = ItemParent
                 }), {
-                    AddThemeObject(SetProps(MakeElement("Label", TextboxConfig.Name, 15), {
+                    AddThemeObject(SetProps(MakeElement("Label", tostring(TextboxConfig.Name), 15), {
                         Size = UDim2.new(1, -12, 1, 0),
                         Position = UDim2.new(0, 12, 0, 0),
                         Font = Enum.Font.GothamBold,
@@ -1372,7 +1365,7 @@ function OrionLib:MakeWindow(WindowConfig)
                 Size = UDim2.new(1, 0, 0, 26),
                 Parent = Container
             }), {
-                AddThemeObject(SetProps(MakeElement("Label", SectionConfig.Name, 14), {
+                AddThemeObject(SetProps(MakeElement("Label", tostring(SectionConfig.Name), 14), {
                     Size = UDim2.new(1, -12, 0, 16),
                     Position = UDim2.new(0, 0, 0, 3),
                     Font = Enum.Font.GothamSemibold
