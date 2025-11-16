@@ -188,7 +188,8 @@ function Library:Window(title)
         ScrollBarThickness = 0, -- Hidden scrollbars
         ScrollBarImageTransparency = 1, -- Completely invisible
         BorderSizePixel = 0,
-        ScrollingEnabled = true
+        ScrollingEnabled = true,
+        ClipsDescendants = true
     })
 
     createInstance("UIListLayout", {
@@ -201,13 +202,20 @@ function Library:Window(title)
 
     createInstance("UIPadding", {
         Parent = TabsContainer,
-        PaddingTop = UDim.new(0, 5)
+        PaddingTop = UDim.new(0, 5),
+        PaddingBottom = UDim.new(0, 5)
     })
 
-    -- Auto-size the tabs container
-    TabsContainer.TabsList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        TabsContainer.CanvasSize = UDim2.new(0, 0, 0, TabsContainer.TabsList.AbsoluteContentSize.Y + 10)
-    end)
+    -- FIXED: Auto-size the tabs container with proper update function
+    local function updateTabsCanvasSize()
+        local absoluteSize = TabsContainer.TabsList.AbsoluteContentSize
+        TabsContainer.CanvasSize = UDim2.new(0, 0, 0, absoluteSize.Y + 15)
+    end
+
+    TabsContainer.TabsList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateTabsCanvasSize)
+    TabsContainer.ChildAdded:Connect(updateTabsCanvasSize)
+    TabsContainer.ChildRemoved:Connect(updateTabsCanvasSize)
+    updateTabsCanvasSize()
 
     -- Mobile Toggle Button (MOVED AFTER Main IS DEFINED)
     local DeviceType = UserInputService.TouchEnabled and "Mobile" or "PC"
@@ -349,9 +357,10 @@ function Library:Window(title)
             BorderSizePixel = 0,
             Size = UDim2.new(1, 0, 1, 0),
             CanvasPosition = Vector2.new(0, 0),
-            ScrollBarThickness = 0, -- Hidden scrollbars for pages too
-            ScrollBarImageTransparency = 1, -- Completely invisible
-            ScrollingEnabled = true
+            ScrollBarThickness = 3, -- Visible scrollbar for debugging
+            ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100),
+            ScrollingEnabled = true,
+            ClipsDescendants = true -- Important: Ensures content is clipped properly
         })
 
         local UIListLayout = createInstance("UIListLayout", {
@@ -363,12 +372,25 @@ function Library:Window(title)
 
         createInstance("UIPadding", {
             Parent = Page,
-            PaddingTop = UDim.new(0, 5)
+            PaddingTop = UDim.new(0, 5),
+            PaddingBottom = UDim.new(0, 5) -- Added bottom padding
         })
 
-        UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            Page.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
-        end)
+        -- FIXED: Proper CanvasSize update function
+        local function updatePageCanvasSize()
+            local absoluteSize = UIListLayout.AbsoluteContentSize
+            Page.CanvasSize = UDim2.new(0, 0, 0, absoluteSize.Y + 15) -- Extra padding
+        end
+
+        -- Connect to AbsoluteContentSize changes
+        UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updatePageCanvasSize)
+
+        -- Also update when child elements are added/removed
+        Page.ChildAdded:Connect(updatePageCanvasSize)
+        Page.ChildRemoved:Connect(updatePageCanvasSize)
+
+        -- Initial update
+        updatePageCanvasSize()
 
         if firstTab then
             Page.Visible = true
