@@ -31,7 +31,7 @@ function Library:Window(title)
         Parent = ui,
         BackgroundColor3 = Color3.fromRGB(30, 30, 30),
         BorderSizePixel = 0,
-        Position = UDim2.new(0.377, 0, 0.368, 0),
+        Position = UDim2.new(0.5, -235, 0.5, -141.5), -- Centered position
         Size = UDim2.new(0, 470, 0, 283),
         Active = true,
         Selectable = true,
