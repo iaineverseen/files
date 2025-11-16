@@ -177,11 +177,17 @@ function Library:Window(title)
         Size = UDim2.new(1, -138, 1, -50)
     })
 
-    local TabsContainer = createInstance("Frame", {
+    -- CHANGED: TabsContainer is now a ScrollingFrame for tab scrolling
+    local TabsContainer = createInstance("ScrollingFrame", {
         Name = "TabsContainer",
         Parent = tabs,
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 1, 0)
+        Size = UDim2.new(1, 0, 1, 0),
+        CanvasSize = UDim2.new(0, 0, 0, 0),
+        ScrollBarThickness = 0, -- Hidden scrollbars
+        ScrollBarImageTransparency = 1, -- Completely invisible
+        BorderSizePixel = 0,
+        ScrollingEnabled = true
     })
 
     createInstance("UIListLayout", {
@@ -196,6 +202,11 @@ function Library:Window(title)
         Parent = TabsContainer,
         PaddingTop = UDim.new(0, 5)
     })
+
+    -- Auto-size the tabs container
+    TabsContainer.TabsList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        TabsContainer.CanvasSize = UDim2.new(0, 0, 0, TabsContainer.TabsList.AbsoluteContentSize.Y + 10)
+    end)
 
     -- Mobile Toggle Button (MOVED AFTER Main IS DEFINED)
     local DeviceType = UserInputService.TouchEnabled and "Mobile" or "PC"
@@ -337,8 +348,9 @@ function Library:Window(title)
             BorderSizePixel = 0,
             Size = UDim2.new(1, 0, 1, 0),
             CanvasPosition = Vector2.new(0, 0),
-            ScrollBarThickness = 2,
-            ScrollBarImageColor3 = Color3.fromRGB(255, 24, 101)
+            ScrollBarThickness = 0, -- Hidden scrollbars for pages too
+            ScrollBarImageTransparency = 1, -- Completely invisible
+            ScrollingEnabled = true
         })
 
         local UIListLayout = createInstance("UIListLayout", {
