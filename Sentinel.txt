@@ -32,7 +32,7 @@ function Library:Window(title)
         Parent = ui,
         BackgroundColor3 = Color3.fromRGB(30, 30, 30),
         BorderSizePixel = 0,
-        Position = UDim2.new(0.5, -235, 0.5, -141.5), -- Centered position
+        Position = UDim2.new(0.5, -235, 0.5, -141.5),
         Size = UDim2.new(0, 470, 0, 283),
         Active = true,
         Selectable = true,
@@ -138,7 +138,6 @@ function Library:Window(title)
         ScaleType = Enum.ScaleType.Crop
     })
 
-    -- Fixed close button to use Destroy() instead of Remove()
     Close.MouseButton1Click:Connect(function()
         ui:Destroy()
     end)
@@ -178,15 +177,14 @@ function Library:Window(title)
         Size = UDim2.new(1, -138, 1, -50)
     })
 
-    -- CHANGED: TabsContainer is now a ScrollingFrame for tab scrolling
     local TabsContainer = createInstance("ScrollingFrame", {
         Name = "TabsContainer",
         Parent = tabs,
         BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 1, 0),
         CanvasSize = UDim2.new(0, 0, 0, 0),
-        ScrollBarThickness = 0, -- Hidden scrollbars
-        ScrollBarImageTransparency = 1, -- Completely invisible
+        ScrollBarThickness = 0,
+        ScrollBarImageTransparency = 1,
         BorderSizePixel = 0,
         ScrollingEnabled = true,
         ClipsDescendants = true
@@ -206,7 +204,6 @@ function Library:Window(title)
         PaddingBottom = UDim.new(0, 5)
     })
 
-    -- FIXED: Auto-size the tabs container with proper update function
     local function updateTabsCanvasSize()
         local absoluteSize = TabsContainer.TabsList.AbsoluteContentSize
         TabsContainer.CanvasSize = UDim2.new(0, 0, 0, absoluteSize.Y + 15)
@@ -217,7 +214,6 @@ function Library:Window(title)
     TabsContainer.ChildRemoved:Connect(updateTabsCanvasSize)
     updateTabsCanvasSize()
 
-    -- Mobile Toggle Button (MOVED AFTER Main IS DEFINED)
     local DeviceType = UserInputService.TouchEnabled and "Mobile" or "PC"
     local MobileToggleButton
     local uitoggled = false
@@ -306,7 +302,6 @@ function Library:Window(title)
             }):Play()
         end)
         
-        -- Toggle functionality
         MobileToggleButton.MouseButton1Click:Connect(function()
             uitoggled = not uitoggled
             
@@ -357,10 +352,10 @@ function Library:Window(title)
             BorderSizePixel = 0,
             Size = UDim2.new(1, 0, 1, 0),
             CanvasPosition = Vector2.new(0, 0),
-            ScrollBarThickness = 0, -- Hidden scrollbars
-            ScrollBarImageTransparency = 1, -- Completely invisible
+            ScrollBarThickness = 0,
+            ScrollBarImageTransparency = 1,
             ScrollingEnabled = true,
-            ClipsDescendants = true -- Important: Ensures content is clipped properly
+            ClipsDescendants = true
         })
 
         local UIListLayout = createInstance("UIListLayout", {
@@ -373,23 +368,19 @@ function Library:Window(title)
         createInstance("UIPadding", {
             Parent = Page,
             PaddingTop = UDim.new(0, 5),
-            PaddingBottom = UDim.new(0, 5) -- Added bottom padding
+            PaddingBottom = UDim.new(0, 5)
         })
 
-        -- FIXED: Proper CanvasSize update function
         local function updatePageCanvasSize()
             local absoluteSize = UIListLayout.AbsoluteContentSize
-            Page.CanvasSize = UDim2.new(0, 0, 0, absoluteSize.Y + 15) -- Extra padding
+            Page.CanvasSize = UDim2.new(0, 0, 0, absoluteSize.Y + 15)
         end
 
-        -- Connect to AbsoluteContentSize changes
         UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updatePageCanvasSize)
 
-        -- Also update when child elements are added/removed
         Page.ChildAdded:Connect(updatePageCanvasSize)
         Page.ChildRemoved:Connect(updatePageCanvasSize)
 
-        -- Initial update
         updatePageCanvasSize()
 
         if firstTab then
@@ -963,7 +954,6 @@ function Library:Window(title)
             return DropdownFunc
         end
 
-        -- NEW: Simple Textbox function
         function TabFunctions:Textbox(title, placeholder, callback)
             callback = callback or function() end
 
@@ -1008,8 +998,8 @@ function Library:Window(title)
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 ClearTextOnFocus = false,
-                TextTruncate = Enum.TextTruncate.AtEnd, -- Ensures text stays inside
-                ClipsDescendants = true -- Prevents text from overflowing
+                TextTruncate = Enum.TextTruncate.AtEnd,
+                ClipsDescendants = true
             })
 
             createInstance("UICorner", {
@@ -1020,10 +1010,9 @@ function Library:Window(title)
             createInstance("UIPadding", {
                 Parent = InputBox,
                 PaddingLeft = UDim.new(0, 6),
-                PaddingRight = UDim.new(0, 6) -- Added right padding to keep text inside
+                PaddingRight = UDim.new(0, 6)
             })
 
-            -- Hover effects
             Textbox.MouseEnter:Connect(function()
                 TweenService:Create(Textbox, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -1048,7 +1037,6 @@ function Library:Window(title)
                 }):Play()
             end)
 
-            -- Focus effects
             InputBox.Focused:Connect(function()
                 TweenService:Create(InputBox, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = Color3.fromRGB(50, 50, 50),
