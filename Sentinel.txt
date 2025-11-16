@@ -357,8 +357,8 @@ function Library:Window(title)
             BorderSizePixel = 0,
             Size = UDim2.new(1, 0, 1, 0),
             CanvasPosition = Vector2.new(0, 0),
-            ScrollBarThickness = 3, -- Visible scrollbar for debugging
-            ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100),
+            ScrollBarThickness = 0, -- Hidden scrollbars
+            ScrollBarImageTransparency = 1, -- Completely invisible
             ScrollingEnabled = true,
             ClipsDescendants = true -- Important: Ensures content is clipped properly
         })
