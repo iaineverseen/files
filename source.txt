@@ -380,17 +380,35 @@ function lib:Window(text, preset, closebind)
         local tabcontent = {}
         
         function tabcontent:Label(text)
-            local Label = CreateInstance("TextLabel", {
+            local Label = CreateInstance("Frame", {
                 Name = "Label",
                 Parent = Tab,
+                BackgroundColor3 = Color3.fromRGB(54, 54, 54),
+                Size = UDim2.new(0, 363, 0, 30)
+            })
+
+            CreateInstance("UICorner", {
+                Parent = Label,
+                CornerRadius = UDim.new(0, 6)
+            })
+
+            local LabelText = CreateInstance("TextLabel", {
+                Name = "LabelText",
+                Parent = Label,
                 BackgroundTransparency = 1,
-                Size = UDim2.new(0, 363, 0, 30),
+                Size = UDim2.new(1, 0, 1, 0),
                 Font = Enum.Font.Gotham,
                 Text = text,
                 TextColor3 = Color3.fromRGB(200, 200, 200),
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Center
             })
+
+            return {
+                Set = function(self, newText)
+                    LabelText.Text = newText
+                end
+            }
         end
         
         function tabcontent:Button(text, callback)
@@ -691,7 +709,7 @@ function lib:Window(text, preset, closebind)
                 else
                     return tostring(math.floor(value))
                 end
-            end
+            }
 
             local currentValue = start
             local lastCallbackValue = start
