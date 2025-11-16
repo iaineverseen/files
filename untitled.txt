@@ -1,5 +1,9 @@
+-- Remove any existing Sentinel GUI
 pcall(function()
-    game:GetService('CoreGui'):FindFirstChild('ui'):Remove()
+    local existingGui = game:GetService('CoreGui'):FindFirstChild('Sentinel')
+    if existingGui then
+        existingGui:Destroy()
+    end
 end)
 
 local TweenService = game:GetService("TweenService")
@@ -8,7 +12,6 @@ local RunService = game:GetService("RunService")
 
 local Library = {}
 
--- Helper function to safely create instances
 local function createInstance(className, properties)
     local instance = Instance.new(className)
     for property, value in pairs(properties) do
@@ -19,7 +22,7 @@ end
 
 function Library:Window(title)
     local ui = createInstance("ScreenGui", {
-        Name = "ui",
+        Name = "Sentinel",
         Parent = game.CoreGui,
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
@@ -135,6 +138,7 @@ function Library:Window(title)
         ScaleType = Enum.ScaleType.Crop
     })
 
+    -- Fixed close button to use Destroy() instead of Remove()
     Close.MouseButton1Click:Connect(function()
         ui:Destroy()
     end)
@@ -245,7 +249,6 @@ function Library:Window(title)
             Page.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
         end)
 
-        -- Show first tab by default
         if firstTab then
             Page.Visible = true
             TabButton.BackgroundTransparency = 0.6
@@ -436,193 +439,191 @@ function Library:Window(title)
         end
 
         function TabFunctions:Slider(title, min, max, increment, callback)
-    min = min or 0
-    max = max or 100
-    increment = increment or 1
-    callback = callback or function() end
+            min = min or 0
+            max = max or 100
+            increment = increment or 1
+            callback = callback or function() end
 
-    local dragging = false
-    local currentValue = min -- Use min as default instead of def parameter
-    local lastCallbackValue = currentValue
-    local moveConn, endConn
+            local dragging = false
+            local currentValue = min
+            local lastCallbackValue = currentValue
+            local moveConn, endConn
 
-    local Slider = createInstance("Frame", {
-        Name = "Slider",
-        Parent = Page,
-        BackgroundColor3 = Color3.fromRGB(35, 35, 35),
-        Size = UDim2.new(1, -6, 0, 48)
-    })
+            local Slider = createInstance("Frame", {
+                Name = "Slider",
+                Parent = Page,
+                BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+                Size = UDim2.new(1, -6, 0, 48)
+            })
 
-    createInstance("UICorner", {
-        CornerRadius = UDim.new(0, 6),
-        Parent = Slider
-    })
+            createInstance("UICorner", {
+                CornerRadius = UDim.new(0, 6),
+                Parent = Slider
+            })
 
-    local Title = createInstance("TextLabel", {
-        Name = "Title",
-        Parent = Slider,
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 8, 0, 0),
-        Size = UDim2.new(1, -6, 0, 34),
-        Font = Enum.Font.Gotham,
-        Text = title or "Slider",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left
-    })
+            local Title = createInstance("TextLabel", {
+                Name = "Title",
+                Parent = Slider,
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 8, 0, 0),
+                Size = UDim2.new(1, -6, 0, 34),
+                Font = Enum.Font.Gotham,
+                Text = title or "Slider",
+                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
 
-    local SliderClick = createInstance("TextButton", {
-        Name = "SliderClick",
-        Parent = Slider,
-        AnchorPoint = Vector2.new(0.5, 1),
-        BackgroundColor3 = Color3.fromRGB(52, 52, 52),
-        Position = UDim2.new(0.5, 0, 1, -8),
-        Size = UDim2.new(1, -12, 0, 6),
-        AutoButtonColor = false,
-        Text = ''
-    })
+            local SliderClick = createInstance("TextButton", {
+                Name = "SliderClick",
+                Parent = Slider,
+                AnchorPoint = Vector2.new(0.5, 1),
+                BackgroundColor3 = Color3.fromRGB(52, 52, 52),
+                Position = UDim2.new(0.5, 0, 1, -8),
+                Size = UDim2.new(1, -12, 0, 6),
+                AutoButtonColor = false,
+                Text = ''
+            })
 
-    createInstance("UICorner", {
-        CornerRadius = UDim.new(0, 6),
-        Parent = SliderClick
-    })
+            createInstance("UICorner", {
+                CornerRadius = UDim.new(0, 6),
+                Parent = SliderClick
+            })
 
-    local SliderDrag = createInstance("Frame", {
-        Name = "SliderDrag",
-        Parent = SliderClick,
-        BackgroundColor3 = Color3.fromRGB(188, 14, 69),
-        Size = UDim2.new(0, 0, 1, 0)
-    })
+            local SliderDrag = createInstance("Frame", {
+                Name = "SliderDrag",
+                Parent = SliderClick,
+                BackgroundColor3 = Color3.fromRGB(188, 14, 69),
+                Size = UDim2.new(0, 0, 1, 0)
+            })
 
-    createInstance("UICorner", {
-        CornerRadius = UDim.new(0, 6),
-        Parent = SliderDrag
-    })
+            createInstance("UICorner", {
+                CornerRadius = UDim.new(0, 6),
+                Parent = SliderDrag
+            })
 
-    local Value = createInstance("TextLabel", {
-        Name = "Value",
-        Parent = Slider,
-        AnchorPoint = Vector2.new(1, 0),
-        BackgroundTransparency = 1,
-        Position = UDim2.new(1, -10, 0, 0),
-        Size = UDim2.new(1, 0, 0, 34),
-        Font = Enum.Font.Gotham,
-        Text = tostring(currentValue),
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Right
-    })
+            local Value = createInstance("TextLabel", {
+                Name = "Value",
+                Parent = Slider,
+                AnchorPoint = Vector2.new(1, 0),
+                BackgroundTransparency = 1,
+                Position = UDim2.new(1, -10, 0, 0),
+                Size = UDim2.new(1, 0, 0, 34),
+                Font = Enum.Font.Gotham,
+                Text = tostring(currentValue),
+                TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Right
+            })
 
-    local function formatNumber(value)
-        if math.abs(value) < 0.0001 and value ~= 0 then
-            return string.format("%.2e", value)
-        end
-        
-        if math.abs(value) >= 10000 then
-            local formatted = tostring(math.floor(value))
-            local k = formatted:len() % 3
-            if k == 0 then k = 3 end
-            return formatted:sub(1, k) .. formatted:sub(k+1):gsub("(%d%d%d)", ",%1")
-        end
-        
-        if increment < 1 then
-            local decimalPlaces = math.max(1, math.ceil(-math.log10(increment)))
-            decimalPlaces = math.min(decimalPlaces, 6)
-            
-            local formatString = "%." .. decimalPlaces .. "f"
-            local formatted = string.format(formatString, value)
-            
-            formatted = formatted:gsub("%.(%d-)0*$", function(decimal)
-                return decimal == "" and "" or "." .. decimal
-            end)
-            formatted = formatted:gsub("%.$", "")
-            
-            return formatted
-        else
-            return tostring(math.floor(value))
-        end
-    end
-
-    local function updateSlider(value)
-        value = math.clamp(value, min, max)
-        
-        if increment > 0 then
-            value = math.floor(value / increment) * increment
-        end
-        
-        currentValue = value
-        local normalizedValue = (value - min) / (max - min)
-        local dragSize = UDim2.new(normalizedValue, 0, 1, 0)
-        
-        TweenService:Create(SliderDrag, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = dragSize
-        }):Play()
-        
-        Value.Text = formatNumber(value)
-    end
-
-    local function executeCallback(value)
-        if value ~= lastCallbackValue then
-            pcall(callback, value)
-            lastCallbackValue = value
-        end
-    end
-
-    local function cleanupConnections()
-        if moveConn then
-            moveConn:Disconnect()
-            moveConn = nil
-        end
-        if endConn then
-            endConn:Disconnect()
-            endConn = nil
-        end
-    end
-
-    local function startDrag(input)
-        dragging = true
-        
-        local function update(inputPosition)
-            local sliderAbsolutePos = SliderClick.AbsolutePosition.X
-            local sliderAbsoluteSize = SliderClick.AbsoluteSize.X
-            
-            local x = math.clamp(inputPosition.X - sliderAbsolutePos, 0, sliderAbsoluteSize)
-            local percent = x / sliderAbsoluteSize
-            local value = min + percent * (max - min)
-            
-            updateSlider(value)
-        end
-        
-        update(input.Position)
-        
-        -- Clean up any existing connections first
-        cleanupConnections()
-        
-        moveConn = UserInputService.InputChanged:Connect(function(i)
-            if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
-                update(i.Position)
+            local function formatNumber(value)
+                if math.abs(value) < 0.0001 and value ~= 0 then
+                    return string.format("%.2e", value)
+                end
+                
+                if math.abs(value) >= 10000 then
+                    local formatted = tostring(math.floor(value))
+                    local k = formatted:len() % 3
+                    if k == 0 then k = 3 end
+                    return formatted:sub(1, k) .. formatted:sub(k+1):gsub("(%d%d%d)", ",%1")
+                end
+                
+                if increment < 1 then
+                    local decimalPlaces = math.max(1, math.ceil(-math.log10(increment)))
+                    decimalPlaces = math.min(decimalPlaces, 6)
+                    
+                    local formatString = "%." .. decimalPlaces .. "f"
+                    local formatted = string.format(formatString, value)
+                    
+                    formatted = formatted:gsub("%.(%d-)0*$", function(decimal)
+                        return decimal == "" and "" or "." .. decimal
+                    end)
+                    formatted = formatted:gsub("%.$", "")
+                    
+                    return formatted
+                else
+                    return tostring(math.floor(value))
+                end
             end
-        end)
-        
-        endConn = UserInputService.InputEnded:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
+
+            local function updateSlider(value)
+                value = math.clamp(value, min, max)
+                
+                if increment > 0 then
+                    value = math.floor(value / increment) * increment
+                end
+                
+                currentValue = value
+                local normalizedValue = (value - min) / (max - min)
+                local dragSize = UDim2.new(normalizedValue, 0, 1, 0)
+                
+                TweenService:Create(SliderDrag, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = dragSize
+                }):Play()
+                
+                Value.Text = formatNumber(value)
+            end
+
+            local function executeCallback(value)
+                if value ~= lastCallbackValue then
+                    pcall(callback, value)
+                    lastCallbackValue = value
+                end
+            end
+
+            local function cleanupConnections()
+                if moveConn then
+                    moveConn:Disconnect()
+                    moveConn = nil
+                end
+                if endConn then
+                    endConn:Disconnect()
+                    endConn = nil
+                end
+            end
+
+            local function startDrag(input)
+                dragging = true
+                
+                local function update(inputPosition)
+                    local sliderAbsolutePos = SliderClick.AbsolutePosition.X
+                    local sliderAbsoluteSize = SliderClick.AbsoluteSize.X
+                    
+                    local x = math.clamp(inputPosition.X - sliderAbsolutePos, 0, sliderAbsoluteSize)
+                    local percent = x / sliderAbsoluteSize
+                    local value = min + percent * (max - min)
+                    
+                    updateSlider(value)
+                end
+                
+                update(input.Position)
+                
                 cleanupConnections()
-                executeCallback(currentValue)
+                
+                moveConn = UserInputService.InputChanged:Connect(function(i)
+                    if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+                        update(i.Position)
+                    end
+                end)
+                
+                endConn = UserInputService.InputEnded:Connect(function(i)
+                    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                        dragging = false
+                        cleanupConnections()
+                        executeCallback(currentValue)
+                    end
+                end)
             end
-        end)
-    end
 
-    SliderClick.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            startDrag(input)
+            SliderClick.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    startDrag(input)
+                end
+            end)
+
+            updateSlider(currentValue)
+            executeCallback(currentValue)
         end
-    end)
-
-    -- Initialize slider with min as default value
-    updateSlider(currentValue)
-    executeCallback(currentValue)
-end
 
         function TabFunctions:Dropdown(title, list, callback)
             list = list or {}
