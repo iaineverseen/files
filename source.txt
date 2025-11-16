@@ -19,9 +19,6 @@ ui.Name = "67Library"
 ui.Parent = CoreGui
 ui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-if setsecureinstance then setsecureinstance(ui) end
-if protectinstance then protectinstance(ui) end
-
 local DeviceType = UserInputService.TouchEnabled and "Mobile" or "PC"
 
 -- Optimized instance creation with security
@@ -30,10 +27,6 @@ local function CreateInstance(className, properties)
     for property, value in pairs(properties) do
         instance[property] = value
     end
-    
-    if setsecureinstance then setsecureinstance(instance) end
-    if protectinstance then protectinstance(instance) end
-    
     return instance
 end
 
