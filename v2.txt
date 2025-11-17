@@ -6,38 +6,41 @@ local TweenService = cloneref(game:GetService("TweenService"))
 local CoreGui = cloneref(game:GetService("CoreGui"))
 local RunService = cloneref(game:GetService("RunService"))
 
-local PresetColor = Color3.fromRGB(44, 120, 224)
+local PresetColor = Color3.fromRGB(0, 170, 255)
 local CloseBind = Enum.KeyCode.RightControl
 
--- Modern color palette
+-- Modern color palette with better contrast
 local ModernColors = {
-    Background = Color3.fromRGB(30, 30, 35),
-    Secondary = Color3.fromRGB(40, 40, 45),
-    Accent = Color3.fromRGB(44, 120, 224),
-    Text = Color3.fromRGB(240, 240, 240),
-    SubText = Color3.fromRGB(180, 180, 180),
-    Border = Color3.fromRGB(60, 60, 65)
+    Background = Color3.fromRGB(25, 25, 30),
+    Secondary = Color3.fromRGB(35, 35, 40),
+    Card = Color3.fromRGB(40, 40, 45),
+    Accent = Color3.fromRGB(0, 170, 255),
+    Success = Color3.fromRGB(85, 220, 115),
+    Text = Color3.fromRGB(245, 245, 245),
+    SubText = Color3.fromRGB(170, 170, 170),
+    Border = Color3.fromRGB(55, 55, 60),
+    Hover = Color3.fromRGB(50, 50, 55)
 }
 
-if CoreGui:FindFirstChild("67Library") then
-    CoreGui:FindFirstChild("67Library"):Destroy()
+if CoreGui:FindFirstChild("ModernLib") then
+    CoreGui:FindFirstChild("ModernLib"):Destroy()
 end
 
 local ui = Instance.new("ScreenGui")
-ui.Name = "67Library"
+ui.Name = "ModernLib"
 ui.Parent = CoreGui
 ui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ui.ResetOnSpawn = false
 
 local DeviceType = UserInputService.TouchEnabled and "Mobile" or "PC"
 
--- Enhanced mobile toggle with modern design
+-- Enhanced mobile toggle
 local MobileToggleButton
 if DeviceType == "Mobile" then
     MobileToggleButton = Instance.new("ImageButton")
     MobileToggleButton.Name = "MobileToggle"
-    MobileToggleButton.Size = UDim2.new(0, 50, 0, 50)
-    MobileToggleButton.Position = UDim2.new(1, -60, 0, 20)
+    MobileToggleButton.Size = UDim2.new(0, 52, 0, 52)
+    MobileToggleButton.Position = UDim2.new(1, -65, 0, 25)
     MobileToggleButton.AnchorPoint = Vector2.new(1, 0)
     MobileToggleButton.BackgroundColor3 = ModernColors.Background
     MobileToggleButton.Image = "rbxassetid://3926305904"
@@ -55,19 +58,17 @@ if DeviceType == "Mobile" then
     Stroke.Thickness = 2
     Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     
-    -- Add glow effect
-    local Glow = Instance.new("ImageLabel", MobileToggleButton)
+    -- Subtle glow
+    local Glow = Instance.new("Frame", MobileToggleButton)
     Glow.Name = "Glow"
-    Glow.BackgroundTransparency = 1
+    Glow.BackgroundColor3 = ModernColors.Accent
+    Glow.BackgroundTransparency = 0.9
     Glow.Size = UDim2.new(1.2, 0, 1.2, 0)
     Glow.Position = UDim2.new(-0.1, 0, -0.1, 0)
     Glow.ZIndex = -1
-    Glow.Image = "rbxassetid://4996891970"
-    Glow.ImageColor3 = ModernColors.Accent
-    Glow.ScaleType = Enum.ScaleType.Slice
-    Glow.SliceCenter = Rect.new(49, 49, 450, 450)
-    Glow.ImageTransparency = 0.8
     
+    CreateInstance("UICorner", {Parent = Glow, CornerRadius = UDim.new(1, 0)})
+
     local Dragging, DragInput, DragStart, StartPosition
     
     local function Update(input)
@@ -108,28 +109,16 @@ if DeviceType == "Mobile" then
     end)
     
     MobileToggleButton.MouseEnter:Connect(function()
-        TweenService:Create(MobileToggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            BackgroundColor3 = ModernColors.Secondary,
-            Size = UDim2.new(0, 55, 0, 55)
-        }):Play()
-        TweenService:Create(Stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Thickness = 3
-        }):Play()
-        TweenService:Create(Glow, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            ImageTransparency = 0.6
+        TweenService:Create(MobileToggleButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = ModernColors.Hover,
+            Size = UDim2.new(0, 56, 0, 56)
         }):Play()
     end)
 
     MobileToggleButton.MouseLeave:Connect(function()
         TweenService:Create(MobileToggleButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             BackgroundColor3 = ModernColors.Background,
-            Size = UDim2.new(0, 50, 0, 50)
-        }):Play()
-        TweenService:Create(Stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Thickness = 2
-        }):Play()
-        TweenService:Create(Glow, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            ImageTransparency = 0.8
+            Size = UDim2.new(0, 52, 0, 52)
         }):Play()
     end)
 end
@@ -147,10 +136,9 @@ local function TweenCreate(instance, tweenInfo, properties)
     return TweenService:Create(instance, tweenInfo, properties)
 end
 
--- Enhanced draggable function with smooth movement
+-- Enhanced draggable function
 local function MakeDraggable(topbarobject, object)
     local Dragging, DragInput, DragStart, StartPosition
-    local DragSpeed = 0.5
 
     local function Update(input)
         local Delta = input.Position - DragStart
@@ -196,59 +184,70 @@ function lib:Window(text, preset, closebind)
     PresetColor = preset or PresetColor
     local fs = false
     
-    -- Modern main container with glass effect
+    -- Modern main container
     local Main = CreateInstance("Frame", {
         Name = "Main",
         Parent = ui,
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundColor3 = ModernColors.Background,
-        BackgroundTransparency = 0.1,
         BorderSizePixel = 0,
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 600, 0, 350),
+        Size = UDim2.new(0, 620, 0, 380),
         ClipsDescendants = true,
         Visible = true
     })
 
-    -- Glass effect
-    local GlassEffect = CreateInstance("Frame", {
-        Name = "GlassEffect",
-        Parent = Main,
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        BackgroundTransparency = 0.9,
-        Size = UDim2.new(1, 0, 1, 0),
-        ZIndex = -1
-    })
-
     CreateInstance("UICorner", {
         Parent = Main,
-        CornerRadius = UDim.new(0, 12)
+        CornerRadius = UDim.new(0, 14)
     })
 
     CreateInstance("UIStroke", {
         Parent = Main,
         Color = ModernColors.Border,
         Thickness = 1,
-        Transparency = 0.8
+        Transparency = 0.6
     })
 
-    -- Enhanced tab holder with modern design
+    -- Header with gradient
+    local Header = CreateInstance("Frame", {
+        Name = "Header",
+        Parent = Main,
+        BackgroundColor3 = ModernColors.Secondary,
+        Size = UDim2.new(1, 0, 0, 45),
+        BorderSizePixel = 0
+    })
+
+    CreateInstance("UICorner", {
+        Parent = Header,
+        CornerRadius = UDim.new(0, 14)
+    })
+
+    local HeaderCornerFix = CreateInstance("Frame", {
+        Name = "HeaderCornerFix",
+        Parent = Header,
+        BackgroundColor3 = ModernColors.Secondary,
+        Position = UDim2.new(0, 0, 1, 0),
+        Size = UDim2.new(1, 0, 0, 14),
+        BorderSizePixel = 0
+    })
+
+    -- Enhanced tab holder
     local TabHold = CreateInstance("ScrollingFrame", {
         Name = "TabHold",
         Parent = Main,
         BackgroundColor3 = ModernColors.Secondary,
-        BackgroundTransparency = 0.5,
-        Position = UDim2.new(0.02, 0, 0.12, 0),
-        Size = UDim2.new(0, 120, 0, 270),
+        BackgroundTransparency = 0,
+        Position = UDim2.new(0.02, 0, 0.14, 0),
+        Size = UDim2.new(0, 130, 0, 300),
         CanvasSize = UDim2.new(0, 0, 0, 0),
-        ScrollBarThickness = 3,
-        ScrollBarImageColor3 = ModernColors.Accent,
+        ScrollBarThickness = 0,
         ClipsDescendants = true
     })
 
     CreateInstance("UICorner", {
         Parent = TabHold,
-        CornerRadius = UDim.new(0, 8)
+        CornerRadius = UDim.new(0, 10)
     })
 
     local TabHoldLayout = CreateInstance("UIListLayout", {
@@ -261,25 +260,25 @@ function lib:Window(text, preset, closebind)
         TabHold.CanvasSize = UDim2.new(0, 0, 0, TabHoldLayout.AbsoluteContentSize.Y)
     end)
 
-    -- Modern title with gradient
+    -- Modern title
     local Title = CreateInstance("TextLabel", {
         Name = "Title",
-        Parent = Main,
+        Parent = Header,
         BackgroundTransparency = 1,
-        Position = UDim2.new(0.03, 0, 0.03, 0),
-        Size = UDim2.new(0, 200, 0, 25),
+        Position = UDim2.new(0.04, 0, 0, 0),
+        Size = UDim2.new(0.5, 0, 1, 0),
         Font = Enum.Font.GothamSemibold,
         Text = text,
         TextColor3 = ModernColors.Accent,
-        TextSize = 16,
+        TextSize = 18,
         TextXAlignment = Enum.TextXAlignment.Left
     })
 
     local DragFrame = CreateInstance("Frame", {
         Name = "DragFrame",
-        Parent = Main,
+        Parent = Header,
         BackgroundTransparency = 1,
-        Size = UDim2.new(0, 600, 0, 45)
+        Size = UDim2.new(1, 0, 1, 0)
     })
 
     local TabFolder = CreateInstance("Folder", {
@@ -297,16 +296,10 @@ function lib:Window(text, preset, closebind)
             
             if uitoggled then
                 Main.Visible = false
-                MobileToggleButton.ImageColor3 = Color3.fromRGB(150, 150, 150)
-                TweenService:Create(MobileToggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = ModernColors.Secondary
-                }):Play()
+                MobileToggleButton.ImageColor3 = ModernColors.SubText
             else
                 Main.Visible = true
                 MobileToggleButton.ImageColor3 = ModernColors.Accent
-                TweenService:Create(MobileToggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = ModernColors.Background
-                }):Play()
             end
         end)
     end
@@ -318,7 +311,7 @@ function lib:Window(text, preset, closebind)
             if uitoggled then
                 Main.Visible = false
                 if DeviceType == "Mobile" and MobileToggleButton then
-                    MobileToggleButton.ImageColor3 = Color3.fromRGB(150, 150, 150)
+                    MobileToggleButton.ImageColor3 = ModernColors.SubText
                 end
             else
                 Main.Visible = true
@@ -335,39 +328,44 @@ function lib:Window(text, preset, closebind)
         local TabBtn = CreateInstance("TextButton", {
             Name = "TabBtn",
             Parent = TabHold,
-            BackgroundTransparency = 1,
-            Size = UDim2.new(0, 110, 0, 30),
+            BackgroundColor3 = ModernColors.Card,
+            Size = UDim2.new(0, 120, 0, 36),
+            AutoButtonColor = false,
             Font = Enum.Font.SourceSans,
             Text = "",
             TextColor3 = Color3.fromRGB(0, 0, 0),
             TextSize = 14
         })
 
+        CreateInstance("UICorner", {
+            Parent = TabBtn,
+            CornerRadius = UDim.new(0, 8)
+        })
+
         local TabTitle = CreateInstance("TextLabel", {
             Name = "TabTitle",
             Parent = TabBtn,
             BackgroundTransparency = 1,
-            Size = UDim2.new(0, 110, 0, 30),
+            Size = UDim2.new(1, 0, 1, 0),
             Font = Enum.Font.GothamSemibold,
             Text = text,
             TextColor3 = ModernColors.SubText,
-            TextSize = 13,
-            TextXAlignment = Enum.TextXAlignment.Center
+            TextSize = 13
         })
 
-        local TabBtnIndicator = CreateInstance("Frame", {
-            Name = "TabBtnIndicator",
+        local TabHighlight = CreateInstance("Frame", {
+            Name = "TabHighlight",
             Parent = TabBtn,
             BackgroundColor3 = ModernColors.Accent,
             BorderSizePixel = 0,
-            Position = UDim2.new(0.5, 0, 1, 0),
-            AnchorPoint = Vector2.new(0.5, 0),
-            Size = UDim2.new(0, 0, 0, 2)
+            Position = UDim2.new(0, 0, 1, -3),
+            Size = UDim2.new(1, 0, 0, 3),
+            BackgroundTransparency = 1
         })
 
         CreateInstance("UICorner", {
-            Parent = TabBtnIndicator,
-            CornerRadius = UDim.new(1, 0)
+            Parent = TabHighlight,
+            CornerRadius = UDim.new(0, 2)
         })
 
         local Tab = CreateInstance("ScrollingFrame", {
@@ -376,8 +374,8 @@ function lib:Window(text, preset, closebind)
             Active = true,
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
-            Position = UDim2.new(0.25, 0, 0.12, 0),
-            Size = UDim2.new(0, 430, 0, 270),
+            Position = UDim2.new(0.25, 0, 0.14, 0),
+            Size = UDim2.new(0, 440, 0, 300),
             CanvasSize = UDim2.new(0, 0, 0, 0),
             ScrollBarThickness = 3,
             ScrollBarImageColor3 = ModernColors.Accent,
@@ -387,7 +385,7 @@ function lib:Window(text, preset, closebind)
         local TabLayout = CreateInstance("UIListLayout", {
             Parent = Tab,
             SortOrder = Enum.SortOrder.LayoutOrder,
-            Padding = UDim.new(0, 8)
+            Padding = UDim.new(0, 10)
         })
 
         TabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -396,8 +394,9 @@ function lib:Window(text, preset, closebind)
 
         if not fs then
             fs = true
-            TabBtnIndicator.Size = UDim2.new(0, 80, 0, 2)
             TabTitle.TextColor3 = ModernColors.Accent
+            TabBtn.BackgroundColor3 = ModernColors.Hover
+            TabHighlight.BackgroundTransparency = 0
             Tab.Visible = true
         end
 
@@ -411,17 +410,43 @@ function lib:Window(text, preset, closebind)
             
             for _, v in pairs(TabHold:GetChildren()) do
                 if v.Name == "TabBtn" then
-                    v.TabBtnIndicator:TweenSize(UDim2.new(0, 0, 0, 2), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
-                    TweenCreate(v.TabTitle, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    TweenCreate(v.TabTitle, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                         TextColor3 = ModernColors.SubText
+                    }):Play()
+                    TweenCreate(v, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = ModernColors.Card
+                    }):Play()
+                    TweenCreate(v.TabHighlight, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundTransparency = 1
                     }):Play()
                 end
             end
             
-            TabBtnIndicator:TweenSize(UDim2.new(0, 80, 0, 2), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
-            TweenCreate(TabTitle, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            TweenCreate(TabTitle, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                 TextColor3 = ModernColors.Accent
             }):Play()
+            TweenCreate(TabBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = ModernColors.Hover
+            }):Play()
+            TweenCreate(TabHighlight, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundTransparency = 0
+            }):Play()
+        end)
+
+        TabBtn.MouseEnter:Connect(function()
+            if TabTitle.TextColor3 ~= ModernColors.Accent then
+                TweenCreate(TabBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = ModernColors.Hover
+                }):Play()
+            end
+        end)
+
+        TabBtn.MouseLeave:Connect(function()
+            if TabTitle.TextColor3 ~= ModernColors.Accent then
+                TweenCreate(TabBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = ModernColors.Card
+                }):Play()
+            end
         end)
 
         local tabcontent = {}
@@ -431,22 +456,27 @@ function lib:Window(text, preset, closebind)
                 Name = "Label",
                 Parent = Tab,
                 BackgroundTransparency = 1,
-                Size = UDim2.new(0, 420, 0, 30),
-                Font = Enum.Font.Gotham,
+                Size = UDim2.new(1, 0, 0, 30),
+                Font = Enum.Font.GothamSemibold,
                 Text = text,
                 TextColor3 = ModernColors.Text,
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Center
             })
 
-            local Underline = CreateInstance("Frame", {
-                Name = "Underline",
+            local Divider = CreateInstance("Frame", {
+                Name = "Divider",
                 Parent = Label,
                 BackgroundColor3 = ModernColors.Accent,
                 BorderSizePixel = 0,
-                Position = UDim2.new(0.1, 0, 1, 0),
+                Position = UDim2.new(0.1, 0, 1, -2),
                 Size = UDim2.new(0.8, 0, 0, 1),
                 BackgroundTransparency = 0.7
+            })
+
+            CreateInstance("UICorner", {
+                Parent = Divider,
+                CornerRadius = UDim.new(1, 0)
             })
         end
         
@@ -454,8 +484,8 @@ function lib:Window(text, preset, closebind)
             local Button = CreateInstance("TextButton", {
                 Name = "Button",
                 Parent = Tab,
-                BackgroundColor3 = ModernColors.Secondary,
-                Size = UDim2.new(0, 420, 0, 45),
+                BackgroundColor3 = ModernColors.Card,
+                Size = UDim2.new(1, 0, 0, 45),
                 AutoButtonColor = false,
                 Font = Enum.Font.SourceSans,
                 Text = "",
@@ -465,14 +495,14 @@ function lib:Window(text, preset, closebind)
 
             CreateInstance("UICorner", {
                 Parent = Button,
-                CornerRadius = UDim.new(0, 8)
+                CornerRadius = UDim.new(0, 10)
             })
 
             CreateInstance("UIStroke", {
                 Parent = Button,
                 Color = ModernColors.Border,
                 Thickness = 1,
-                Transparency = 0.8
+                Transparency = 0.5
             })
 
             local ButtonTitle = CreateInstance("TextLabel", {
@@ -486,63 +516,33 @@ function lib:Window(text, preset, closebind)
                 TextSize = 14
             })
 
-            local HoverEffect = CreateInstance("Frame", {
-                Name = "HoverEffect",
-                Parent = Button,
-                BackgroundColor3 = ModernColors.Accent,
-                BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 1, 0),
-                ZIndex = -1
-            })
-
-            CreateInstance("UICorner", {
-                Parent = HoverEffect,
-                CornerRadius = UDim.new(0, 8)
-            })
-
             Button.MouseEnter:Connect(function()
-                TweenCreate(Button, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = ModernColors.Secondary:Lerp(ModernColors.Accent, 0.1)
-                }):Play()
-                TweenCreate(HoverEffect, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundTransparency = 0.9
+                TweenCreate(Button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = ModernColors.Hover,
+                    Size = UDim2.new(1, 0, 0, 47)
                 }):Play()
             end)
 
             Button.MouseLeave:Connect(function()
                 TweenCreate(Button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = ModernColors.Secondary
-                }):Play()
-                TweenCreate(HoverEffect, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundTransparency = 1
+                    BackgroundColor3 = ModernColors.Card,
+                    Size = UDim2.new(1, 0, 0, 45)
                 }):Play()
             end)
 
             Button.MouseButton1Click:Connect(function()
-                -- Ripple effect
-                local Ripple = CreateInstance("Frame", {
-                    Parent = Button,
+                -- Click animation
+                TweenCreate(Button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = ModernColors.Accent,
-                    BackgroundTransparency = 0.7,
-                    Size = UDim2.new(0, 0, 0, 0),
-                    Position = UDim2.new(0.5, 0, 0.5, 0),
-                    AnchorPoint = Vector2.new(0.5, 0.5),
-                    ZIndex = -1
-                })
-                
-                CreateInstance("UICorner", {
-                    Parent = Ripple,
-                    CornerRadius = UDim.new(1, 0)
-                })
-                
-                TweenCreate(Ripple, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(2, 0, 2, 0),
-                    BackgroundTransparency = 1
+                    Size = UDim2.new(1, 0, 0, 43)
                 }):Play()
                 
-                delay(0.6, function()
-                    Ripple:Destroy()
-                end)
+                wait(0.1)
+                
+                TweenCreate(Button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = ModernColors.Hover,
+                    Size = UDim2.new(1, 0, 0, 47)
+                }):Play()
                 
                 pcall(callback)
             end)
@@ -554,8 +554,8 @@ function lib:Window(text, preset, closebind)
             local Toggle = CreateInstance("TextButton", {
                 Name = "Toggle",
                 Parent = Tab,
-                BackgroundColor3 = ModernColors.Secondary,
-                Size = UDim2.new(0, 420, 0, 45),
+                BackgroundColor3 = ModernColors.Card,
+                Size = UDim2.new(1, 0, 0, 45),
                 AutoButtonColor = false,
                 Font = Enum.Font.SourceSans,
                 Text = "",
@@ -565,21 +565,21 @@ function lib:Window(text, preset, closebind)
 
             CreateInstance("UICorner", {
                 Parent = Toggle,
-                CornerRadius = UDim.new(0, 8)
+                CornerRadius = UDim.new(0, 10)
             })
 
             CreateInstance("UIStroke", {
                 Parent = Toggle,
                 Color = ModernColors.Border,
                 Thickness = 1,
-                Transparency = 0.8
+                Transparency = 0.5
             })
 
             local ToggleTitle = CreateInstance("TextLabel", {
                 Name = "ToggleTitle",
                 Parent = Toggle,
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0.05, 0, 0, 0),
+                Position = UDim2.new(0.04, 0, 0, 0),
                 Size = UDim2.new(0.7, 0, 1, 0),
                 Font = Enum.Font.Gotham,
                 Text = text,
@@ -588,25 +588,25 @@ function lib:Window(text, preset, closebind)
                 TextXAlignment = Enum.TextXAlignment.Left
             })
 
-            -- Modern toggle switch
-            local ToggleSwitch = CreateInstance("Frame", {
-                Name = "ToggleSwitch",
+            -- Fixed toggle switch
+            local ToggleContainer = CreateInstance("Frame", {
+                Name = "ToggleContainer",
                 Parent = Toggle,
                 BackgroundColor3 = ModernColors.Border,
                 Position = UDim2.new(0.85, 0, 0.5, 0),
                 AnchorPoint = Vector2.new(0.5, 0.5),
-                Size = UDim2.new(0, 50, 0, 25)
+                Size = UDim2.new(0, 50, 0, 26)
             })
 
             CreateInstance("UICorner", {
-                Parent = ToggleSwitch,
+                Parent = ToggleContainer,
                 CornerRadius = UDim.new(1, 0)
             })
 
             local ToggleKnob = CreateInstance("Frame", {
                 Name = "ToggleKnob",
-                Parent = ToggleSwitch,
-                BackgroundColor3 = Color3.fromRGB(240, 240, 240),
+                Parent = ToggleContainer,
+                BackgroundColor3 = Color3.fromRGB(220, 220, 220),
                 Position = UDim2.new(0.1, 0, 0.5, 0),
                 AnchorPoint = Vector2.new(0, 0.5),
                 Size = UDim2.new(0, 20, 0, 20)
@@ -617,22 +617,41 @@ function lib:Window(text, preset, closebind)
                 CornerRadius = UDim.new(1, 0)
             })
 
+            local ToggleFill = CreateInstance("Frame", {
+                Name = "ToggleFill",
+                Parent = ToggleContainer,
+                BackgroundColor3 = ModernColors.Accent,
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1
+            })
+
+            CreateInstance("UICorner", {
+                Parent = ToggleFill,
+                CornerRadius = UDim.new(1, 0)
+            })
+
             local function UpdateToggleState()
                 if toggled then
-                    TweenCreate(ToggleSwitch, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        BackgroundColor3 = ModernColors.Accent
+                    TweenCreate(ToggleFill, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundTransparency = 0
                     }):Play()
-                    TweenCreate(ToggleKnob, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    TweenCreate(ToggleKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                         Position = UDim2.new(0.7, 0, 0.5, 0),
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                     }):Play()
-                else
-                    TweenCreate(ToggleSwitch, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        BackgroundColor3 = ModernColors.Border
+                    TweenCreate(Toggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = ModernColors.Card
                     }):Play()
-                    TweenCreate(ToggleKnob, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                else
+                    TweenCreate(ToggleFill, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundTransparency = 1
+                    }):Play()
+                    TweenCreate(ToggleKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                         Position = UDim2.new(0.1, 0, 0.5, 0),
-                        BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+                        BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+                    }):Play()
+                    TweenCreate(Toggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = ModernColors.Card
                     }):Play()
                 end
                 pcall(callback, toggled)
@@ -645,6 +664,22 @@ function lib:Window(text, preset, closebind)
 
             Toggle.MouseButton1Click:Connect(ToggleState)
 
+            Toggle.MouseEnter:Connect(function()
+                if not toggled then
+                    TweenCreate(Toggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = ModernColors.Hover
+                    }):Play()
+                end
+            end)
+
+            Toggle.MouseLeave:Connect(function()
+                if not toggled then
+                    TweenCreate(Toggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = ModernColors.Card
+                    }):Play()
+                end
+            end)
+
             UpdateToggleState()
 
             return {
@@ -653,6 +688,9 @@ function lib:Window(text, preset, closebind)
                         toggled = state
                         UpdateToggleState()
                     end
+                end,
+                Get = function(self)
+                    return toggled
                 end
             }
         end
@@ -665,8 +703,8 @@ function lib:Window(text, preset, closebind)
             local Slider = CreateInstance("TextButton", {
                 Name = "Slider",
                 Parent = Tab,
-                BackgroundColor3 = ModernColors.Secondary,
-                Size = UDim2.new(0, 420, 0, 70),
+                BackgroundColor3 = ModernColors.Card,
+                Size = UDim2.new(1, 0, 0, 70),
                 AutoButtonColor = false,
                 Font = Enum.Font.SourceSans,
                 Text = "",
@@ -676,21 +714,21 @@ function lib:Window(text, preset, closebind)
 
             CreateInstance("UICorner", {
                 Parent = Slider,
-                CornerRadius = UDim.new(0, 8)
+                CornerRadius = UDim.new(0, 10)
             })
 
             CreateInstance("UIStroke", {
                 Parent = Slider,
                 Color = ModernColors.Border,
                 Thickness = 1,
-                Transparency = 0.8
+                Transparency = 0.5
             })
 
             local SliderTitle = CreateInstance("TextLabel", {
                 Name = "SliderTitle",
                 Parent = Slider,
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0.05, 0, 0.1, 0),
+                Position = UDim2.new(0.04, 0, 0.1, 0),
                 Size = UDim2.new(0.6, 0, 0, 20),
                 Font = Enum.Font.Gotham,
                 Text = text,
@@ -712,102 +750,56 @@ function lib:Window(text, preset, closebind)
                 TextXAlignment = Enum.TextXAlignment.Right
             })
 
-            local SlideFrame = CreateInstance("Frame", {
-                Name = "SlideFrame",
+            local SlideContainer = CreateInstance("Frame", {
+                Name = "SlideContainer",
                 Parent = Slider,
                 BackgroundColor3 = ModernColors.Border,
                 BorderSizePixel = 0,
-                Position = UDim2.new(0.05, 0, 0.6, 0),
-                Size = UDim2.new(0.9, 0, 0, 6)
+                Position = UDim2.new(0.04, 0, 0.6, 0),
+                Size = UDim2.new(0.92, 0, 0, 6)
             })
 
             CreateInstance("UICorner", {
-                Parent = SlideFrame,
+                Parent = SlideContainer,
                 CornerRadius = UDim.new(1, 0)
             })
 
-            local CurrentValueFrame = CreateInstance("Frame", {
-                Name = "CurrentValueFrame",
-                Parent = SlideFrame,
+            local ProgressFill = CreateInstance("Frame", {
+                Name = "ProgressFill",
+                Parent = SlideContainer,
                 BackgroundColor3 = ModernColors.Accent,
                 BorderSizePixel = 0,
                 Size = UDim2.new((start - min) / (max - min), 0, 1, 0)
             })
 
             CreateInstance("UICorner", {
-                Parent = CurrentValueFrame,
+                Parent = ProgressFill,
                 CornerRadius = UDim.new(1, 0)
             })
 
-            local SlideCircle = CreateInstance("Frame", {
-                Name = "SlideCircle",
-                Parent = SlideFrame,
+            local SliderKnob = CreateInstance("Frame", {
+                Name = "SliderKnob",
+                Parent = SlideContainer,
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                 Position = UDim2.new((start - min) / (max - min), -8, 0.5, -8),
                 AnchorPoint = Vector2.new(0, 0.5),
-                Size = UDim2.new(0, 16, 0, 16),
-                ZIndex = 2
+                Size = UDim2.new(0, 16, 0, 16)
             })
 
             CreateInstance("UICorner", {
-                Parent = SlideCircle,
+                Parent = SliderKnob,
                 CornerRadius = UDim.new(1, 0)
             })
 
             CreateInstance("UIStroke", {
-                Parent = SlideCircle,
+                Parent = SliderKnob,
                 Color = ModernColors.Accent,
                 Thickness = 2
             })
 
-            -- Glow effect for slider circle
-            local CircleGlow = CreateInstance("ImageLabel", {
-                Name = "CircleGlow",
-                Parent = SlideCircle,
-                BackgroundTransparency = 1,
-                Size = UDim2.new(1.5, 0, 1.5, 0),
-                Position = UDim2.new(-0.25, 0, -0.25, 0),
-                ZIndex = -1,
-                Image = "rbxassetid://4996891970",
-                ImageColor3 = ModernColors.Accent,
-                ScaleType = Enum.ScaleType.Slice,
-                SliceCenter = Rect.new(49, 49, 450, 450),
-                ImageTransparency = 0.8
-            })
-
             local function formatNumber(value)
-                if math.abs(value) < 0.0001 and value ~= 0 then
-                    return string.format("%.2e", value)
-                end
-                
-                if math.abs(value) >= 10000 then
-                    local formatted = tostring(math.floor(value))
-                    local k = formatted:len() % 3
-                    if k == 0 then k = 3 end
-                    return formatted:sub(1, k) .. formatted:sub(k+1):gsub("(%d%d%d)", ",%1")
-                end
-                
                 if increment < 1 then
-                    local decimalPlaces = 0
-                    local tempIncrement = increment
-                    
-                    while tempIncrement < 1 do
-                        decimalPlaces = decimalPlaces + 1
-                        tempIncrement = tempIncrement * 10
-                        if tempIncrement >= 1 then break end
-                    end
-                    
-                    decimalPlaces = math.min(decimalPlaces + 1, 6)
-                    
-                    local formatString = "%." .. decimalPlaces .. "f"
-                    local formatted = string.format(formatString, value)
-                    
-                    formatted = formatted:gsub("%.(%d-)0*$", function(decimal)
-                        return decimal == "" and "" or "." .. decimal
-                    end)
-                    formatted = formatted:gsub("%.$", "")
-                    
-                    return formatted
+                    return string.format("%.2f", value)
                 else
                     return tostring(math.floor(value))
                 end
@@ -820,14 +812,14 @@ function lib:Window(text, preset, closebind)
                 value = math.clamp(value, min, max)
                 currentValue = value
                 local normalizedValue = (value - min) / (max - min)
-                local circlePos = UDim2.new(normalizedValue, -8, 0.5, -8)
-                local frameSize = UDim2.new(normalizedValue, 0, 1, 0)
+                local knobPos = UDim2.new(normalizedValue, -8, 0.5, -8)
+                local fillSize = UDim2.new(normalizedValue, 0, 1, 0)
                 
-                TweenService:Create(CurrentValueFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = frameSize
+                TweenService:Create(ProgressFill, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = fillSize
                 }):Play()
-                TweenService:Create(SlideCircle, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Position = circlePos
+                TweenService:Create(SliderKnob, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Position = knobPos
                 }):Play()
                 
                 SliderValue.Text = formatNumber(value)
@@ -844,18 +836,18 @@ function lib:Window(text, preset, closebind)
                 dragging = true
                 
                 TweenService:Create(Slider, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = ModernColors.Secondary:Lerp(ModernColors.Accent, 0.1)
+                    BackgroundColor3 = ModernColors.Hover
                 }):Play()
-                TweenService:Create(CircleGlow, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    ImageTransparency = 0.6
+                TweenService:Create(SliderKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, 18, 0, 18)
                 }):Play()
                 
                 local function update(inputPosition)
-                    local slideFrameAbsolutePos = SlideFrame.AbsolutePosition.X
-                    local slideFrameAbsoluteSize = SlideFrame.AbsoluteSize.X
+                    local containerPos = SlideContainer.AbsolutePosition.X
+                    local containerSize = SlideContainer.AbsoluteSize.X
                     
-                    local x = math.clamp(inputPosition.X - slideFrameAbsolutePos, 0, slideFrameAbsoluteSize)
-                    local percent = x / slideFrameAbsoluteSize
+                    local x = math.clamp(inputPosition.X - containerPos, 0, containerSize)
+                    local percent = x / containerSize
                     local value = min + percent * (max - min)
                     
                     if increment > 0 then
@@ -878,32 +870,28 @@ function lib:Window(text, preset, closebind)
                 endConn = UserInputService.InputEnded:Connect(function(i)
                     if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
                         dragging = false
-                        if moveConn then
-                            moveConn:Disconnect()
-                        end
-                        if endConn then
-                            endConn:Disconnect()
-                        end
+                        if moveConn then moveConn:Disconnect() end
+                        if endConn then endConn:Disconnect() end
                         
                         executeCallback(currentValue)
                         
                         TweenService:Create(Slider, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                            BackgroundColor3 = ModernColors.Secondary
+                            BackgroundColor3 = ModernColors.Card
                         }):Play()
-                        TweenService:Create(CircleGlow, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                            ImageTransparency = 0.8
+                        TweenService:Create(SliderKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                            Size = UDim2.new(0, 16, 0, 16)
                         }):Play()
                     end
                 end)
             end
 
-            SlideCircle.InputBegan:Connect(function(input)
+            SliderKnob.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     startDrag(input)
                 end
             end)
             
-            SlideFrame.InputBegan:Connect(function(input)
+            SlideContainer.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     startDrag(input)
                 end
@@ -911,8 +899,8 @@ function lib:Window(text, preset, closebind)
 
             Slider.MouseEnter:Connect(function()
                 if not dragging then
-                    TweenService:Create(Slider, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        BackgroundColor3 = ModernColors.Secondary:Lerp(ModernColors.Accent, 0.05)
+                    TweenService:Create(Slider, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = ModernColors.Hover
                     }):Play()
                 end
             end)
@@ -920,7 +908,7 @@ function lib:Window(text, preset, closebind)
             Slider.MouseLeave:Connect(function()
                 if not dragging then
                     TweenService:Create(Slider, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        BackgroundColor3 = ModernColors.Secondary
+                        BackgroundColor3 = ModernColors.Card
                     }):Play()
                 end
             end)
@@ -945,34 +933,33 @@ function lib:Window(text, preset, closebind)
 
         function tabcontent:Dropdown(text, list, callback)
             local droptog = false
-            local framesize = 0
             local itemcount = 0
 
             local Dropdown = CreateInstance("Frame", {
                 Name = "Dropdown",
                 Parent = Tab,
-                BackgroundColor3 = ModernColors.Secondary,
+                BackgroundColor3 = ModernColors.Card,
                 ClipsDescendants = true,
-                Size = UDim2.new(0, 420, 0, 45)
+                Size = UDim2.new(1, 0, 0, 45)
             })
 
             CreateInstance("UICorner", {
                 Parent = Dropdown,
-                CornerRadius = UDim.new(0, 8)
+                CornerRadius = UDim.new(0, 10)
             })
 
             CreateInstance("UIStroke", {
                 Parent = Dropdown,
                 Color = ModernColors.Border,
                 Thickness = 1,
-                Transparency = 0.8
+                Transparency = 0.5
             })
 
             local DropdownBtn = CreateInstance("TextButton", {
                 Name = "DropdownBtn",
                 Parent = Dropdown,
                 BackgroundTransparency = 1,
-                Size = UDim2.new(0, 420, 0, 45),
+                Size = UDim2.new(1, 0, 0, 45),
                 Font = Enum.Font.SourceSans,
                 Text = "",
                 TextColor3 = Color3.fromRGB(0, 0, 0),
@@ -983,7 +970,7 @@ function lib:Window(text, preset, closebind)
                 Name = "DropdownTitle",
                 Parent = Dropdown,
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0.05, 0, 0, 0),
+                Position = UDim2.new(0.04, 0, 0, 0),
                 Size = UDim2.new(0.7, 0, 1, 0),
                 Font = Enum.Font.Gotham,
                 Text = text,
@@ -992,11 +979,11 @@ function lib:Window(text, preset, closebind)
                 TextXAlignment = Enum.TextXAlignment.Left
             })
 
-            local ArrowImg = CreateInstance("ImageLabel", {
-                Name = "ArrowImg",
+            local Arrow = CreateInstance("ImageLabel", {
+                Name = "Arrow",
                 Parent = Dropdown,
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0.9, 0, 0.5, 0),
+                Position = UDim2.new(0.92, 0, 0.5, 0),
                 AnchorPoint = Vector2.new(0.5, 0.5),
                 Size = UDim2.new(0, 20, 0, 20),
                 Image = "rbxassetid://3926305904",
@@ -1011,8 +998,8 @@ function lib:Window(text, preset, closebind)
                 Active = true,
                 BackgroundColor3 = ModernColors.Secondary,
                 BorderSizePixel = 0,
-                Position = UDim2.new(0.05, 0, 1.1, 0),
-                Size = UDim2.new(0, 380, 0, 0),
+                Position = UDim2.new(0.02, 0, 1.05, 0),
+                Size = UDim2.new(0.96, 0, 0, 0),
                 CanvasSize = UDim2.new(0, 0, 0, 0),
                 ScrollBarThickness = 3,
                 ScrollBarImageColor3 = ModernColors.Accent,
@@ -1022,13 +1009,6 @@ function lib:Window(text, preset, closebind)
             CreateInstance("UICorner", {
                 Parent = DropItemHolder,
                 CornerRadius = UDim.new(0, 8)
-            })
-
-            CreateInstance("UIStroke", {
-                Parent = DropItemHolder,
-                Color = ModernColors.Border,
-                Thickness = 1,
-                Transparency = 0.8
             })
 
             local DropLayout = CreateInstance("UIListLayout", {
@@ -1041,14 +1021,16 @@ function lib:Window(text, preset, closebind)
                 droptog = not droptog
                 
                 if droptog then
-                    Dropdown:TweenSize(UDim2.new(0, 420, 0, 55 + framesize), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
-                    TweenCreate(ArrowImg, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    local contentSize = math.min(#list * 35, 140)
+                    Dropdown:TweenSize(UDim2.new(1, 0, 0, 45 + contentSize), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+                    DropItemHolder.Size = UDim2.new(0.96, 0, 0, contentSize)
+                    TweenCreate(Arrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                         Rotation = 180,
                         ImageColor3 = ModernColors.Accent
                     }):Play()
                 else
-                    Dropdown:TweenSize(UDim2.new(0, 420, 0, 45), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
-                    TweenCreate(ArrowImg, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Dropdown:TweenSize(UDim2.new(1, 0, 0, 45), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+                    TweenCreate(Arrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                         Rotation = 0,
                         ImageColor3 = ModernColors.SubText
                     }):Play()
@@ -1056,18 +1038,11 @@ function lib:Window(text, preset, closebind)
             end)
 
             for _, v in pairs(list) do
-                itemcount = itemcount + 1
-                if itemcount <= 3 then
-                    framesize = framesize + 30
-                    DropItemHolder.Size = UDim2.new(0, 380, 0, framesize)
-                end
-
                 local Item = CreateInstance("TextButton", {
                     Name = "Item",
                     Parent = DropItemHolder,
-                    BackgroundColor3 = ModernColors.Background,
-                    ClipsDescendants = true,
-                    Size = UDim2.new(0, 370, 0, 28),
+                    BackgroundColor3 = ModernColors.Card,
+                    Size = UDim2.new(1, 0, 0, 32),
                     AutoButtonColor = false,
                     Font = Enum.Font.Gotham,
                     Text = v,
@@ -1081,14 +1056,14 @@ function lib:Window(text, preset, closebind)
                 })
 
                 Item.MouseEnter:Connect(function()
-                    TweenCreate(Item, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        BackgroundColor3 = ModernColors.Background:Lerp(ModernColors.Accent, 0.1)
+                    TweenCreate(Item, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = ModernColors.Hover
                     }):Play()
                 end)
 
                 Item.MouseLeave:Connect(function()
-                    TweenCreate(Item, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        BackgroundColor3 = ModernColors.Background
+                    TweenCreate(Item, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = ModernColors.Card
                     }):Play()
                 end)
 
@@ -1096,8 +1071,8 @@ function lib:Window(text, preset, closebind)
                     droptog = false
                     DropdownTitle.Text = text .. " - " .. v
                     pcall(callback, v)
-                    Dropdown:TweenSize(UDim2.new(0, 420, 0, 45), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
-                    TweenCreate(ArrowImg, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Dropdown:TweenSize(UDim2.new(1, 0, 0, 45), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+                    TweenCreate(Arrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                         Rotation = 0,
                         ImageColor3 = ModernColors.SubText
                     }):Play()
@@ -1111,28 +1086,27 @@ function lib:Window(text, preset, closebind)
             local Textbox = CreateInstance("Frame", {
                 Name = "Textbox",
                 Parent = Tab,
-                BackgroundColor3 = ModernColors.Secondary,
-                ClipsDescendants = true,
-                Size = UDim2.new(0, 420, 0, 45)
+                BackgroundColor3 = ModernColors.Card,
+                Size = UDim2.new(1, 0, 0, 45)
             })
 
             CreateInstance("UICorner", {
                 Parent = Textbox,
-                CornerRadius = UDim.new(0, 8)
+                CornerRadius = UDim.new(0, 10)
             })
 
             CreateInstance("UIStroke", {
                 Parent = Textbox,
                 Color = ModernColors.Border,
                 Thickness = 1,
-                Transparency = 0.8
+                Transparency = 0.5
             })
 
             local TextboxTitle = CreateInstance("TextLabel", {
                 Name = "TextboxTitle",
                 Parent = Textbox,
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0.05, 0, 0, 0),
+                Position = UDim2.new(0.04, 0, 0, 0),
                 Size = UDim2.new(0.4, 0, 1, 0),
                 Font = Enum.Font.Gotham,
                 Text = text,
@@ -1141,8 +1115,8 @@ function lib:Window(text, preset, closebind)
                 TextXAlignment = Enum.TextXAlignment.Left
             })
 
-            local TextboxFrame = CreateInstance("Frame", {
-                Name = "TextboxFrame",
+            local InputFrame = CreateInstance("Frame", {
+                Name = "InputFrame",
                 Parent = Textbox,
                 BackgroundColor3 = ModernColors.Background,
                 Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -1151,41 +1125,39 @@ function lib:Window(text, preset, closebind)
             })
 
             CreateInstance("UICorner", {
-                Parent = TextboxFrame,
+                Parent = InputFrame,
                 CornerRadius = UDim.new(0, 6)
             })
 
             CreateInstance("UIStroke", {
-                Parent = TextboxFrame,
+                Parent = InputFrame,
                 Color = ModernColors.Border,
                 Thickness = 1
             })
 
             local TextBox = CreateInstance("TextBox", {
-                Parent = TextboxFrame,
+                Parent = InputFrame,
                 BackgroundTransparency = 1,
                 Size = UDim2.new(0.9, 0, 0.9, 0),
                 Position = UDim2.new(0.5, 0, 0.5, 0),
                 AnchorPoint = Vector2.new(0.5, 0.5),
                 Font = Enum.Font.Gotham,
                 Text = "",
+                PlaceholderText = "Type here...",
                 PlaceholderColor3 = ModernColors.SubText,
                 TextColor3 = ModernColors.Text,
                 TextSize = 13,
-                TextWrapped = true,
-                TextXAlignment = Enum.TextXAlignment.Center,
-                TextYAlignment = Enum.TextYAlignment.Center,
                 ClearTextOnFocus = false
             })
 
             TextBox.Focused:Connect(function()
-                TweenCreate(TextboxFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = ModernColors.Background:Lerp(ModernColors.Accent, 0.1)
+                TweenCreate(InputFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = ModernColors.Hover
                 }):Play()
             end)
 
             TextBox.FocusLost:Connect(function(enterPressed)
-                TweenCreate(TextboxFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                TweenCreate(InputFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = ModernColors.Background
                 }):Play()
                 
