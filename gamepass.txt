@@ -44,7 +44,7 @@ local function FetchProducts()
         table.insert(names, pass.Name)
     end
     
-    return #names > 0 and names or {"No GamePasses Found"}
+    return names
 end
 
 local function SelectPass(name)
