@@ -431,6 +431,27 @@ function UILibrary.Load(GUITitle)
 				Tween(DropdownContainer, {Size = DropdownToggle and UDim2.new(1,0,0,20+(#DropdownArray*20)) or UDim2.new(1,0,0,20)})
 				Tween(DropdownExpander, {Rotation = DropdownToggle and 135 or 0})
 			end)
+			
+			local DropdownLibrary = {}
+			
+			function DropdownLibrary.Refresh(NewArray)
+				DropdownArray = NewArray or {}
+				DropdownFrame:ClearAllChildren()
+				
+				for OptionIndex, Option in next, DropdownArray do
+					PageLibrary.AddButton(Option, function()
+						Callback(Option)
+						DropdownLabel.Text = Text..": "..Option
+					end, DropdownFrame, OptionIndex < #DropdownArray)
+				end
+				
+				DropdownFrame.Size = UDim2.new(1,0,0,#DropdownArray*20)
+				if DropdownToggle then
+					Tween(DropdownContainer, {Size = UDim2.new(1,0,0,20+(#DropdownArray*20))})
+				end
+			end
+			
+			return DropdownLibrary
 		end
 		
 		function PageLibrary.AddSlider(Text, ConfigurationDictionary, Callback, Parent)
@@ -502,6 +523,19 @@ function UILibrary.Load(GUITitle)
 					end
 				end)
 			end)
+			
+			local SliderLibrary = {}
+			
+			function SliderLibrary.Set(Value)
+				Value = math.clamp(Value, Minimum, Maximum)
+				local XScale = (Value - Minimum) / (Maximum - Minimum)
+				Callback(Value)
+				SliderButton.Text = Text..": "..tostring(Value)
+				local TargetSize = UDim2.new(XScale,0,1,0)
+				Tween(SliderFill, {Size = TargetSize})
+			end
+			
+			return SliderLibrary
 		end
 		
 		function PageLibrary.AddToggle(Text, Default, Callback)
@@ -552,7 +586,43 @@ function UILibrary.Load(GUITitle)
 				Tween(EffectFrame, {BackgroundColor3 = ThisToggle and Color3.fromRGB(0,255,109) or Color3.fromRGB(255,160,160)})
 				Tween(RightTick, {ImageTransparency = ThisToggle and 0 or 1})
 				Callback(ThisToggle)
-			end)	
+			end)
+			
+			local ToggleLibrary = {}
+			
+			function ToggleLibrary.Set(Value)
+				ThisToggle = Value
+				Tween(EffectFrame, {BackgroundColor3 = ThisToggle and Color3.fromRGB(0,255,109) or Color3.fromRGB(255,160,160)})
+				Tween(RightTick, {ImageTransparency = ThisToggle and 0 or 1})
+				Callback(ThisToggle)
+			end
+			
+			return ToggleLibrary
+		end
+		
+		function PageLibrary.AddTextBox(Text, Placeholder, Callback)
+			local TextBoxContainer = Frame()
+			TextBoxContainer.Name = Text.."TEXTBOX"
+			TextBoxContainer.Size = UDim2.new(1,0,0,20)
+			TextBoxContainer.BackgroundTransparency = 1
+			TextBoxContainer.Parent = DisplayPage
+			
+			local TextBoxForeground = RoundBox(5)
+			TextBoxForeground.Name = "TextBoxForeground"
+			TextBoxForeground.ImageColor3 = Color3.fromRGB(35,35,35)
+			TextBoxForeground.Size = UDim2.new(1,0,1,0)
+			TextBoxForeground.Parent = TextBoxContainer
+			
+			local HiddenTextBox = TextBox("", 12)
+			HiddenTextBox.PlaceholderText = Placeholder or ""
+			HiddenTextBox.Text = Text
+			HiddenTextBox.Parent = TextBoxForeground
+			
+			HiddenTextBox.FocusLost:Connect(function(enterPressed)
+				if enterPressed then
+					Callback(HiddenTextBox.Text)
+				end
+			end)
 		end
 		
 		return PageLibrary
