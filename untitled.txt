@@ -410,10 +410,11 @@ function UILibrary.Load(GUITitle)
 			DropdownLabel.Size = UDim2.new(1,0,0,20)
 			DropdownLabel.Parent = DropdownForeground
 			
-			local DropdownFrame = Frame()
+			local DropdownFrame = ScrollingFrame()
 			DropdownFrame.Position = UDim2.new(0,0,0,20)
 			DropdownFrame.BackgroundTransparency = 1
-			DropdownFrame.Size = UDim2.new(1,0,0,#DropdownArray*20)
+			DropdownFrame.Size = UDim2.new(1,0,0,math.min(#DropdownArray*20, 100))
+			DropdownFrame.CanvasSize = UDim2.new(0,0,0,#DropdownArray*20)
 			DropdownFrame.Parent = DropdownForeground
 			
 			local DropdownList = Instance.new("UIListLayout")
@@ -428,7 +429,7 @@ function UILibrary.Load(GUITitle)
 			
 			DropdownExpander.MouseButton1Down:Connect(function()
 				DropdownToggle = not DropdownToggle
-				Tween(DropdownContainer, {Size = DropdownToggle and UDim2.new(1,0,0,20+(#DropdownArray*20)) or UDim2.new(1,0,0,20)})
+				Tween(DropdownContainer, {Size = DropdownToggle and UDim2.new(1,0,0,20+math.min(#DropdownArray*20, 100)) or UDim2.new(1,0,0,20)})
 				Tween(DropdownExpander, {Rotation = DropdownToggle and 135 or 0})
 			end)
 			
@@ -445,9 +446,10 @@ function UILibrary.Load(GUITitle)
 					end, DropdownFrame, OptionIndex < #DropdownArray)
 				end
 				
-				DropdownFrame.Size = UDim2.new(1,0,0,#DropdownArray*20)
+				DropdownFrame.Size = UDim2.new(1,0,0,math.min(#DropdownArray*20, 100))
+				DropdownFrame.CanvasSize = UDim2.new(0,0,0,#DropdownArray*20)
 				if DropdownToggle then
-					Tween(DropdownContainer, {Size = UDim2.new(1,0,0,20+(#DropdownArray*20))})
+					Tween(DropdownContainer, {Size = UDim2.new(1,0,0,20+math.min(#DropdownArray*20, 100))})
 				end
 			end
 			
@@ -616,6 +618,7 @@ function UILibrary.Load(GUITitle)
 			local HiddenTextBox = TextBox("", 12)
 			HiddenTextBox.PlaceholderText = Placeholder or ""
 			HiddenTextBox.Text = Text
+			HiddenTextBox.TextTruncate = Enum.TextTruncate.AtEnd
 			HiddenTextBox.Parent = TextBoxForeground
 			
 			HiddenTextBox.FocusLost:Connect(function(enterPressed)
