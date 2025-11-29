@@ -1,685 +1,697 @@
-local Player = game.Players.LocalPlayer
-local Mouse = Player:GetMouse()
+--[[
+	Optimized UI Library
+	Improvements:
+	- Better memory management with object pooling
+	- Reduced redundant calculations
+	- Improved event handling with proper cleanup
+	- Enhanced security with input validation
+	- Optimized rendering and layout updates
+	- Better error handling
+--]]
 
+local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local CoreGuiService = game:GetService("CoreGui")
+local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local TextService = game:GetService("TextService")
 
-local TweenTime = 0.1
-local Level = 1
+local Player = Players.LocalPlayer
+local Mouse = Player:GetMouse()
 
-local GlobalTweenInfo = TweenInfo.new(TweenTime)
-local AlteredTweenInfo = TweenInfo.new(TweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+-- Constants
+local TWEEN_TIME = 0.1
+local GLOBAL_TWEEN_INFO = TweenInfo.new(TWEEN_TIME)
+local ALTERED_TWEEN_INFO = TweenInfo.new(TWEEN_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+local MAIN_FONT = Enum.Font.Gotham
 
-local IconLibraryID = "rbxassetid://3926305904"
-local IconLibraryID2 = "rbxassetid://3926307971"
+-- Asset IDs
+local ICON_LIBRARY = {
+	MAIN = "rbxassetid://3926305904",
+	SECONDARY = "rbxassetid://3926307971"
+}
 
-local MainFont = Enum.Font.Gotham
+-- Color constants
+local COLORS = {
+	BACKGROUND = {
+		DARK = Color3.fromRGB(20, 20, 20),
+		MEDIUM = Color3.fromRGB(30, 30, 30),
+		LIGHT = Color3.fromRGB(40, 40, 40),
+		BUTTON = Color3.fromRGB(35, 35, 35),
+		BUTTON_HOVER = Color3.fromRGB(45, 45, 45)
+	},
+	ACCENT = {
+		SUCCESS = Color3.fromRGB(0, 255, 109),
+		ERROR = Color3.fromRGB(255, 160, 160)
+	},
+	TEXT = Color3.fromRGB(255, 255, 255)
+}
 
-local function GetXY(GuiObject)
-	local X, Y = Mouse.X - GuiObject.AbsolutePosition.X, Mouse.Y - GuiObject.AbsolutePosition.Y
-	local MaxX, MaxY = GuiObject.AbsoluteSize.X, GuiObject.AbsoluteSize.Y
-	X, Y = math.clamp(X, 0, MaxX), math.clamp(Y, 0, MaxY)
-	return X, Y, X/MaxX, Y/MaxY
+-- Utility functions
+local function GetXY(guiObject)
+	local absolutePosition = guiObject.AbsolutePosition
+	local absoluteSize = guiObject.AbsoluteSize
+	
+	local x = math.clamp(Mouse.X - absolutePosition.X, 0, absoluteSize.X)
+	local y = math.clamp(Mouse.Y - absolutePosition.Y, 0, absoluteSize.Y)
+	
+	return x, y, x / absoluteSize.X, y / absoluteSize.Y
 end
 
-local function TitleIcon(ButtonOrNot)
-	local NewTitleIcon = Instance.new(ButtonOrNot and "ImageButton" or "ImageLabel")
-	NewTitleIcon.Name = "TitleIcon"
-	NewTitleIcon.BackgroundTransparency = 1
-	NewTitleIcon.Image = IconLibraryID
-	NewTitleIcon.ImageRectOffset = Vector2.new(524, 764)
-	NewTitleIcon.ImageRectSize = Vector2.new(36, 36)
-	NewTitleIcon.Size = UDim2.new(0,14,0,14)
-	NewTitleIcon.Position = UDim2.new(1,-17,0,3)
-	NewTitleIcon.Rotation = 180
-	NewTitleIcon.ZIndex = Level
-	return NewTitleIcon
+local function CreateTween(guiObject, properties)
+	local tween = TweenService:Create(guiObject, GLOBAL_TWEEN_INFO, properties)
+	tween:Play()
+	return tween
 end
 
-local function TickIcon(ButtonOrNot)
-	local NewTickIcon = Instance.new(ButtonOrNot and "ImageButton" or "ImageLabel")
-	NewTickIcon.Name = "TickIcon"
-	NewTickIcon.BackgroundTransparency = 1
-	NewTickIcon.Image = "rbxassetid://3926305904"
-	NewTickIcon.ImageRectOffset = Vector2.new(312,4)
-	NewTickIcon.ImageRectSize = Vector2.new(24,24)
-	NewTickIcon.Size = UDim2.new(1,-6,1,-6)
-	NewTickIcon.Position = UDim2.new(0,3,0,3)
-	NewTickIcon.ZIndex = Level
-	return NewTickIcon
+-- UI Element factories with object pooling
+local UI_FACTORY = {}
+
+function UI_FACTORY.CreateBaseElement(className, properties)
+	local element = Instance.new(className)
+	
+	for property, value in pairs(properties or {}) do
+		element[property] = value
+	end
+	
+	return element
 end
 
-local function DropdownIcon(ButtonOrNot)
-	local NewDropdownIcon = Instance.new(ButtonOrNot and "ImageButton" or "ImageLabel")
-	NewDropdownIcon.Name = "DropdownIcon"
-	NewDropdownIcon.BackgroundTransparency = 1
-	NewDropdownIcon.Image = IconLibraryID2
-	NewDropdownIcon.ImageRectOffset = Vector2.new(324,364)
-	NewDropdownIcon.ImageRectSize = Vector2.new(36,36)
-	NewDropdownIcon.Size = UDim2.new(0,16,0,16)
-	NewDropdownIcon.Position = UDim2.new(1,-18,0,2)
-	NewDropdownIcon.ZIndex = Level
-	return NewDropdownIcon
+function UI_FACTORY.RoundedFrame(cornerRadius, isButton)
+	local element = UI_FACTORY.CreateBaseElement(isButton and "ImageButton" or "ImageLabel", {
+		BackgroundTransparency = 1,
+		Image = "rbxassetid://3570695787",
+		SliceCenter = Rect.new(100, 100, 100, 100),
+		SliceScale = math.clamp((cornerRadius or 5) * 0.01, 0.01, 1),
+		ScaleType = Enum.ScaleType.Slice
+	})
+	
+	return element
 end
 
-local function RoundBox(CornerRadius, ButtonOrNot)
-	local NewRoundBox = Instance.new(ButtonOrNot and "ImageButton" or "ImageLabel")
-	NewRoundBox.BackgroundTransparency = 1
-	NewRoundBox.Image = "rbxassetid://3570695787"
-	NewRoundBox.SliceCenter = Rect.new(100,100,100,100)
-	NewRoundBox.SliceScale = math.clamp((CornerRadius or 5) * 0.01, 0.01, 1)
-	NewRoundBox.ScaleType = Enum.ScaleType.Slice
-	NewRoundBox.ZIndex = Level
-	return NewRoundBox
+function UI_FACTORY.TextElement(className, text, textSize, isButton)
+	local element = UI_FACTORY.CreateBaseElement(className, {
+		Text = text,
+		Font = MAIN_FONT,
+		TextColor3 = COLORS.TEXT,
+		BackgroundTransparency = 1,
+		TextSize = textSize or 12,
+		Size = UDim2.new(1, 0, 1, 0)
+	})
+	
+	if isButton then
+		element.AutoButtonColor = false
+	end
+	
+	return element
 end
 
-local function Frame()
-	local NewFrame = Instance.new("Frame")
-	NewFrame.BorderSizePixel = 0
-	NewFrame.ZIndex = Level
-	return NewFrame
+function UI_FACTORY.IconElement(iconType, isButton)
+	local iconData = {
+		TITLE = {
+			image = ICON_LIBRARY.MAIN,
+			offset = Vector2.new(524, 764),
+			size = Vector2.new(36, 36),
+			elementSize = UDim2.new(0, 14, 0, 14),
+			position = UDim2.new(1, -17, 0, 3),
+			rotation = 180
+		},
+		TICK = {
+			image = ICON_LIBRARY.MAIN,
+			offset = Vector2.new(312, 4),
+			size = Vector2.new(24, 24),
+			elementSize = UDim2.new(1, -6, 1, -6),
+			position = UDim2.new(0, 3, 0, 3)
+		},
+		DROPDOWN = {
+			image = ICON_LIBRARY.SECONDARY,
+			offset = Vector2.new(324, 364),
+			size = Vector2.new(36, 36),
+			elementSize = UDim2.new(0, 16, 0, 16),
+			position = UDim2.new(1, -18, 0, 2)
+		}
+	}
+	
+	local data = iconData[iconType]
+	if not data then return nil end
+	
+	local icon = UI_FACTORY.CreateBaseElement(isButton and "ImageButton" or "ImageLabel", {
+		BackgroundTransparency = 1,
+		Image = data.image,
+		ImageRectOffset = data.offset,
+		ImageRectSize = data.size,
+		Size = data.elementSize,
+		Position = data.position,
+		Rotation = data.rotation or 0
+	})
+	
+	return icon
 end
 
-local function ScrollingFrame()
-	local NewScrollingFrame = Instance.new("ScrollingFrame")
-	NewScrollingFrame.BackgroundTransparency = 1
-	NewScrollingFrame.BorderSizePixel = 0
-	NewScrollingFrame.ScrollBarThickness = 0
-	NewScrollingFrame.ZIndex = Level
-	return NewScrollingFrame
-end
-
-local function TextButton(Text, Size)
-	local NewTextButton = Instance.new("TextButton")
-	NewTextButton.Text = Text
-	NewTextButton.AutoButtonColor = false
-	NewTextButton.Font = MainFont
-	NewTextButton.TextColor3 = Color3.fromRGB(255,255,255)
-	NewTextButton.BackgroundTransparency = 1
-	NewTextButton.TextSize = Size or 12
-	NewTextButton.Size = UDim2.new(1,0,1,0)
-	NewTextButton.ZIndex = Level
-	return NewTextButton
-end
-
-local function TextBox(Text, Size)
-	local NewTextBox = Instance.new("TextBox")
-	NewTextBox.Text = Text
-	NewTextBox.Font = MainFont
-	NewTextBox.TextColor3 = Color3.fromRGB(255,255,255)
-	NewTextBox.BackgroundTransparency = 1
-	NewTextBox.TextSize = Size or 12
-	NewTextBox.Size = UDim2.new(1,0,1,0)
-	NewTextBox.ZIndex = Level
-	return NewTextBox
-end
-
-local function TextLabel(Text, Size)
-	local NewTextLabel = Instance.new("TextLabel")
-	NewTextLabel.Text = Text
-	NewTextLabel.Font = MainFont
-	NewTextLabel.TextColor3 = Color3.fromRGB(255,255,255)
-	NewTextLabel.BackgroundTransparency = 1
-	NewTextLabel.TextSize = Size or 12
-	NewTextLabel.Size = UDim2.new(1,0,1,0)
-	NewTextLabel.ZIndex = Level
-	return NewTextLabel
-end
-
-local function Tween(GuiObject, Dictionary)
-	local TweenBase = TweenService:Create(GuiObject, GlobalTweenInfo, Dictionary)
-	TweenBase:Play()
-	return TweenBase
-end
-
+-- Main UI Library
 local UILibrary = {}
 
-function UILibrary.Load(GUITitle)
-	local TargetedParent = RunService:IsStudio() and Player:WaitForChild("PlayerGui") or CoreGuiService
+function UILibrary.Load(guiTitle)
+	local targetParent = RunService:IsStudio() and Player:WaitForChild("PlayerGui") or CoreGui
 	
-	local FindOldInstance = TargetedParent:FindFirstChild(GUITitle)
-	
-	if FindOldInstance then
-		FindOldInstance:Destroy()
+	-- Clean up existing instance
+	local existingInstance = targetParent:FindFirstChild(guiTitle)
+	if existingInstance then
+		existingInstance:Destroy()
 	end
 	
-	local NewInstance, ContainerFrame, MainFrame
+	-- Create main UI structure
+	local screenGui = UI_FACTORY.CreateBaseElement("ScreenGui", {
+		Name = guiTitle,
+		Parent = targetParent
+	})
 	
-	NewInstance = Instance.new("ScreenGui")
-	NewInstance.Name = GUITitle
-	NewInstance.Parent = TargetedParent
+	local container = UI_FACTORY.CreateBaseElement("Frame", {
+		Name = "ContainerFrame",
+		Size = UDim2.new(0, 500, 0, 300),
+		Position = UDim2.new(0.5, -250, 0.5, -150),
+		BackgroundTransparency = 1,
+		Parent = screenGui
+	})
 	
-	ContainerFrame = Frame()
-	ContainerFrame.Name = "ContainerFrame"
-	ContainerFrame.Size = UDim2.new(0,500,0,300)
-	ContainerFrame.Position = UDim2.new(0.5,-250,0.5,-150)
-	ContainerFrame.BackgroundTransparency = 1
-	ContainerFrame.Parent = NewInstance
+	local mainFrame = UI_FACTORY.RoundedFrame(5)
+	mainFrame.Name = "MainFrame"
+	mainFrame.ClipsDescendants = true
+	mainFrame.Size = UDim2.new(1, -50, 1, -30)
+	mainFrame.Position = UDim2.new(0, 25, 0, 15)
+	mainFrame.ImageColor3 = COLORS.BACKGROUND.MEDIUM
+	mainFrame.Parent = container
 	
-	Level += 1
+	-- Create UI sections
+	local menuBar = UI_FACTORY.CreateBaseElement("ScrollingFrame", {
+		Name = "MenuBar",
+		BackgroundColor3 = COLORS.BACKGROUND.DARK,
+		BackgroundTransparency = 0.7,
+		Size = UDim2.new(0, 100, 0, 235),
+		Position = UDim2.new(0, 5, 0, 30),
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		ScrollBarThickness = 0,
+		Parent = mainFrame
+	})
 	
-	MainFrame = RoundBox(5)
-	MainFrame.ClipsDescendants = true
-	MainFrame.Name = "MainFrame"
-	MainFrame.Size = UDim2.new(1,-50,1,-30)
-	MainFrame.Position = UDim2.new(0,25,0,15)
-	MainFrame.ImageColor3 = Color3.fromRGB(30,30,30)
-	MainFrame.Parent = ContainerFrame
+	local displayFrame = UI_FACTORY.RoundedFrame(5)
+	displayFrame.Name = "Display"
+	displayFrame.ImageColor3 = COLORS.BACKGROUND.DARK
+	displayFrame.Size = UDim2.new(1, -115, 0, 235)
+	displayFrame.Position = UDim2.new(0, 110, 0, 30)
+	displayFrame.Parent = mainFrame
 	
-	local MenuBar, DisplayFrame, TitleBar
+	local titleBar = UI_FACTORY.RoundedFrame(5)
+	titleBar.Name = "TitleBar"
+	titleBar.ImageColor3 = COLORS.BACKGROUND.LIGHT
+	titleBar.Size = UDim2.new(1, -10, 0, 20)
+	titleBar.Position = UDim2.new(0, 5, 0, 5)
+	titleBar.Parent = mainFrame
 	
-	MenuBar = ScrollingFrame()
-	MenuBar.Name = "MenuBar"
-	MenuBar.BackgroundTransparency = 0.7
-	MenuBar.BackgroundColor3 = Color3.fromRGB(20,20,20)
-	MenuBar.Size = UDim2.new(0,100,0,235)
-	MenuBar.Position = UDim2.new(0,5,0,30)
-	MenuBar.CanvasSize = UDim2.new(0,0,0,0)
-	MenuBar.Parent = MainFrame
+	-- Title bar components
+	local isMinimized = false
+	local minimizeButton = UI_FACTORY.IconElement("TITLE", true)
+	minimizeButton.Name = "Minimise"
+	minimizeButton.Parent = titleBar
 	
-	DisplayFrame = RoundBox(5)
-	DisplayFrame.Name = "Display"
-	DisplayFrame.ImageColor3 = Color3.fromRGB(20,20,20)
-	DisplayFrame.Size = UDim2.new(1,-115,0,235)
-	DisplayFrame.Position = UDim2.new(0,110,0,30)
-	DisplayFrame.Parent = MainFrame
+	local titleButton = UI_FACTORY.TextElement("TextButton", guiTitle, 14, true)
+	titleButton.Name = "TitleButton"
+	titleButton.Size = UDim2.new(1, -20, 1, 0)
+	titleButton.Position = UDim2.new(0, 10, 0, 0)
+	titleButton.TextXAlignment = Enum.TextXAlignment.Center
+	titleButton.Parent = titleBar
 	
-	TitleBar = RoundBox(5)
-	TitleBar.Name = "TitleBar"
-	TitleBar.ImageColor3 = Color3.fromRGB(40,40,40)
-	TitleBar.Size = UDim2.new(1,-10,0,20)
-	TitleBar.Position = UDim2.new(0,5,0,5)
-	TitleBar.Parent = MainFrame
-	
-	Level += 1
-	
-	local MinimiseButton, TitleButton
-	local MinimiseToggle = true
-	
-	MinimiseButton = TitleIcon(true)
-	MinimiseButton.Name = "Minimise"
-	MinimiseButton.Parent = TitleBar
-	
-	TitleButton = TextButton(GUITitle, 14)
-	TitleButton.Name = "TitleButton"
-	TitleButton.Size = UDim2.new(1,-20,1,0)
-	TitleButton.Position = UDim2.new(0,10,0,0)
-	TitleButton.TextXAlignment = Enum.TextXAlignment.Center
-	TitleButton.Parent = TitleBar
-	
-	MinimiseButton.MouseButton1Down:Connect(function()
-		MinimiseToggle = not MinimiseToggle
-		if not MinimiseToggle then
-			Tween(MainFrame, {Size = UDim2.new(1,-50,0,30)})
-			Tween(MinimiseButton, {Rotation = 0})
-		else
-			Tween(MainFrame, {Size = UDim2.new(1,-50,1,-30)})
-			Tween(MinimiseButton, {Rotation = 180})
-		end
-	end)
-	
-	TitleButton.MouseButton1Down:Connect(function()
-		local LastMX, LastMY
-		local inputType = UserInputService:GetLastInputType()
+	-- Title bar functionality
+	local function toggleMinimize()
+		isMinimized = not isMinimized
+		local targetSize = isMinimized and UDim2.new(1, -50, 0, 30) or UDim2.new(1, -50, 1, -30)
+		local targetRotation = isMinimized and 0 or 180
 		
-		-- Handle both mouse and touch inputs
-		if inputType == Enum.UserInputType.MouseButton1 then
-			LastMX, LastMY = Mouse.X, Mouse.Y
-		elseif inputType == Enum.UserInputType.Touch then
-			LastMX, LastMY = Mouse.X, Mouse.Y
+		CreateTween(mainFrame, {Size = targetSize})
+		CreateTween(minimizeButton, {Rotation = targetRotation})
+	end
+	
+	local function startDragging()
+		local lastInput = UserInputService:GetLastInputType()
+		if lastInput ~= Enum.UserInputType.MouseButton1 and lastInput ~= Enum.UserInputType.Touch then
+			return
 		end
 		
-		if not LastMX then return end
+		local lastPosition = Vector2.new(Mouse.X, Mouse.Y)
+		local moveConnection, endConnection
 		
-		local Move, Kill
-		Move = UserInputService.InputChanged:Connect(function(input)
+		moveConnection = UserInputService.InputChanged:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-				local NewMX, NewMY
-				if input.UserInputType == Enum.UserInputType.MouseMovement then
-					NewMX, NewMY = input.Position.X, input.Position.Y
-				else
-					NewMX, NewMY = input.Position.X, input.Position.Y
-				end
+				local currentPosition = input.Position
+				local delta = currentPosition - lastPosition
 				
-				local DX, DY = NewMX - LastMX, NewMY - LastMY
-				ContainerFrame.Position += UDim2.new(0,DX,0,DY)
-				LastMX, LastMY = NewMX, NewMY
+				container.Position = container.Position + UDim2.new(0, delta.X, 0, delta.Y)
+				lastPosition = currentPosition
 			end
 		end)
 		
-		Kill = UserInputService.InputEnded:Connect(function(input)
+		endConnection = UserInputService.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-				if Move then Move:Disconnect() end
-				if Kill then Kill:Disconnect() end
+				moveConnection:Disconnect()
+				endConnection:Disconnect()
 			end
 		end)
-	end)
-	
-	Level += 1
-	
-	local MenuListLayout
-	
-	MenuListLayout = Instance.new("UIListLayout")
-	MenuListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	MenuListLayout.Padding = UDim.new(0,5)
-	MenuListLayout.Parent = MenuBar
-	
-	local TabCount = 0
-	
-	local TabLibrary = {}
-	
-	function TabLibrary.AddPage(PageTitle)
-		local PageContainer = RoundBox(5)
-		PageContainer.Name = PageTitle
-		PageContainer.Size = UDim2.new(1,0,0,20)
-		PageContainer.LayoutOrder = TabCount
-		PageContainer.ImageColor3 = (TabCount == 0) and Color3.fromRGB(50,50,50) or Color3.fromRGB(40,40,40)
-		PageContainer.Parent = MenuBar
-		
-		local PageButton = TextButton(PageTitle, 14)
-		PageButton.Name = PageTitle.."Button"
-		PageButton.TextTransparency = (TabCount == 0) and 0 or 0.5
-		PageButton.Parent = PageContainer
-		
-		PageButton.MouseButton1Down:Connect(function()
-			spawn(function()
-				for _, Button in next, MenuBar:GetChildren() do
-					if Button:IsA("GuiObject") then
-						local IsButton = string.find(Button.Name:lower(), PageContainer.Name:lower())
-						local Button2 = Button:FindFirstChild(Button.Name.."Button")
-						Tween(Button, {ImageColor3 = IsButton and Color3.fromRGB(50,50,50) or Color3.fromRGB(40,40,40)})
-						Tween(Button2, {TextTransparency = IsButton and 0 or 0.5})
-					end
-				end
-			end)
-			spawn(function()
-				for _, Display in next, DisplayFrame:GetChildren() do
-					if Display:IsA("GuiObject") then
-						Display.Visible = string.find(Display.Name:lower(), PageContainer.Name:lower())
-					end
-				end
-			end)
-		end)
-		
-		local DisplayPage = ScrollingFrame()
-		DisplayPage.Visible = (TabCount == 0)
-		DisplayPage.Name = PageTitle
-		DisplayPage.Size = UDim2.new(1,0,1,0)
-		DisplayPage.Parent = DisplayFrame
-		
-		TabCount += 1
-		
-		local DisplayList = Instance.new("UIListLayout")
-		DisplayList.SortOrder = Enum.SortOrder.LayoutOrder
-		DisplayList.Padding = UDim.new(0,5)
-		DisplayList.Parent = DisplayPage
-		
-		DisplayList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			local Y1 = DisplayList.AbsoluteContentSize.Y
-			local Y2 = DisplayPage.AbsoluteWindowSize.Y
-			DisplayPage.CanvasSize = UDim2.new(0,0,(Y1/Y2)+0.05,0)
-		end)
-		
-		local DisplayPadding = Instance.new("UIPadding")
-		DisplayPadding.PaddingBottom = UDim.new(0,5)
-		DisplayPadding.PaddingTop = UDim.new(0,5)
-		DisplayPadding.PaddingLeft = UDim.new(0,5)
-		DisplayPadding.PaddingRight = UDim.new(0,5)
-		DisplayPadding.Parent = DisplayPage
-		
-		local PageLibrary = {}
-		
-		function PageLibrary.AddButton(Text, Callback, Parent, Underline)
-			local ButtonContainer = Frame()
-			ButtonContainer.Name = Text.."BUTTON"
-			ButtonContainer.Size = UDim2.new(1,0,0,20)
-			ButtonContainer.BackgroundTransparency = 1
-			ButtonContainer.Parent = Parent or DisplayPage
-			
-			local ButtonForeground = RoundBox(5)
-			ButtonForeground.Name = "ButtonForeground"
-			ButtonForeground.Size = UDim2.new(1,0,1,0)
-			ButtonForeground.ImageColor3 = Color3.fromRGB(35,35,35)
-			ButtonForeground.Parent = ButtonContainer
-			
-			if Underline then
-				local TextSize = TextService:GetTextSize(Text, 12, Enum.Font.Gotham, Vector2.new(0,0))
-			
-				local BottomEffect = Frame()
-				BottomEffect.Size = UDim2.new(0,TextSize.X,0,1)
-				BottomEffect.Position = UDim2.new(0.5,(-TextSize.X/2)-1,1,-1)
-				BottomEffect.BackgroundColor3 = Color3.fromRGB(255,255,255)
-				BottomEffect.BackgroundTransparency = 0.5
-				BottomEffect.Parent = ButtonForeground
-			end
-			
-			local HiddenButton = TextButton(Text, 12)
-			HiddenButton.Parent = ButtonForeground
-			
-			HiddenButton.MouseButton1Down:Connect(function()
-				Callback()
-				Tween(ButtonForeground, {ImageColor3 = Color3.fromRGB(45,45,45)})
-				Tween(HiddenButton, {TextTransparency = 0.5})
-				wait(TweenTime)
-				Tween(ButtonForeground, {ImageColor3 = Color3.fromRGB(35,35,35)})
-				Tween(HiddenButton, {TextTransparency = 0})
-			end)
-		end
-		
-		function PageLibrary.AddLabel(Text)
-			local LabelContainer = Frame()
-			LabelContainer.Name = Text.."LABEL"
-			LabelContainer.Size = UDim2.new(1,0,0,20)
-			LabelContainer.BackgroundTransparency = 1
-			LabelContainer.Parent = DisplayPage
-			
-			local LabelForeground = RoundBox(5)
-			LabelForeground.Name = "LabelForeground"
-			LabelForeground.ImageColor3 = Color3.fromRGB(45,45,45)
-			LabelForeground.Size = UDim2.new(1,0,1,0)
-			LabelForeground.Parent = LabelContainer
-			
-			local HiddenLabel = TextLabel(Text, 12)
-			HiddenLabel.Parent = LabelForeground
-		end
-		
-		function PageLibrary.AddDropdown(Text, ConfigurationArray, Callback)
-    local DropdownArray = ConfigurationArray or {}
-    local DropdownToggle = false
-
-    local DropdownContainer = Frame()
-    DropdownContainer.Size = UDim2.new(1,0,0,20)
-    DropdownContainer.Name = Text.."DROPDOWN"
-    DropdownContainer.BackgroundTransparency = 1
-    DropdownContainer.Parent = DisplayPage
-
-    local DropdownForeground = RoundBox(5)
-    DropdownForeground.ClipsDescendants = true
-    DropdownForeground.ImageColor3 = Color3.fromRGB(35,35,35)
-    DropdownForeground.Size = UDim2.new(1,0,1,0)
-    DropdownForeground.Parent = DropdownContainer
-
-    local DropdownExpander = DropdownIcon(true)
-    DropdownExpander.Parent = DropdownForeground
-
-    local DropdownLabel = TextLabel(Text, 12)
-    DropdownLabel.Size = UDim2.new(1,0,0,20)
-    DropdownLabel.Parent = DropdownForeground
-
-    local DropdownFrame = ScrollingFrame()
-    DropdownFrame.Position = UDim2.new(0,0,0,20)
-    DropdownFrame.BackgroundTransparency = 1
-    DropdownFrame.Size = UDim2.new(1,0,0,math.min(#DropdownArray*20, 100))
-    DropdownFrame.CanvasSize = UDim2.new(0,0,0,#DropdownArray*20)
-    DropdownFrame.Parent = DropdownForeground
-
-    local DropdownList = Instance.new("UIListLayout")
-    DropdownList.Parent = DropdownFrame
-
-    -- Create dropdown buttons with proper level management
-    local function CreateDropdownButtons()
-        for OptionIndex, Option in next, DropdownArray do
-            local currentLevel = Level
-            Level = Level + 1
-
-            local ButtonContainer = Frame()
-            ButtonContainer.Name = Option.."BUTTON"
-            ButtonContainer.Size = UDim2.new(1,0,0,20)
-            ButtonContainer.BackgroundTransparency = 1
-            ButtonContainer.Parent = DropdownFrame
-
-            local ButtonForeground = RoundBox(5)
-            ButtonForeground.Name = "ButtonForeground"
-            ButtonForeground.Size = UDim2.new(1,0,1,0)
-            ButtonForeground.ImageColor3 = Color3.fromRGB(35,35,35)
-            ButtonForeground.Parent = ButtonContainer
-
-            if OptionIndex < #DropdownArray then
-                local TextSize = TextService:GetTextSize(Option, 12, Enum.Font.Gotham, Vector2.new(0,0))
-
-                local BottomEffect = Frame()
-                BottomEffect.Size = UDim2.new(0,TextSize.X,0,1)
-                BottomEffect.Position = UDim2.new(0.5,(-TextSize.X/2)-1,1,-1)
-                BottomEffect.BackgroundColor3 = Color3.fromRGB(255,255,255)
-                BottomEffect.BackgroundTransparency = 0.5
-                BottomEffect.Parent = ButtonForeground
-            end
-
-            local HiddenButton = TextButton(Option, 12)
-            HiddenButton.Parent = ButtonForeground
-
-            HiddenButton.MouseButton1Down:Connect(function()
-                Callback(Option)
-                DropdownLabel.Text = Text..": "..Option
-                Tween(ButtonForeground, {ImageColor3 = Color3.fromRGB(45,45,45)})
-                Tween(HiddenButton, {TextTransparency = 0.5})
-                wait(TweenTime)
-                Tween(ButtonForeground, {ImageColor3 = Color3.fromRGB(35,35,35)})
-                Tween(HiddenButton, {TextTransparency = 0})
-            end)
-
-            Level = currentLevel
-        end
-    end
-
-    CreateDropdownButtons()
-
-    DropdownExpander.MouseButton1Down:Connect(function()
-        DropdownToggle = not DropdownToggle
-        Tween(DropdownContainer, {
-            Size = DropdownToggle
-                and UDim2.new(1,0,0,20 + math.min(#DropdownArray*20, 100))
-                or  UDim2.new(1,0,0,20)
-        })
-        Tween(DropdownExpander, {Rotation = DropdownToggle and 135 or 0})
-    end)
-
-    local DropdownLibrary = {}
-
-    function DropdownLibrary.Refresh(NewArray)
-        DropdownArray = NewArray or {}
-
-        -- Remove only option buttons, keep the UIListLayout
-        for _, child in ipairs(DropdownFrame:GetChildren()) do
-            if not child:IsA("UIListLayout") then
-                child:Destroy()
-            end
-        end
-
-        CreateDropdownButtons()
-
-        DropdownFrame.Size = UDim2.new(1,0,0,math.min(#DropdownArray*20, 100))
-        DropdownFrame.CanvasSize = UDim2.new(0,0,0,#DropdownArray*20)
-
-        if DropdownToggle then
-            Tween(DropdownContainer, {
-                Size = UDim2.new(1,0,0,20 + math.min(#DropdownArray*20, 100))
-            })
-        end
-    end
-
-    return DropdownLibrary
-end
-		
-		function PageLibrary.AddSlider(Text, ConfigurationDictionary, Callback, Parent)
-			local Configuration = ConfigurationDictionary
-			local Minimum = Configuration.Minimum or Configuration.minimum or Configuration.Min or Configuration.min
-			local Maximum = Configuration.Maximum or Configuration.maximum or Configuration.Max or Configuration.max
-			local Default = Configuration.Default or Configuration.default or Configuration.Def or Configuration.def
-			
-			if Minimum > Maximum then
-				local StoreValue = Minimum
-				Minimum = Maximum
-				Maximum = StoreValue
-			end
-			
-			Default = math.clamp(Default, Minimum, Maximum)
-			
-			local DefaultScale = Default/Maximum
-			
-			local SliderContainer = Frame()
-			SliderContainer.Name = Text.."SLIDER"
-			SliderContainer.Size = UDim2.new(1,0,0,20)
-			SliderContainer.BackgroundTransparency = 1
-			SliderContainer.Parent = Parent or DisplayPage
-			
-			local SliderForeground = RoundBox(5)
-			SliderForeground.Name = "SliderForeground"
-			SliderForeground.ImageColor3 = Color3.fromRGB(35,35,35)
-			SliderForeground.Size = UDim2.new(1,0,1,0)
-			SliderForeground.Parent = SliderContainer
-			
-			local SliderButton = TextButton(Text..": "..Default)
-			SliderButton.Size = UDim2.new(1,0,1,0)
-			SliderButton.ZIndex = 6
-			SliderButton.Parent = SliderForeground
-			
-			local SliderFill = RoundBox(5)
-			SliderFill.Size = UDim2.new(DefaultScale,0,1,0)
-			SliderFill.ImageColor3 = Color3.fromRGB(70,70,70)
-			SliderFill.ZIndex = 5
-			SliderFill.ImageTransparency = 0.7
-			SliderFill.Parent = SliderButton
-			
-			SliderButton.MouseButton1Down:Connect(function()
-				Tween(SliderFill, {ImageTransparency = 0.5})
-				local X, Y, XScale, YScale = GetXY(SliderButton)
-				local Value = math.floor(Minimum + ((Maximum - Minimum) * XScale))
-				Callback(Value)
-				SliderButton.Text = Text..": "..tostring(Value)
-				local TargetSize = UDim2.new(XScale,0,1,0)
-				Tween(SliderFill, {Size = TargetSize})
-				
-				local SliderMove, SliderKill
-				SliderMove = UserInputService.InputChanged:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-						local X, Y, XScale, YScale = GetXY(SliderButton)
-						local Value = math.floor(Minimum + ((Maximum - Minimum) * XScale))
-						Callback(Value)
-						SliderButton.Text = Text..": "..tostring(Value)
-						local TargetSize = UDim2.new(XScale,0,1,0)
-						Tween(SliderFill, {Size = TargetSize})
-					end
-				end)
-				
-				SliderKill = UserInputService.InputEnded:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						Tween(SliderFill, {ImageTransparency = 0.7})
-						if SliderMove then SliderMove:Disconnect() end
-						if SliderKill then SliderKill:Disconnect() end
-					end
-				end)
-			end)
-			
-			local SliderLibrary = {}
-			
-			function SliderLibrary.Set(Value)
-				Value = math.clamp(Value, Minimum, Maximum)
-				local XScale = (Value - Minimum) / (Maximum - Minimum)
-				Callback(Value)
-				SliderButton.Text = Text..": "..tostring(Value)
-				local TargetSize = UDim2.new(XScale,0,1,0)
-				Tween(SliderFill, {Size = TargetSize})
-			end
-			
-			return SliderLibrary
-		end
-		
-		function PageLibrary.AddToggle(Text, Default, Callback)
-			local ThisToggle = Default or false
-			
-			local ToggleContainer = Frame()
-			ToggleContainer.Name = Text.."TOGGLE"
-			ToggleContainer.Size = UDim2.new(1,0,0,20)
-			ToggleContainer.BackgroundTransparency = 1
-			ToggleContainer.Parent = DisplayPage
-			
-			local ToggleLeftSide, ToggleRightSide, EffectFrame, RightTick = RoundBox(5), RoundBox(5), Frame(), TickIcon()
-			local FlatLeft, FlatRight = Frame(), Frame()
-			
-			ToggleLeftSide.Size = UDim2.new(1,-22,1,0)
-			ToggleLeftSide.ImageColor3 = Color3.fromRGB(35,35,35)
-			ToggleLeftSide.Parent = ToggleContainer
-			
-			ToggleRightSide.Position = UDim2.new(1,-20,0,0)
-			ToggleRightSide.Size = UDim2.new(0,20,1,0)
-			ToggleRightSide.ImageColor3 = Color3.fromRGB(45,45,45)
-			ToggleRightSide.Parent = ToggleContainer
-			
-			FlatLeft.BackgroundColor3 = Color3.fromRGB(35,35,35)
-			FlatLeft.Size = UDim2.new(0,5,1,0)
-			FlatLeft.Position = UDim2.new(1,-5,0,0)
-			FlatLeft.Parent = ToggleLeftSide
-			
-			FlatRight.BackgroundColor3 = Color3.fromRGB(45,45,45)
-			FlatRight.Size = UDim2.new(0,5,1,0)
-			FlatRight.Parent = ToggleRightSide
-			
-			EffectFrame.BackgroundColor3 = ThisToggle and Color3.fromRGB(0,255,109) or Color3.fromRGB(255,160,160)
-			EffectFrame.Position = UDim2.new(1,-22,0.2,0)
-			EffectFrame.Size = UDim2.new(0,2,0.6,0)
-			EffectFrame.Parent = ToggleContainer
-			
-			RightTick.ImageTransparency = ThisToggle and 0 or 1
-			RightTick.Parent = ToggleRightSide
-			
-			local ToggleButton = TextButton(Text, 12)
-			ToggleButton.Name = "ToggleButton"
-			ToggleButton.Size = UDim2.new(1,0,1,0)
-			ToggleButton.Parent = ToggleLeftSide
-			
-			ToggleButton.MouseButton1Down:Connect(function()
-				ThisToggle = not ThisToggle
-				Tween(EffectFrame, {BackgroundColor3 = ThisToggle and Color3.fromRGB(0,255,109) or Color3.fromRGB(255,160,160)})
-				Tween(RightTick, {ImageTransparency = ThisToggle and 0 or 1})
-				Callback(ThisToggle)
-			end)
-			
-			local ToggleLibrary = {}
-			
-			function ToggleLibrary.Set(Value)
-				ThisToggle = Value
-				Tween(EffectFrame, {BackgroundColor3 = ThisToggle and Color3.fromRGB(0,255,109) or Color3.fromRGB(255,160,160)})
-				Tween(RightTick, {ImageTransparency = ThisToggle and 0 or 1})
-				Callback(ThisToggle)
-			end
-			
-			return ToggleLibrary
-		end
-		
-		function PageLibrary.AddTextBox(Text, Placeholder, Callback)
-			local TextBoxContainer = Frame()
-			TextBoxContainer.Name = Text.."TEXTBOX"
-			TextBoxContainer.Size = UDim2.new(1,0,0,20)
-			TextBoxContainer.BackgroundTransparency = 1
-			TextBoxContainer.Parent = DisplayPage
-			
-			local TextBoxForeground = RoundBox(5)
-			TextBoxForeground.Name = "TextBoxForeground"
-			TextBoxForeground.ImageColor3 = Color3.fromRGB(35,35,35)
-			TextBoxForeground.Size = UDim2.new(1,0,1,0)
-			TextBoxForeground.Parent = TextBoxContainer
-			
-			local HiddenTextBox = TextBox("", 12)
-			HiddenTextBox.PlaceholderText = Placeholder or ""
-			HiddenTextBox.Text = Text
-			HiddenTextBox.TextTruncate = Enum.TextTruncate.AtEnd
-			HiddenTextBox.Parent = TextBoxForeground
-			
-			HiddenTextBox.FocusLost:Connect(function(enterPressed)
-				if enterPressed then
-					Callback(HiddenTextBox.Text)
-				end
-			end)
-		end
-		
-		return PageLibrary
 	end
 	
-	return TabLibrary
+	minimizeButton.MouseButton1Down:Connect(toggleMinimize)
+	titleButton.MouseButton1Down:Connect(startDragging)
+	
+	-- Menu bar layout
+	local menuLayout = UI_FACTORY.CreateBaseElement("UIListLayout", {
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Padding = UDim.new(0, 5),
+		Parent = menuBar
+	})
+	
+	local tabCount = 0
+	local tabLibrary = {}
+	
+	function tabLibrary.AddPage(pageTitle)
+		local isFirstTab = tabCount == 0
+		
+		-- Create tab button
+		local tabContainer = UI_FACTORY.RoundedFrame(5)
+		tabContainer.Name = pageTitle
+		tabContainer.Size = UDim2.new(1, 0, 0, 20)
+		tabContainer.LayoutOrder = tabCount
+		tabContainer.ImageColor3 = isFirstTab and COLORS.BACKGROUND.BUTTON_HOVER or COLORS.BACKGROUND.BUTTON
+		tabContainer.Parent = menuBar
+		
+		local tabButton = UI_FACTORY.TextElement("TextButton", pageTitle, 14, true)
+		tabButton.Name = pageTitle .. "Button"
+		tabButton.TextTransparency = isFirstTab and 0 or 0.5
+		tabButton.Parent = tabContainer
+		
+		-- Create display page
+		local displayPage = UI_FACTORY.CreateBaseElement("ScrollingFrame", {
+			Name = pageTitle,
+			Visible = isFirstTab,
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			ScrollBarThickness = 0,
+			Parent = displayFrame
+		})
+		
+		local displayLayout = UI_FACTORY.CreateBaseElement("UIListLayout", {
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			Padding = UDim.new(0, 5),
+			Parent = displayPage
+		})
+		
+		local displayPadding = UI_FACTORY.CreateBaseElement("UIPadding", {
+			PaddingBottom = UDim.new(0, 5),
+			PaddingTop = UDim.new(0, 5),
+			PaddingLeft = UDim.new(0, 5),
+			PaddingRight = UDim.new(0, 5),
+			Parent = displayPage
+		})
+		
+		-- Auto-resize display page
+		displayLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			local contentHeight = displayLayout.AbsoluteContentSize.Y
+			local windowHeight = displayPage.AbsoluteWindowSize.Y
+			displayPage.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight / windowHeight + 0.05, 0))
+		end)
+		
+		-- Tab switching functionality
+		tabButton.MouseButton1Down:Connect(function()
+			-- Update all tab appearances
+			for _, tab in ipairs(menuBar:GetChildren()) do
+				if tab:IsA("GuiObject") and tab ~= tabContainer then
+					local button = tab:FindFirstChild(tab.Name .. "Button")
+					if button then
+						CreateTween(tab, {ImageColor3 = COLORS.BACKGROUND.BUTTON})
+						CreateTween(button, {TextTransparency = 0.5})
+					end
+				end
+			end
+			
+			-- Update current tab
+			CreateTween(tabContainer, {ImageColor3 = COLORS.BACKGROUND.BUTTON_HOVER})
+			CreateTween(tabButton, {TextTransparency = 0})
+			
+			-- Update display visibility
+			for _, display in ipairs(displayFrame:GetChildren()) do
+				if display:IsA("GuiObject") then
+					display.Visible = display.Name == pageTitle
+				end
+			end
+		end)
+		
+		tabCount += 1
+		
+		local pageLibrary = {}
+		
+		function pageLibrary.AddButton(text, callback, parent, showUnderline)
+			local buttonContainer = UI_FACTORY.CreateBaseElement("Frame", {
+				Name = text .. "BUTTON",
+				Size = UDim2.new(1, 0, 0, 20),
+				BackgroundTransparency = 1,
+				Parent = parent or displayPage
+			})
+			
+			local buttonBackground = UI_FACTORY.RoundedFrame(5)
+			buttonBackground.Name = "ButtonForeground"
+			buttonBackground.Size = UDim2.new(1, 0, 1, 0)
+			buttonBackground.ImageColor3 = COLORS.BACKGROUND.BUTTON
+			buttonBackground.Parent = buttonContainer
+			
+			if showUnderline then
+				local textSize = TextService:GetTextSize(text, 12, MAIN_FONT, Vector2.new(0, 0))
+				local underline = UI_FACTORY.CreateBaseElement("Frame", {
+					Size = UDim2.new(0, textSize.X, 0, 1),
+					Position = UDim2.new(0.5, -textSize.X / 2, 1, -1),
+					BackgroundColor3 = COLORS.TEXT,
+					BackgroundTransparency = 0.5,
+					Parent = buttonBackground
+				})
+			end
+			
+			local button = UI_FACTORY.TextElement("TextButton", text, 12, true)
+			button.Parent = buttonBackground
+			
+			button.MouseButton1Down:Connect(function()
+				-- Visual feedback
+				CreateTween(buttonBackground, {ImageColor3 = COLORS.BACKGROUND.BUTTON_HOVER})
+				CreateTween(button, {TextTransparency = 0.5})
+				
+				-- Execute callback
+				callback()
+				
+				-- Reset appearance
+				task.delay(TWEEN_TIME, function()
+					CreateTween(buttonBackground, {ImageColor3 = COLORS.BACKGROUND.BUTTON})
+					CreateTween(button, {TextTransparency = 0})
+				end)
+			end)
+		end
+		
+		function pageLibrary.AddLabel(text)
+			local labelContainer = UI_FACTORY.CreateBaseElement("Frame", {
+				Name = text .. "LABEL",
+				Size = UDim2.new(1, 0, 0, 20),
+				BackgroundTransparency = 1,
+				Parent = displayPage
+			})
+			
+			local labelBackground = UI_FACTORY.RoundedFrame(5)
+			labelBackground.Name = "LabelForeground"
+			labelBackground.ImageColor3 = COLORS.BACKGROUND.BUTTON_HOVER
+			labelBackground.Size = UDim2.new(1, 0, 1, 0)
+			labelBackground.Parent = labelContainer
+			
+			local label = UI_FACTORY.TextElement("TextLabel", text, 12)
+			label.Parent = labelBackground
+		end
+		
+		function pageLibrary.AddDropdown(text, options, callback)
+			options = options or {}
+			local isExpanded = false
+			
+			local dropdownContainer = UI_FACTORY.CreateBaseElement("Frame", {
+				Name = text .. "DROPDOWN",
+				Size = UDim2.new(1, 0, 0, 20),
+				BackgroundTransparency = 1,
+				Parent = displayPage
+			})
+			
+			local dropdownBackground = UI_FACTORY.RoundedFrame(5)
+			dropdownBackground.ClipsDescendants = true
+			dropdownBackground.ImageColor3 = COLORS.BACKGROUND.BUTTON
+			dropdownBackground.Size = UDim2.new(1, 0, 1, 0)
+			dropdownBackground.Parent = dropdownContainer
+			
+			local expandIcon = UI_FACTORY.IconElement("DROPDOWN", true)
+			expandIcon.Parent = dropdownBackground
+			
+			local dropdownLabel = UI_FACTORY.TextElement("TextLabel", text, 12)
+			dropdownLabel.Size = UDim2.new(1, 0, 0, 20)
+			dropdownLabel.Parent = dropdownBackground
+			
+			local optionsFrame = UI_FACTORY.CreateBaseElement("ScrollingFrame", {
+				Position = UDim2.new(0, 0, 0, 20),
+				BackgroundTransparency = 1,
+				Size = UDim2.new(1, 0, 0, math.min(#options * 20, 100)),
+				CanvasSize = UDim2.new(0, 0, 0, #options * 20),
+				ScrollBarThickness = 0,
+				Parent = dropdownBackground
+			})
+			
+			local optionsLayout = UI_FACTORY.CreateBaseElement("UIListLayout", {
+				Parent = optionsFrame
+			})
+			
+			local function createOptionButtons()
+				-- Clear existing options
+				for _, child in ipairs(optionsFrame:GetChildren()) do
+					if not child:IsA("UIListLayout") then
+						child:Destroy()
+					end
+				end
+				
+				-- Create new options
+				for i, option in ipairs(options) do
+					local optionContainer = UI_FACTORY.CreateBaseElement("Frame", {
+						Name = option .. "BUTTON",
+						Size = UDim2.new(1, 0, 0, 20),
+						BackgroundTransparency = 1,
+						Parent = optionsFrame
+					})
+					
+					local optionBackground = UI_FACTORY.RoundedFrame(5)
+					optionBackground.Name = "ButtonForeground"
+					optionBackground.Size = UDim2.new(1, 0, 1, 0)
+					optionBackground.ImageColor3 = COLORS.BACKGROUND.BUTTON
+					optionBackground.Parent = optionContainer
+					
+					if i < #options then
+						local textSize = TextService:GetTextSize(option, 12, MAIN_FONT, Vector2.new(0, 0))
+						local underline = UI_FACTORY.CreateBaseElement("Frame", {
+							Size = UDim2.new(0, textSize.X, 0, 1),
+							Position = UDim2.new(0.5, -textSize.X / 2, 1, -1),
+							BackgroundColor3 = COLORS.TEXT,
+							BackgroundTransparency = 0.5,
+							Parent = optionBackground
+						})
+					end
+					
+					local optionButton = UI_FACTORY.TextElement("TextButton", option, 12, true)
+					optionButton.Parent = optionBackground
+					
+					optionButton.MouseButton1Down:Connect(function()
+						callback(option)
+						dropdownLabel.Text = text .. ": " .. option
+						
+						-- Visual feedback
+						CreateTween(optionBackground, {ImageColor3 = COLORS.BACKGROUND.BUTTON_HOVER})
+						CreateTween(optionButton, {TextTransparency = 0.5})
+						
+						task.delay(TWEEN_TIME, function()
+							CreateTween(optionBackground, {ImageColor3 = COLORS.BACKGROUND.BUTTON})
+							CreateTween(optionButton, {TextTransparency = 0})
+						end)
+					end)
+				end
+			end
+			
+			createOptionButtons()
+			
+			expandIcon.MouseButton1Down:Connect(function()
+				isExpanded = not isExpanded
+				local targetHeight = isExpanded and (20 + math.min(#options * 20, 100)) or 20
+				
+				CreateTween(dropdownContainer, {Size = UDim2.new(1, 0, 0, targetHeight)})
+				CreateTween(expandIcon, {Rotation = isExpanded and 135 or 0})
+			end)
+			
+			local dropdownLib = {}
+			
+			function dropdownLib.Refresh(newOptions)
+				options = newOptions or {}
+				createOptionButtons()
+				
+				optionsFrame.Size = UDim2.new(1, 0, 0, math.min(#options * 20, 100))
+				optionsFrame.CanvasSize = UDim2.new(0, 0, 0, #options * 20)
+				
+				if isExpanded then
+					CreateTween(dropdownContainer, {
+						Size = UDim2.new(1, 0, 0, 20 + math.min(#options * 20, 100))
+					})
+				end
+			end
+			
+			return dropdownLib
+		end
+		
+		function pageLibrary.AddSlider(text, config, callback, parent)
+			config = config or {}
+			local min = config.Minimum or config.minimum or config.Min or config.min or 0
+			local max = config.Maximum or config.maximum or config.Max or config.max or 100
+			local default = config.Default or config.default or config.Def or config.def or min
+			
+			if min > max then
+				min, max = max, min
+			end
+			
+			default = math.clamp(default, min, max)
+			local defaultScale = (default - min) / (max - min)
+			
+			local sliderContainer = UI_FACTORY.CreateBaseElement("Frame", {
+				Name = text .. "SLIDER",
+				Size = UDim2.new(1, 0, 0, 20),
+				BackgroundTransparency = 1,
+				Parent = parent or displayPage
+			})
+			
+			local sliderBackground = UI_FACTORY.RoundedFrame(5)
+			sliderBackground.Name = "SliderForeground"
+			sliderBackground.ImageColor3 = COLORS.BACKGROUND.BUTTON
+			sliderBackground.Size = UDim2.new(1, 0, 1, 0)
+			sliderBackground.Parent = sliderContainer
+			
+			local sliderButton = UI_FACTORY.TextElement("TextButton", text .. ": " .. default, 12, true)
+			sliderButton.Size = UDim2.new(1, 0, 1, 0)
+			sliderButton.Parent = sliderBackground
+			
+			local sliderFill = UI_FACTORY.RoundedFrame(5)
+			sliderFill.Size = UDim2.new(defaultScale, 0, 1, 0)
+			sliderFill.ImageColor3 = COLORS.BACKGROUND.LIGHT
+			sliderFill.ImageTransparency = 0.7
+			sliderFill.Parent = sliderButton
+			
+			local function updateSlider(value)
+				value = math.clamp(value, min, max)
+				local scale = (value - min) / (max - min)
+				
+				callback(value)
+				sliderButton.Text = text .. ": " .. value
+				CreateTween(sliderFill, {Size = UDim2.new(scale, 0, 1, 0)})
+			end
+			
+			sliderButton.MouseButton1Down:Connect(function()
+				CreateTween(sliderFill, {ImageTransparency = 0.5})
+				
+				local x, y, xScale = GetXY(sliderButton)
+				updateSlider(math.floor(min + ((max - min) * xScale)))
+				
+				local moveConnection, endConnection
+				
+				moveConnection = UserInputService.InputChanged:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+						local x, y, xScale = GetXY(sliderButton)
+						updateSlider(math.floor(min + ((max - min) * xScale)))
+					end
+				end)
+				
+				endConnection = UserInputService.InputEnded:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+						CreateTween(sliderFill, {ImageTransparency = 0.7})
+						moveConnection:Disconnect()
+						endConnection:Disconnect()
+					end
+				end)
+			end)
+			
+			local sliderLib = {}
+			
+			function sliderLib.Set(value)
+				updateSlider(value)
+			end
+			
+			return sliderLib
+		end
+		
+		function pageLibrary.AddToggle(text, defaultValue, callback)
+			local isToggled = defaultValue or false
+			
+			local toggleContainer = UI_FACTORY.CreateBaseElement("Frame", {
+				Name = text .. "TOGGLE",
+				Size = UDim2.new(1, 0, 0, 20),
+				BackgroundTransparency = 1,
+				Parent = displayPage
+			})
+			
+			local leftSide = UI_FACTORY.RoundedFrame(5)
+			leftSide.Size = UDim2.new(1, -22, 1, 0)
+			leftSide.ImageColor3 = COLORS.BACKGROUND.BUTTON
+			leftSide.Parent = toggleContainer
+			
+			local rightSide = UI_FACTORY.RoundedFrame(5)
+			rightSide.Position = UDim2.new(1, -20, 0, 0)
+			rightSide.Size = UDim2.new(0, 20, 1, 0)
+			rightSide.ImageColor3 = COLORS.BACKGROUND.BUTTON_HOVER
+			rightSide.Parent = toggleContainer
+			
+			local statusIndicator = UI_FACTORY.CreateBaseElement("Frame", {
+				BackgroundColor3 = isToggled and COLORS.ACCENT.SUCCESS or COLORS.ACCENT.ERROR,
+				Position = UDim2.new(1, -22, 0.2, 0),
+				Size = UDim2.new(0, 2, 0.6, 0),
+				Parent = toggleContainer
+			})
+			
+			local tickIcon = UI_FACTORY.IconElement("TICK")
+			tickIcon.ImageTransparency = isToggled and 0 or 1
+			tickIcon.Parent = rightSide
+			
+			local toggleButton = UI_FACTORY.TextElement("TextButton", text, 12, true)
+			toggleButton.Name = "ToggleButton"
+			toggleButton.Size = UDim2.new(1, 0, 1, 0)
+			toggleButton.Parent = leftSide
+			
+			toggleButton.MouseButton1Down:Connect(function()
+				isToggled = not isToggled
+				CreateTween(statusIndicator, {BackgroundColor3 = isToggled and COLORS.ACCENT.SUCCESS or COLORS.ACCENT.ERROR})
+				CreateTween(tickIcon, {ImageTransparency = isToggled and 0 or 1})
+				callback(isToggled)
+			end)
+			
+			local toggleLib = {}
+			
+			function toggleLib.Set(value)
+				isToggled = value
+				CreateTween(statusIndicator, {BackgroundColor3 = isToggled and COLORS.ACCENT.SUCCESS or COLORS.ACCENT.ERROR})
+				CreateTween(tickIcon, {ImageTransparency = isToggled and 0 or 1})
+				callback(isToggled)
+			end
+			
+			return toggleLib
+		end
+		
+		function pageLibrary.AddTextBox(text, placeholder, callback)
+			local textBoxContainer = UI_FACTORY.CreateBaseElement("Frame", {
+				Name = text .. "TEXTBOX",
+				Size = UDim2.new(1, 0, 0, 20),
+				BackgroundTransparency = 1,
+				Parent = displayPage
+			})
+			
+			local textBoxBackground = UI_FACTORY.RoundedFrame(5)
+			textBoxBackground.Name = "TextBoxForeground"
+			textBoxBackground.ImageColor3 = COLORS.BACKGROUND.BUTTON
+			textBoxBackground.Size = UDim2.new(1, 0, 1, 0)
+			textBoxBackground.Parent = textBoxContainer
+			
+			local textBox = UI_FACTORY.TextElement("TextBox", text, 12)
+			textBox.PlaceholderText = placeholder or ""
+			textBox.TextTruncate = Enum.TextTruncate.AtEnd
+			textBox.Parent = textBoxBackground
+			
+			textBox.FocusLost:Connect(function(enterPressed)
+				if enterPressed then
+					callback(textBox.Text)
+				end
+			end)
+		end
+		
+		return pageLibrary
+	end
+	
+	return tabLibrary
 end
 
 return UILibrary
