@@ -5,8 +5,8 @@ local Players = game:GetService("Players")
 
 local LocalPlayer = Players.LocalPlayer
 
-local Window = Library:Window("Free Product Finder")
-local MainTab = Window:Tab("Main")
+local Window = Library:CreateWindow("Free Product Finder")
+local MainTab = Window:AddTab("Main")
 
 local State = {
     passes = {},
@@ -107,24 +107,25 @@ Purchase(%d)
     setclipboard(scriptCode)
 end
 
-GamePassDropdown = MainTab:Dropdown("Select Game Pass", FetchProducts(), function(name)
+-- Create UI elements using new Sentinel API
+GamePassDropdown = MainTab:AddDropdown("Select Game Pass", FetchProducts(), function(name)
     SelectPass(name)
     LoopStop()
 end)
 
-MainTab:Button("Buy Selected Game Pass", function()
+MainTab:AddButton("Buy Selected Game Pass", function()
     if HasSelected() then
         Purchase(State.selected.ID)
     end
 end)
 
-MainTab:Button("Buy All Game Passes", function()
+MainTab:AddButton("Buy All Game Passes", function()
     for _, pass in ipairs(State.passes) do
         Purchase(pass.ID)
     end
 end)
 
-MainTab:Toggle("Loop Buy Selected Game Pass", false, function(on)
+MainTab:AddToggle("Loop Buy Selected Game Pass", false, function(on)
     if on and HasSelected() then
         LoopStart()
     else
@@ -132,20 +133,20 @@ MainTab:Toggle("Loop Buy Selected Game Pass", false, function(on)
     end
 end)
 
-MainTab:Slider("Loop Buy Speed", 0.01, 1, 0.01, function(v)
+MainTab:AddSlider("Loop Buy Speed", 0.01, 1, 0.01, function(v)
     State.speed = v
 end)
 
-MainTab:Button("Copy Selected Game Pass ID", function()
+MainTab:AddButton("Copy Selected Game Pass ID", function()
     if HasSelected() then
         setclipboard(tostring(State.selected.ID))
     end
 end)
 
-MainTab:Button("Copy Buy Script (Standalone)", function()
+MainTab:AddButton("Copy Buy Script (Standalone)", function()
     CopyBuyScript()
 end)
 
-MainTab:Button("Refresh Game Pass List", function()
-    GamePassDropdown:RefreshDropdown(Refresh())
+MainTab:AddButton("Refresh Game Pass List", function()
+    GamePassDropdown:Refresh(Refresh())
 end)
