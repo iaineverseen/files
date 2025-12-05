@@ -238,6 +238,7 @@ function Library:Window(title)
         
         UIPadding.Parent = Page
         UIPadding.PaddingTop = UDim.new(0, 5)
+        UIPadding.PaddingBottom = UDim.new(0, 5)
         
         UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             Page.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
@@ -420,7 +421,6 @@ function Library:Window(title)
             TextLabel.Parent = Page
             TextLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             TextLabel.BorderSizePixel = 0
-            TextLabel.Position = UDim2.new(0, 0, 0, 0)
             TextLabel.Size = UDim2.new(1, -6, 0, 34)
             TextLabel.Font = Enum.Font.Gotham
             TextLabel.Text = "  "..(labeltext or "Label")
