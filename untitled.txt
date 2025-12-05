@@ -747,7 +747,7 @@ function Library:Window(Title)
             Dropdown.Parent = Page
             Dropdown.BackgroundTransparency = 1
             Dropdown.BorderSizePixel = 0
-            Dropdown.ClipsDescendants = true
+            Dropdown.ClipsDescendants = false
             Dropdown.Size = UDim2.new(1, -6, 0, 34)
             
             local Choose = Instance.new("Frame")
@@ -791,13 +791,14 @@ function Library:Window(Title)
             
             local OptionHolder = Instance.new("Frame")
             OptionHolder.Name = "OptionHolder"
-            OptionHolder.Parent = Dropdown
+            OptionHolder.Parent = Ui
             OptionHolder.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             OptionHolder.BorderSizePixel = 0
-            OptionHolder.Position = UDim2.new(0, 0, 0, 39)
-            OptionHolder.Size = UDim2.new(1, 0, 0, 0)
+            OptionHolder.Position = UDim2.new(0, 0, 0, 0)
+            OptionHolder.Size = UDim2.new(0, 150, 0, 0)
             OptionHolder.Visible = false
-            OptionHolder.ZIndex = 2
+            OptionHolder.ZIndex = 100
+            OptionHolder.ClipsDescendants = true
             
             local OptionHolderCorner = Instance.new("UICorner")
             OptionHolderCorner.CornerRadius = UDim.new(0, 6)
@@ -817,12 +818,22 @@ function Library:Window(Title)
             OptionPadding.PaddingRight = UDim.new(0, 8)
             OptionPadding.PaddingBottom = UDim.new(0, 8)
             
-            OptionList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                local ContentHeight = OptionList.AbsoluteContentSize.Y + 16
-                OptionHolder.Size = UDim2.new(1, 0, 0, ContentHeight)
-            end)
-            
             local Dropped = false
+            
+            local function UpdateOptionHolderPosition()
+                if Dropped then
+                    local DropdownAbsolutePosition = Dropdown.AbsolutePosition
+                    local DropdownAbsoluteSize = Dropdown.AbsoluteSize
+                    
+                    OptionHolder.Position = UDim2.new(
+                        0,
+                        DropdownAbsolutePosition.X,
+                        0,
+                        DropdownAbsolutePosition.Y + DropdownAbsoluteSize.Y
+                    )
+                    OptionHolder.Size = UDim2.new(0, DropdownAbsoluteSize.X, 0, math.min(OptionList.AbsoluteContentSize.Y + 16, 150))
+                end
+            end
             
             local function RefreshOptions(NewOptions)
                 NewOptions = NewOptions or {}
@@ -848,11 +859,7 @@ function Library:Window(Title)
                     NoOptionText.TextSize = 14
                     NoOptionText.TextXAlignment = Enum.TextXAlignment.Center
                     NoOptionText.AutoButtonColor = false
-                    NoOptionText.ZIndex = 3
-                    
-                    local NoOptionCorner = Instance.new("UICorner")
-                    NoOptionCorner.CornerRadius = UDim.new(0, 6)
-                    NoOptionCorner.Parent = NoOptionText
+                    NoOptionText.ZIndex = 101
                 else
                     for _, Option in ipairs(NewOptions) do
                         local OptionButton = Instance.new("TextButton")
@@ -867,7 +874,7 @@ function Library:Window(Title)
                         OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
                         OptionButton.TextSize = 14
                         OptionButton.TextXAlignment = Enum.TextXAlignment.Center
-                        OptionButton.ZIndex = 3
+                        OptionButton.ZIndex = 101
                         
                         local OptionCorner = Instance.new("UICorner")
                         OptionCorner.CornerRadius = UDim.new(0, 6)
@@ -881,7 +888,6 @@ function Library:Window(Title)
                             Dropped = false
                             OptionHolder.Visible = false
                             Arrow.Rotation = 0
-                            Dropdown.Size = UDim2.new(1, -6, 0, 34)
                         end)
                         
                         OptionButton.MouseEnter:Connect(function()
@@ -901,19 +907,22 @@ function Library:Window(Title)
             
             RefreshOptions(Options)
             
+            OptionList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                if Dropped then
+                    UpdateOptionHolderPosition()
+                end
+            end)
+            
             Arrow.MouseButton1Click:Connect(function()
                 Dropped = not Dropped
                 
                 if Dropped then
+                    UpdateOptionHolderPosition()
                     OptionHolder.Visible = true
                     Arrow.Rotation = 180
-                    OptionList:GetPropertyChangedSignal("AbsoluteContentSize"):Wait()
-                    local ContentHeight = OptionList.AbsoluteContentSize.Y + 16
-                    Dropdown.Size = UDim2.new(1, -6, 0, 34 + ContentHeight)
                 else
                     OptionHolder.Visible = false
                     Arrow.Rotation = 0
-                    Dropdown.Size = UDim2.new(1, -6, 0, 34)
                 end
             end)
             
@@ -923,7 +932,6 @@ function Library:Window(Title)
                 Dropped = false
                 OptionHolder.Visible = false
                 Arrow.Rotation = 0
-                Dropdown.Size = UDim2.new(1, -6, 0, 34)
             end
             
             return DropdownFunctions
