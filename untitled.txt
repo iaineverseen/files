@@ -227,12 +227,15 @@ function Library:Window(Title)
     TabsCover.Position = UDim2.new(1, 0, 0.5, 0)
     TabsCover.Size = UDim2.new(0, 5, 1, 0)
 
-    local TabsContainer = Instance.new("Frame")
+    local TabsContainer = Instance.new("ScrollingFrame")
     TabsContainer.Name = "TabsContainer"
     TabsContainer.Parent = Tabs
     TabsContainer.BackgroundTransparency = 1
     TabsContainer.Size = UDim2.new(1, 0, 1, 0)
-
+    TabsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+    TabsContainer.ScrollBarThickness = 0
+    TabsContainer.ScrollBarImageTransparency = 1
+        
     local TabsList = Instance.new("UIListLayout")
     TabsList.Name = "TabsList"
     TabsList.Parent = TabsContainer
@@ -243,6 +246,10 @@ function Library:Window(Title)
     local TabsPadding = Instance.new("UIPadding")
     TabsPadding.Parent = TabsContainer
     TabsPadding.PaddingTop = UDim.new(0, 5)
+    
+    TabsList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        TabsContainer.CanvasSize = UDim2.new(0, 0, 0, TabsList.AbsoluteContentSize.Y + 10)
+    end)
 
     local Pages = Instance.new("Frame")
     Pages.Name = "Pages"
