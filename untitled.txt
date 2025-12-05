@@ -886,195 +886,244 @@ function Library:Window(Title)
         end
 
         function Elements:Dropdown(Text, Options, Callback)
-            Options = Options or {}
-            Callback = Callback or function() end
-            
-            local Dropdown = Instance.new("Frame")
-            Dropdown.Name = "Dropdown"
-            Dropdown.Parent = Page
-            Dropdown.BackgroundTransparency = 1
-            Dropdown.BorderSizePixel = 0
-            Dropdown.ClipsDescendants = true
-            Dropdown.Size = UDim2.new(1, -6, 0, 34)
-            
-            local Choose = Instance.new("Frame")
-            Choose.Name = "Choose"
-            Choose.Parent = Dropdown
-            Choose.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-            Choose.BorderSizePixel = 0
-            Choose.Size = UDim2.new(1, 0, 0, 34)
-            
-            local ChooseCorner = Instance.new("UICorner")
-            ChooseCorner.CornerRadius = UDim.new(0, 6)
-            ChooseCorner.Parent = Choose
-            
-            local Title = Instance.new("TextLabel")
-            Title.Name = "Title"
-            Title.Parent = Choose
-            Title.BackgroundTransparency = 1
-            Title.Position = UDim2.new(0, 8, 0, 0)
-            Title.Size = UDim2.new(1, -46, 1, 0)
-            Title.Font = Enum.Font.Gotham
-            Title.Text = Text or "Dropdown"
-            Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Title.TextSize = 14
-            Title.TextXAlignment = Enum.TextXAlignment.Left
-            
-            local Arrow = Instance.new("ImageButton")
-            Arrow.Name = "Arrow"
-            Arrow.Parent = Choose
-            Arrow.AnchorPoint = Vector2.new(1, 0.5)
-            Arrow.BackgroundTransparency = 1
-            Arrow.Position = UDim2.new(1, -8, 0.5, 0)
-            Arrow.Size = UDim2.new(0, 20, 0, 20)
-            Arrow.Image = "rbxassetid://3926307971"
-            Arrow.ImageColor3 = Color3.fromRGB(161, 12, 59)
-            Arrow.ImageRectOffset = Vector2.new(324, 524)
-            Arrow.ImageRectSize = Vector2.new(36, 36)
-            Arrow.ScaleType = Enum.ScaleType.Fit
-            
-            local OptionHolder = Instance.new("Frame")
-            OptionHolder.Name = "OptionHolder"
-            OptionHolder.Parent = Dropdown
-            OptionHolder.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-            OptionHolder.BorderSizePixel = 0
-            OptionHolder.Position = UDim2.new(0, 0, 0, 39)
-            OptionHolder.Size = UDim2.new(1, 0, 0, 0)
-            OptionHolder.Visible = false
-            OptionHolder.ZIndex = 10
-            
-            local OptionHolderCorner = Instance.new("UICorner")
-            OptionHolderCorner.CornerRadius = UDim.new(0, 6)
-            OptionHolderCorner.Parent = OptionHolder
-            
-            local OptionList = Instance.new("UIListLayout")
-            OptionList.Name = "OptionList"
-            OptionList.Parent = OptionHolder
-            OptionList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-            OptionList.SortOrder = Enum.SortOrder.LayoutOrder
-            OptionList.Padding = UDim.new(0, 5)
-            
-            local OptionPadding = Instance.new("UIPadding")
-            OptionPadding.Parent = OptionHolder
-            OptionPadding.PaddingTop = UDim.new(0, 8)
-            OptionPadding.PaddingLeft = UDim.new(0, 8)
-            OptionPadding.PaddingRight = UDim.new(0, 8)
-            OptionPadding.PaddingBottom = UDim.new(0, 8)
-            
-            OptionList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                local ContentHeight = OptionList.AbsoluteContentSize.Y + 16
-                OptionHolder.Size = UDim2.new(1, 0, 0, ContentHeight)
-            end)
-            
-            local Dropped = false
-            
-            local function RefreshOptions(NewOptions)
-                NewOptions = NewOptions or {}
-                
-                for _, Child in ipairs(OptionHolder:GetChildren()) do
-                    if Child:IsA("TextButton") or Child:IsA("TextLabel") then
-                        Child:Destroy()
-                    end
-                end
-                
-                Title.Text = Text or "Dropdown"
-                
-                if #NewOptions == 0 then
-                    -- FIXED: Changed from TextLabel to TextButton but kept it non-interactive
-                    local NoOption = Instance.new("TextButton")  -- Changed from TextLabel
-                    NoOption.Name = "NoOption"
-                    NoOption.Parent = OptionHolder
-                    NoOption.BackgroundColor3 = Color3.fromRGB(52, 52, 52)
-                    NoOption.BorderSizePixel = 0
-                    NoOption.Size = UDim2.new(1, -16, 0, 30)
-                    NoOption.Font = Enum.Font.Gotham
-                    NoOption.Text = "No Options Available"
-                    NoOption.TextColor3 = Color3.fromRGB(150, 150, 150)
-                    NoOption.TextSize = 14
-                    NoOption.TextXAlignment = Enum.TextXAlignment.Center
-                    NoOption.AutoButtonColor = false  -- This is valid for TextButton
-                    NoOption.Selectable = false  -- Make it non-selectable
-                    NoOption.Active = false  -- Make it non-interactive
-                    
-                    local NoOptionCorner = Instance.new("UICorner")
-                    NoOptionCorner.CornerRadius = UDim.new(0, 6)
-                    NoOptionCorner.Parent = NoOption
-                else
-                    for _, Option in ipairs(NewOptions) do
-                        local OptionButton = Instance.new("TextButton")
-                        OptionButton.Name = "Option"
-                        OptionButton.Parent = OptionHolder
-                        OptionButton.BackgroundColor3 = Color3.fromRGB(134, 10, 49)
-                        OptionButton.BorderSizePixel = 0
-                        OptionButton.Size = UDim2.new(1, -16, 0, 30)
-                        OptionButton.AutoButtonColor = false
-                        OptionButton.Font = Enum.Font.Gotham
-                        OptionButton.Text = Option
-                        OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-                        OptionButton.TextSize = 14
-                        OptionButton.TextXAlignment = Enum.TextXAlignment.Center
-                        
-                        local OptionCorner = Instance.new("UICorner")
-                        OptionCorner.CornerRadius = UDim.new(0, 6)
-                        OptionCorner.Parent = OptionButton
-                        
-                        OptionButton.MouseButton1Click:Connect(function()
-                            if Callback then
-                                Callback(Option)
-                            end
-                            Title.Text = (Text or "Dropdown") .. ": " .. Option
-                            Dropped = false
-                            OptionHolder.Visible = false
-                            Arrow.Rotation = 0
-                            Dropdown.Size = UDim2.new(1, -6, 0, 34)
-                        end)
-                        
-                        OptionButton.MouseEnter:Connect(function()
-                            TweenService:Create(OptionButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                                BackgroundColor3 = Color3.fromRGB(160, 12, 59)
-                            }):Play()
-                        end)
-                        
-                        OptionButton.MouseLeave:Connect(function()
-                            TweenService:Create(OptionButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                                BackgroundColor3 = Color3.fromRGB(134, 10, 49)
-                            }):Play()
-                        end)
-                    end
-                end
+    Options = Options or {}
+    Callback = Callback or function() end
+    
+    local Dropdown = Instance.new("Frame")
+    Dropdown.Name = "Dropdown"
+    Dropdown.Parent = Page
+    Dropdown.BackgroundTransparency = 1
+    Dropdown.BorderSizePixel = 0
+    Dropdown.ClipsDescendants = false  -- Changed from true to false
+    Dropdown.Size = UDim2.new(1, -6, 0, 34)
+    
+    local Choose = Instance.new("Frame")
+    Choose.Name = "Choose"
+    Choose.Parent = Dropdown
+    Choose.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    Choose.BorderSizePixel = 0
+    Choose.Size = UDim2.new(1, 0, 0, 34)
+    
+    local ChooseCorner = Instance.new("UICorner")
+    ChooseCorner.CornerRadius = UDim.new(0, 6)
+    ChooseCorner.Parent = Choose
+    
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Parent = Choose
+    Title.BackgroundTransparency = 1
+    Title.Position = UDim2.new(0, 8, 0, 0)
+    Title.Size = UDim2.new(1, -46, 1, 0)
+    Title.Font = Enum.Font.Gotham
+    Title.Text = Text or "Dropdown"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 14
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local Arrow = Instance.new("ImageButton")
+    Arrow.Name = "Arrow"
+    Arrow.Parent = Choose
+    Arrow.AnchorPoint = Vector2.new(1, 0.5)
+    Arrow.BackgroundTransparency = 1
+    Arrow.Position = UDim2.new(1, -8, 0.5, 0)
+    Arrow.Size = UDim2.new(0, 20, 0, 20)
+    Arrow.Image = "rbxassetid://3926307971"
+    Arrow.ImageColor3 = Color3.fromRGB(161, 12, 59)
+    Arrow.ImageRectOffset = Vector2.new(324, 524)
+    Arrow.ImageRectSize = Vector2.new(36, 36)
+    Arrow.ScaleType = Enum.ScaleType.Fit
+    
+    local OptionHolder = Instance.new("Frame")
+    OptionHolder.Name = "OptionHolder"
+    OptionHolder.Parent = Page  -- Changed from Dropdown to Page
+    OptionHolder.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    OptionHolder.BorderSizePixel = 0
+    OptionHolder.Position = UDim2.new(0, 0, 0, 0)  -- Will be calculated dynamically
+    OptionHolder.Size = UDim2.new(0, 0, 0, 0)  -- Initially size 0
+    OptionHolder.Visible = false
+    OptionHolder.ZIndex = 100  -- Higher z-index to appear above everything
+    
+    local OptionHolderCorner = Instance.new("UICorner")
+    OptionHolderCorner.CornerRadius = UDim.new(0, 6)
+    OptionHolderCorner.Parent = OptionHolder
+    
+    local OptionList = Instance.new("UIListLayout")
+    OptionList.Name = "OptionList"
+    OptionList.Parent = OptionHolder
+    OptionList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    OptionList.SortOrder = Enum.SortOrder.LayoutOrder
+    OptionList.Padding = UDim.new(0, 5)
+    
+    local OptionPadding = Instance.new("UIPadding")
+    OptionPadding.Parent = OptionHolder
+    OptionPadding.PaddingTop = UDim.new(0, 8)
+    OptionPadding.PaddingLeft = UDim.new(0, 8)
+    OptionPadding.PaddingRight = UDim.new(0, 8)
+    OptionPadding.PaddingBottom = UDim.new(0, 8)
+    
+    OptionList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        local ContentHeight = OptionList.AbsoluteContentSize.Y + 16
+        OptionHolder.Size = UDim2.new(1, -6, 0, ContentHeight)
+    end)
+    
+    local Dropped = false
+    
+    local function RefreshOptions(NewOptions)
+        NewOptions = NewOptions or {}
+        
+        for _, Child in ipairs(OptionHolder:GetChildren()) do
+            if Child:IsA("TextButton") or Child:IsA("TextLabel") then
+                Child:Destroy()
             end
+        end
+        
+        Title.Text = Text or "Dropdown"
+        
+        if #NewOptions == 0 then
+            local NoOption = Instance.new("TextButton")
+            NoOption.Name = "NoOption"
+            NoOption.Parent = OptionHolder
+            NoOption.BackgroundColor3 = Color3.fromRGB(52, 52, 52)
+            NoOption.BorderSizePixel = 0
+            NoOption.Size = UDim2.new(1, -16, 0, 30)
+            NoOption.Font = Enum.Font.Gotham
+            NoOption.Text = "No Options Available"
+            NoOption.TextColor3 = Color3.fromRGB(150, 150, 150)
+            NoOption.TextSize = 14
+            NoOption.TextXAlignment = Enum.TextXAlignment.Center
+            NoOption.AutoButtonColor = false
+            NoOption.Selectable = false
+            NoOption.Active = false
             
-            RefreshOptions(Options)
-            
-            Arrow.MouseButton1Click:Connect(function()
-                Dropped = not Dropped
+            local NoOptionCorner = Instance.new("UICorner")
+            NoOptionCorner.CornerRadius = UDim.new(0, 6)
+            NoOptionCorner.Parent = NoOption
+        else
+            for _, Option in ipairs(NewOptions) do
+                local OptionButton = Instance.new("TextButton")
+                OptionButton.Name = "Option"
+                OptionButton.Parent = OptionHolder
+                OptionButton.BackgroundColor3 = Color3.fromRGB(134, 10, 49)
+                OptionButton.BorderSizePixel = 0
+                OptionButton.Size = UDim2.new(1, -16, 0, 30)
+                OptionButton.AutoButtonColor = false
+                OptionButton.Font = Enum.Font.Gotham
+                OptionButton.Text = Option
+                OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                OptionButton.TextSize = 14
+                OptionButton.TextXAlignment = Enum.TextXAlignment.Center
                 
-                if Dropped then
-                    OptionHolder.Visible = true
-                    Arrow.Rotation = 180
-                    
-                    -- Wait for the layout to update, then set dropdown size
-                    task.wait(0.01)  -- Small delay to ensure layout updates
-                    local ContentHeight = OptionList.AbsoluteContentSize.Y + 16
-                    Dropdown.Size = UDim2.new(1, -6, 0, 34 + ContentHeight)
-                else
+                local OptionCorner = Instance.new("UICorner")
+                OptionCorner.CornerRadius = UDim.new(0, 6)
+                OptionCorner.Parent = OptionButton
+                
+                OptionButton.MouseButton1Click:Connect(function()
+                    if Callback then
+                        Callback(Option)
+                    end
+                    Title.Text = (Text or "Dropdown") .. ": " .. Option
+                    Dropped = false
                     OptionHolder.Visible = false
                     Arrow.Rotation = 0
-                    Dropdown.Size = UDim2.new(1, -6, 0, 34)
-                end
-            end)
-            
-            local DropdownFunctions = {}
-            function DropdownFunctions:Refresh(NewOptions)
-                RefreshOptions(NewOptions)
-                Dropped = false
-                OptionHolder.Visible = false
-                Arrow.Rotation = 0
-                Dropdown.Size = UDim2.new(1, -6, 0, 34)
+                end)
+                
+                OptionButton.MouseEnter:Connect(function()
+                    TweenService:Create(OptionButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = Color3.fromRGB(160, 12, 59)
+                    }):Play()
+                end)
+                
+                OptionButton.MouseLeave:Connect(function()
+                    TweenService:Create(OptionButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = Color3.fromRGB(134, 10, 49)
+                    }):Play()
+                end)
             end
-            
-            return DropdownFunctions
         end
+    end
+    
+    RefreshOptions(Options)
+    
+    local function CalculateOptionHolderPosition()
+        if not Dropped then return end
+        
+        -- Get the absolute position of the dropdown
+        local dropdownAbsPos = Choose.AbsolutePosition
+        local dropdownAbsSize = Choose.AbsoluteSize
+        local pageAbsPos = Page.AbsolutePosition
+        local pageAbsSize = Page.AbsoluteSize
+        
+        -- Calculate position below the dropdown
+        local posX = dropdownAbsPos.X - pageAbsPos.X
+        local posY = (dropdownAbsPos.Y - pageAbsPos.Y) + dropdownAbsSize.Y + 5
+        
+        -- Check if options would go beyond page bottom
+        local maxY = pageAbsSize.Y - OptionHolder.AbsoluteSize.Y - 10
+        if posY > maxY then
+            -- Show above the dropdown instead
+            posY = (dropdownAbsPos.Y - pageAbsPos.Y) - OptionHolder.AbsoluteSize.Y - 5
+        end
+        
+        -- Set the position
+        OptionHolder.Position = UDim2.new(0, posX, 0, posY)
+    end
+    
+    Arrow.MouseButton1Click:Connect(function()
+        Dropped = not Dropped
+        
+        if Dropped then
+            OptionHolder.Visible = true
+            Arrow.Rotation = 180
+            
+            -- Wait for layout to update, then calculate position
+            task.wait(0.01)
+            CalculateOptionHolderPosition()
+        else
+            OptionHolder.Visible = false
+            Arrow.Rotation = 0
+        end
+    end)
+    
+    -- Handle clicking outside to close dropdown
+    local function closeDropdown()
+        if Dropped then
+            Dropped = false
+            OptionHolder.Visible = false
+            Arrow.Rotation = 0
+        end
+    end
+    
+    -- Close dropdown when clicking elsewhere
+    UserInputService.InputBegan:Connect(function(Input)
+        if Dropped and Input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local mousePos = Input.Position
+            local optionHolderAbsPos = OptionHolder.AbsolutePosition
+            local optionHolderAbsSize = OptionHolder.AbsoluteSize
+            local chooseAbsPos = Choose.AbsolutePosition
+            local chooseAbsSize = Choose.AbsoluteSize
+            
+            -- Check if click is outside dropdown and option holder
+            if not (
+                (mousePos.X >= chooseAbsPos.X and mousePos.X <= chooseAbsPos.X + chooseAbsSize.X and
+                 mousePos.Y >= chooseAbsPos.Y and mousePos.Y <= chooseAbsPos.Y + chooseAbsSize.Y) or
+                (mousePos.X >= optionHolderAbsPos.X and mousePos.X <= optionHolderAbsPos.X + optionHolderAbsSize.X and
+                 mousePos.Y >= optionHolderAbsPos.Y and mousePos.Y <= optionHolderAbsPos.Y + optionHolderAbsSize.Y)
+            ) then
+                closeDropdown()
+            end
+        end
+    end)
+    
+    local DropdownFunctions = {}
+    function DropdownFunctions:Refresh(NewOptions)
+        RefreshOptions(NewOptions)
+        Dropped = false
+        OptionHolder.Visible = false
+        Arrow.Rotation = 0
+    end
+    
+    return DropdownFunctions
+end
 
         if not FirstTabCreated then
             FirstTabCreated = true
