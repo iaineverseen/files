@@ -894,7 +894,7 @@ function Library:Window(Title)
     Dropdown.Parent = Page
     Dropdown.BackgroundTransparency = 1
     Dropdown.BorderSizePixel = 0
-    Dropdown.ClipsDescendants = false  -- Changed from true to false
+    Dropdown.ClipsDescendants = false
     Dropdown.Size = UDim2.new(1, -6, 0, 34)
     
     local Choose = Instance.new("Frame")
@@ -935,13 +935,13 @@ function Library:Window(Title)
     
     local OptionHolder = Instance.new("Frame")
     OptionHolder.Name = "OptionHolder"
-    OptionHolder.Parent = Page  -- Changed from Dropdown to Page
+    OptionHolder.Parent = Page
     OptionHolder.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     OptionHolder.BorderSizePixel = 0
-    OptionHolder.Position = UDim2.new(0, 0, 0, 0)  -- Will be calculated dynamically
-    OptionHolder.Size = UDim2.new(0, 0, 0, 0)  -- Initially size 0
+    OptionHolder.Position = UDim2.new(0, 0, 0, 0)
+    OptionHolder.Size = UDim2.new(1, -6, 0, 0)  -- Same width as dropdown
     OptionHolder.Visible = false
-    OptionHolder.ZIndex = 100  -- Higher z-index to appear above everything
+    OptionHolder.ZIndex = 100
     
     local OptionHolderCorner = Instance.new("UICorner")
     OptionHolderCorner.CornerRadius = UDim.new(0, 6)
@@ -972,7 +972,7 @@ function Library:Window(Title)
         NewOptions = NewOptions or {}
         
         for _, Child in ipairs(OptionHolder:GetChildren()) do
-            if Child:IsA("TextButton") or Child:IsA("TextLabel") then
+            if Child:IsA("TextButton") then
                 Child:Destroy()
             end
         end
@@ -1044,30 +1044,6 @@ function Library:Window(Title)
     
     RefreshOptions(Options)
     
-    local function CalculateOptionHolderPosition()
-        if not Dropped then return end
-        
-        -- Get the absolute position of the dropdown
-        local dropdownAbsPos = Choose.AbsolutePosition
-        local dropdownAbsSize = Choose.AbsoluteSize
-        local pageAbsPos = Page.AbsolutePosition
-        local pageAbsSize = Page.AbsoluteSize
-        
-        -- Calculate position below the dropdown
-        local posX = dropdownAbsPos.X - pageAbsPos.X
-        local posY = (dropdownAbsPos.Y - pageAbsPos.Y) + dropdownAbsSize.Y + 5
-        
-        -- Check if options would go beyond page bottom
-        local maxY = pageAbsSize.Y - OptionHolder.AbsoluteSize.Y - 10
-        if posY > maxY then
-            -- Show above the dropdown instead
-            posY = (dropdownAbsPos.Y - pageAbsPos.Y) - OptionHolder.AbsoluteSize.Y - 5
-        end
-        
-        -- Set the position
-        OptionHolder.Position = UDim2.new(0, posX, 0, posY)
-    end
-    
     Arrow.MouseButton1Click:Connect(function()
         Dropped = not Dropped
         
@@ -1075,16 +1051,27 @@ function Library:Window(Title)
             OptionHolder.Visible = true
             Arrow.Rotation = 180
             
-            -- Wait for layout to update, then calculate position
+            -- Wait for layout to update
             task.wait(0.01)
-            CalculateOptionHolderPosition()
+            
+            -- Position the OptionHolder directly below the dropdown
+            local chooseAbsolutePosition = Choose.AbsolutePosition
+            local chooseAbsoluteSize = Choose.AbsoluteSize
+            local pageAbsolutePosition = Page.AbsolutePosition
+            
+            -- Calculate X position to align with dropdown
+            local xPos = chooseAbsolutePosition.X - pageAbsolutePosition.X
+            -- Position directly below dropdown with 5 pixel gap
+            local yPos = (chooseAbsolutePosition.Y - pageAbsolutePosition.Y) + chooseAbsoluteSize.Y + 5
+            
+            OptionHolder.Position = UDim2.new(0, xPos, 0, yPos)
         else
             OptionHolder.Visible = false
             Arrow.Rotation = 0
         end
     end)
     
-    -- Handle clicking outside to close dropdown
+    -- Close dropdown when clicking outside
     local function closeDropdown()
         if Dropped then
             Dropped = false
@@ -1093,7 +1080,6 @@ function Library:Window(Title)
         end
     end
     
-    -- Close dropdown when clicking elsewhere
     UserInputService.InputBegan:Connect(function(Input)
         if Dropped and Input.UserInputType == Enum.UserInputType.MouseButton1 then
             local mousePos = Input.Position
@@ -1102,13 +1088,14 @@ function Library:Window(Title)
             local chooseAbsPos = Choose.AbsolutePosition
             local chooseAbsSize = Choose.AbsoluteSize
             
-            -- Check if click is outside dropdown and option holder
-            if not (
-                (mousePos.X >= chooseAbsPos.X and mousePos.X <= chooseAbsPos.X + chooseAbsSize.X and
-                 mousePos.Y >= chooseAbsPos.Y and mousePos.Y <= chooseAbsPos.Y + chooseAbsSize.Y) or
-                (mousePos.X >= optionHolderAbsPos.X and mousePos.X <= optionHolderAbsPos.X + optionHolderAbsSize.X and
-                 mousePos.Y >= optionHolderAbsPos.Y and mousePos.Y <= optionHolderAbsPos.Y + optionHolderAbsSize.Y)
-            ) then
+            -- Check if click is outside both dropdown and option holder
+            local clickInDropdown = mousePos.X >= chooseAbsPos.X and mousePos.X <= chooseAbsPos.X + chooseAbsSize.X and
+                                   mousePos.Y >= chooseAbsPos.Y and mousePos.Y <= chooseAbsPos.Y + chooseAbsSize.Y
+            
+            local clickInOptions = mousePos.X >= optionHolderAbsPos.X and mousePos.X <= optionHolderAbsPos.X + optionHolderAbsSize.X and
+                                  mousePos.Y >= optionHolderAbsPos.Y and mousePos.Y <= optionHolderAbsPos.Y + optionHolderAbsSize.Y
+            
+            if not (clickInDropdown or clickInOptions) then
                 closeDropdown()
             end
         end
