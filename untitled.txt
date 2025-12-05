@@ -301,7 +301,7 @@ function Library:Window(Title)
         TabButton.TextSize = 14
 
         local TabCorner = Instance.new("UICorner")
-        TabCorner.CornerRadius = UDim.new(0, 6)
+    TabCorner.CornerRadius = UDim.new(0, 6)
         TabCorner.Parent = TabButton
 
         local TextLabel = Instance.new("TextLabel")
@@ -545,10 +545,10 @@ function Library:Window(Title)
             Label.BorderSizePixel = 0
             Label.Size = UDim2.new(1, -6, 0, 34)
             Label.Font = Enum.Font.Gotham
-            Label.Text = "  " .. (Text or "Label")
+            Label.Text = Text or "Label"
             Label.TextColor3 = Color3.fromRGB(255, 255, 255)
             Label.TextSize = 14
-            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.TextXAlignment = Enum.TextXAlignment.Center  -- Changed from Left to Center
 
             local LabelCorner = Instance.new("UICorner")
             LabelCorner.CornerRadius = UDim.new(0, 6)
@@ -556,7 +556,7 @@ function Library:Window(Title)
 
             local LabelFunctions = {}
             function LabelFunctions:Set(NewText)
-                Label.Text = "  " .. (NewText or "Label")
+                Label.Text = NewText or "Label"  -- Removed the leading spaces
             end
 
             return LabelFunctions
@@ -639,19 +639,16 @@ function Library:Window(Title)
                 return math.floor(value / Increment + 0.5) * Increment
             end
 
-            -- Helper function to format number based on increment
+            -- Helper function to format number with minimal decimal places
             local function formatNumber(value)
-                if Increment >= 1 then
-                    return tostring(math.floor(value))
-                elseif Increment >= 0.1 then
-                    return string.format("%.1f", value)
-                elseif Increment >= 0.01 then
-                    return string.format("%.2f", value)
-                elseif Increment >= 0.001 then
-                    return string.format("%.3f", value)
-                else
-                    return string.format("%.4f", value)
-                end
+                -- First format with 4 decimal places
+                local formatted = string.format("%.4f", value)
+                
+                -- Remove trailing zeros and the decimal point if it's all zeros
+                formatted = formatted:gsub("0+$", "")  -- Remove trailing zeros
+                formatted = formatted:gsub("%.$", "")   -- Remove trailing decimal point
+                
+                return formatted
             end
 
             local function Slide(Input)
