@@ -8,9 +8,14 @@ local Library = {}
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
 
+-- Remove old instances before creating new ones
+if CoreGui:FindFirstChild("SentinelLIB") then
+    CoreGui.SentinelLIB:Destroy()
+end
+
 function Library:Window(Title)
     local Ui = Instance.new("ScreenGui")
-    Ui.Name = "UI"
+    Ui.Name = "SentinelLIB"  -- Changed from "UI" to "SentinelLIB"
     Ui.Parent = CoreGui
     Ui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     Ui.IgnoreGuiInset = true
@@ -215,7 +220,7 @@ function Library:Window(Title)
     GameName.Position = UDim2.new(0, 32, 0.5, 0)
     GameName.Size = UDim2.new(0, 165, 0, 22)
     GameName.Font = Enum.Font.Gotham
-    GameName.Text = Title or "Game Name"
+    GameName.Text = Title or "SentinelLIB"  -- Default to SentinelLIB if no title provided
     GameName.TextColor3 = Color3.fromRGB(232, 17, 85)
     GameName.TextSize = 14
     GameName.TextXAlignment = Enum.TextXAlignment.Left
@@ -557,10 +562,11 @@ function Library:Window(Title)
             return LabelFunctions
         end
 
-        function Elements:Slider(Text, Min, Max, Default, Callback)
+        function Elements:Slider(Text, Min, Max, Default, Increment, Callback)
             Min = Min or 0
             Max = Max or 100
             Default = Default or Min
+            Increment = Increment or 1  -- Default increment of 1
 
             local Slider = Instance.new("Frame")
             Slider.Name = "Slider"
@@ -627,15 +633,39 @@ function Library:Window(Title)
             local SliderDragging = false
             local CurrentInput = nil
 
+            -- Helper function to round to nearest increment
+            local function roundToIncrement(value)
+                if Increment == 0 then return value end
+                return math.floor(value / Increment + 0.5) * Increment
+            end
+
+            -- Helper function to format number based on increment
+            local function formatNumber(value)
+                if Increment >= 1 then
+                    return tostring(math.floor(value))
+                elseif Increment >= 0.1 then
+                    return string.format("%.1f", value)
+                elseif Increment >= 0.01 then
+                    return string.format("%.2f", value)
+                elseif Increment >= 0.001 then
+                    return string.format("%.3f", value)
+                else
+                    return string.format("%.4f", value)
+                end
+            end
+
             local function Slide(Input)
                 local Percent = math.clamp(
                     (Input.Position.X - SliderClick.AbsolutePosition.X) / SliderClick.AbsoluteSize.X,
                     0,
                     1
                 )
-                SliderDrag.Size = UDim2.new(Percent, 0, 1, 0)
-                local SliderValue = math.floor(Min + (Percent * (Max - Min)))
-                Value.Text = tostring(SliderValue)
+                local RawValue = Min + (Percent * (Max - Min))
+                local SliderValue = roundToIncrement(RawValue)
+                local AdjustedPercent = (SliderValue - Min) / (Max - Min)
+                
+                SliderDrag.Size = UDim2.new(AdjustedPercent, 0, 1, 0)
+                Value.Text = formatNumber(SliderValue)
                 if Callback then
                     Callback(SliderValue)
                 end
@@ -647,11 +677,26 @@ function Library:Window(Title)
                     0,
                     1
                 )
-                SliderDrag.Size = UDim2.new(Percent, 0, 1, 0)
-                local SliderValue = math.floor(Min + (Percent * (Max - Min)))
-                Value.Text = tostring(SliderValue)
+                local RawValue = Min + (Percent * (Max - Min))
+                local SliderValue = roundToIncrement(RawValue)
+                local AdjustedPercent = (SliderValue - Min) / (Max - Min)
+                
+                SliderDrag.Size = UDim2.new(AdjustedPercent, 0, 1, 0)
+                Value.Text = formatNumber(SliderValue)
                 if Callback then
                     Callback(SliderValue)
+                end
+            end
+
+            local function SetValue(NewValue)
+                local ClampedValue = math.clamp(NewValue, Min, Max)
+                local RoundedValue = roundToIncrement(ClampedValue)
+                local Percent = (RoundedValue - Min) / (Max - Min)
+                
+                SliderDrag.Size = UDim2.new(Percent, 0, 1, 0)
+                Value.Text = formatNumber(RoundedValue)
+                if Callback then
+                    Callback(RoundedValue)
                 end
             end
 
@@ -748,6 +793,15 @@ function Library:Window(Title)
                     end
                 end
             end)
+
+            -- Create slider functions for external control
+            local SliderFunctions = {}
+            
+            function SliderFunctions:Set(NewValue)
+                SetValue(NewValue)
+            end
+            
+            return SliderFunctions
         end
 
         function Elements:InputBox(Text, Placeholder, Callback)
