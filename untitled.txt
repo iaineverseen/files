@@ -122,7 +122,7 @@ function Library:Window(Title)
     Logo.Position = UDim2.new(0, 4, 0.5, 0)
     Logo.Size = UDim2.new(0, 26, 0, 30)
     Logo.Image = "http://www.roblox.com/asset/?id=7803241868"
-    Logo.ImageColor3 = Color3.fromRGB(232, 17, 85)
+    Logo.ImageColor3 = Color3.fromRGB(17, 85, 232)
 
     local Minimize = Instance.new("ImageButton")
     Minimize.Name = "Minimize"
@@ -139,7 +139,7 @@ function Library:Window(Title)
     MinimizedIcon.Name = "MinimizedIcon"
     MinimizedIcon.Parent = Ui
     MinimizedIcon.AnchorPoint = Vector2.new(1, 1)
-    MinimizedIcon.BackgroundColor3 = Color3.fromRGB(232, 17, 85)
+    MinimizedIcon.BackgroundColor3 = Color3.fromRGB(17, 85, 232)
     MinimizedIcon.BorderSizePixel = 0
     MinimizedIcon.Position = UDim2.new(1, -20, 1, -20)
     MinimizedIcon.Size = UDim2.new(0, 40, 0, 40)
@@ -220,7 +220,7 @@ function Library:Window(Title)
     GameName.Size = UDim2.new(0, 165, 0, 22)
     GameName.Font = Enum.Font.Gotham
     GameName.Text = Title or "SentinelLIB"
-    GameName.TextColor3 = Color3.fromRGB(232, 17, 85)
+    GameName.TextColor3 = Color3.fromRGB(17, 85, 232)
     GameName.TextSize = 14
     GameName.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -290,7 +290,7 @@ function Library:Window(Title)
         local TabButton = Instance.new("TextButton")
         TabButton.Name = "TabButton"
         TabButton.Parent = TabsContainer
-        TabButton.BackgroundColor3 = Color3.fromRGB(232, 17, 85)
+        TabButton.BackgroundColor3 = Color3.fromRGB(17, 85, 232)
         TabButton.BackgroundTransparency = 1
         TabButton.Size = UDim2.new(1, -12, 0, 30)
         TabButton.AutoButtonColor = false
@@ -375,7 +375,7 @@ function Library:Window(Title)
             local Button = Instance.new("TextButton")
             Button.Name = "Button"
             Button.Parent = Page
-            Button.BackgroundColor3 = Color3.fromRGB(134, 10, 49)
+            Button.BackgroundColor3 = Color3.fromRGB(10, 49, 134)
             Button.BorderSizePixel = 0
             Button.Size = UDim2.new(1, -6, 0, 34)
             Button.AutoButtonColor = false
@@ -391,13 +391,13 @@ function Library:Window(Title)
 
             Button.MouseEnter:Connect(function()
                 TweenService:Create(Button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = Color3.fromRGB(160, 12, 59)
+                    BackgroundColor3 = Color3.fromRGB(12, 59, 160)
                 }):Play()
             end)
 
             Button.MouseLeave:Connect(function()
                 TweenService:Create(Button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = Color3.fromRGB(134, 10, 49)
+                    BackgroundColor3 = Color3.fromRGB(10, 49, 134)
                 }):Play()
             end)
 
@@ -438,7 +438,7 @@ function Library:Window(Title)
             ToggleFrame.Name = "ToggleFrame"
             ToggleFrame.Parent = Toggle
             ToggleFrame.AnchorPoint = Vector2.new(1, 0.5)
-            ToggleFrame.BackgroundColor3 = Color3.fromRGB(161, 12, 59)
+            ToggleFrame.BackgroundColor3 = Color3.fromRGB(12, 59, 161)
             ToggleFrame.BackgroundTransparency = 1
             ToggleFrame.BorderSizePixel = 0
             ToggleFrame.Position = UDim2.new(1, -8, 0.5, 0)
@@ -462,7 +462,7 @@ function Library:Window(Title)
             ToggleStroke.Parent = ToggleFrame
             ToggleStroke.LineJoinMode = Enum.LineJoinMode.Round
             ToggleStroke.Thickness = 2
-            ToggleStroke.Color = Color3.fromRGB(161, 12, 59)
+            ToggleStroke.Color = Color3.fromRGB(12, 59, 161)
 
             local Toggled = Default or false
 
@@ -622,7 +622,7 @@ function Library:Window(Title)
             local SliderDrag = Instance.new("Frame")
             SliderDrag.Name = "SliderDrag"
             SliderDrag.Parent = SliderClick
-            SliderDrag.BackgroundColor3 = Color3.fromRGB(188, 14, 69)
+            SliderDrag.BackgroundColor3 = Color3.fromRGB(14, 69, 188)
             SliderDrag.Size = UDim2.new((Default - Min) / (Max - Min), 0, 1, 0)
 
             local SliderDragCorner = Instance.new("UICorner")
@@ -631,6 +631,8 @@ function Library:Window(Title)
 
             local SliderDragging = false
             local CurrentInput = nil
+            local LastValue = Default
+            local ValueChangedDuringDrag = false
 
             local function RoundToIncrement(value)
                 if Increment == 0 then return value end
@@ -644,21 +646,29 @@ function Library:Window(Title)
                 return formatted
             end
 
-            local function Slide(Input)
-                local Percent = math.clamp(
-                    (Input.Position.X - SliderClick.AbsolutePosition.X) / SliderClick.AbsoluteSize.X,
-                    0,
-                    1
-                )
+            local function UpdateSlider(Percent)
                 local RawValue = Min + (Percent * (Max - Min))
                 local SliderValue = RoundToIncrement(RawValue)
                 local AdjustedPercent = (SliderValue - Min) / (Max - Min)
                 
                 SliderDrag.Size = UDim2.new(AdjustedPercent, 0, 1, 0)
                 Value.Text = FormatNumber(SliderValue)
-                if Callback then
-                    Callback(SliderValue)
+                
+                if SliderValue ~= LastValue then
+                    LastValue = SliderValue
+                    ValueChangedDuringDrag = true
                 end
+                
+                return SliderValue
+            end
+
+            local function Slide(Input)
+                local Percent = math.clamp(
+                    (Input.Position.X - SliderClick.AbsolutePosition.X) / SliderClick.AbsoluteSize.X,
+                    0,
+                    1
+                )
+                UpdateSlider(Percent)
             end
 
             local function SlideFromPosition(Position)
@@ -667,27 +677,7 @@ function Library:Window(Title)
                     0,
                     1
                 )
-                local RawValue = Min + (Percent * (Max - Min))
-                local SliderValue = RoundToIncrement(RawValue)
-                local AdjustedPercent = (SliderValue - Min) / (Max - Min)
-                
-                SliderDrag.Size = UDim2.new(AdjustedPercent, 0, 1, 0)
-                Value.Text = FormatNumber(SliderValue)
-                if Callback then
-                    Callback(SliderValue)
-                end
-            end
-
-            local function SetValue(NewValue)
-                local ClampedValue = math.clamp(NewValue, Min, Max)
-                local RoundedValue = RoundToIncrement(ClampedValue)
-                local Percent = (RoundedValue - Min) / (Max - Min)
-                
-                SliderDrag.Size = UDim2.new(Percent, 0, 1, 0)
-                Value.Text = FormatNumber(RoundedValue)
-                if Callback then
-                    Callback(RoundedValue)
-                end
+                UpdateSlider(Percent)
             end
 
             SliderClick.InputBegan:Connect(function(Input)
@@ -695,6 +685,8 @@ function Library:Window(Title)
                    Input.UserInputType == Enum.UserInputType.Touch then
                     SliderDragging = true
                     CurrentInput = Input
+                    ValueChangedDuringDrag = false
+                    
                     Slide(Input)
                     
                     local connection
@@ -702,6 +694,11 @@ function Library:Window(Title)
                         if Input.UserInputState == Enum.UserInputState.End then
                             SliderDragging = false
                             CurrentInput = nil
+                            
+                            if ValueChangedDuringDrag and Callback then
+                                Callback(LastValue)
+                            end
+                            
                             if connection then
                                 connection:Disconnect()
                             end
@@ -712,7 +709,16 @@ function Library:Window(Title)
 
             SliderClick.TouchTap:Connect(function(Position)
                 if not SliderDragging then
-                    SlideFromPosition(Position)
+                    ValueChangedDuringDrag = false
+                    local finalValue = UpdateSlider(math.clamp(
+                        (Position.X - SliderClick.AbsolutePosition.X) / SliderClick.AbsoluteSize.X,
+                        0,
+                        1
+                    ))
+                    
+                    if Callback then
+                        Callback(finalValue)
+                    end
                 end
             end)
 
@@ -739,6 +745,8 @@ function Library:Window(Title)
                 if Input.UserInputType == Enum.UserInputType.Touch then
                     SliderDragging = true
                     CurrentInput = Input
+                    ValueChangedDuringDrag = false
+                    
                     Slide(Input)
                     
                     local connection
@@ -746,6 +754,11 @@ function Library:Window(Title)
                         if Input.UserInputState == Enum.UserInputState.End then
                             SliderDragging = false
                             CurrentInput = nil
+                            
+                            if ValueChangedDuringDrag and Callback then
+                                Callback(LastValue)
+                            end
+                            
                             if connection then
                                 connection:Disconnect()
                             end
@@ -764,24 +777,26 @@ function Library:Window(Title)
             SliderTouchArea.Active = false
             
             SliderTouchArea.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.Touch then
+                if Input.UserInputType == Enum.UserInputType.Touch and not SliderDragging then
+                    ValueChangedDuringDrag = false
                     local touchPos = Input.Position
                     local sliderAbsPos = SliderClick.AbsolutePosition
                     local sliderAbsSize = SliderClick.AbsoluteSize
                     
                     if touchPos.X >= sliderAbsPos.X and touchPos.X <= sliderAbsPos.X + sliderAbsSize.X and
                        touchPos.Y >= sliderAbsPos.Y - 15 and touchPos.Y <= sliderAbsPos.Y + sliderAbsSize.Y + 15 then
-                        SlideFromPosition(touchPos)
+                        local finalValue = UpdateSlider(math.clamp(
+                            (touchPos.X - sliderAbsPos.X) / sliderAbsSize.X,
+                            0,
+                            1
+                        ))
+                        
+                        if Callback then
+                            Callback(finalValue)
+                        end
                     end
                 end
             end)
-
-            local SliderFunctions = {}
-            function SliderFunctions:Set(NewValue)
-                SetValue(NewValue)
-            end
-            
-            return SliderFunctions
         end
 
         function Elements:InputBox(Text, Placeholder, Callback)
@@ -911,7 +926,7 @@ function Library:Window(Title)
             Arrow.Position = UDim2.new(1, -8, 0.5, 0)
             Arrow.Size = UDim2.new(0, 20, 0, 20)
             Arrow.Image = "rbxassetid://3926307971"
-            Arrow.ImageColor3 = Color3.fromRGB(161, 12, 59)
+            Arrow.ImageColor3 = Color3.fromRGB(12, 59, 161)
             Arrow.ImageRectOffset = Vector2.new(324, 524)
             Arrow.ImageRectSize = Vector2.new(36, 36)
             Arrow.ScaleType = Enum.ScaleType.Fit
@@ -986,7 +1001,7 @@ function Library:Window(Title)
                         local OptionButton = Instance.new("TextButton")
                         OptionButton.Name = "Option"
                         OptionButton.Parent = OptionHolder
-                        OptionButton.BackgroundColor3 = Color3.fromRGB(134, 10, 49)
+                        OptionButton.BackgroundColor3 = Color3.fromRGB(10, 49, 134)
                         OptionButton.BorderSizePixel = 0
                         OptionButton.Size = UDim2.new(1, -16, 0, 30)
                         OptionButton.AutoButtonColor = false
@@ -1012,13 +1027,13 @@ function Library:Window(Title)
                         
                         OptionButton.MouseEnter:Connect(function()
                             TweenService:Create(OptionButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                                BackgroundColor3 = Color3.fromRGB(160, 12, 59)
+                                BackgroundColor3 = Color3.fromRGB(12, 59, 160)
                             }):Play()
                         end)
                         
                         OptionButton.MouseLeave:Connect(function()
                             TweenService:Create(OptionButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                                BackgroundColor3 = Color3.fromRGB(134, 10, 49)
+                                BackgroundColor3 = Color3.fromRGB(10, 49, 134)
                             }):Play()
                         end)
                     end
