@@ -238,7 +238,6 @@ function Library:Window(title)
         
         UIPadding.Parent = Page
         UIPadding.PaddingTop = UDim.new(0, 5)
-        UIPadding.PaddingBottom = UDim.new(0, 5)
         
         UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             Page.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
@@ -421,6 +420,7 @@ function Library:Window(title)
             TextLabel.Parent = Page
             TextLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             TextLabel.BorderSizePixel = 0
+            TextLabel.Position = UDim2.new(0, 0, 0, 0)
             TextLabel.Size = UDim2.new(1, -6, 0, 34)
             TextLabel.Font = Enum.Font.Gotham
             TextLabel.Text = "  "..(labeltext or "Label")
@@ -717,7 +717,8 @@ function Library:Window(title)
                 end
             end
             
-            OptionHolder:TweenSize(UDim2.new(1, 0, 0, OptionList.AbsoluteContentSize.Y + 15), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, .15, true)
+            -- Set OptionHolder size directly without tweening to prevent flickering
+            OptionHolder.Size = UDim2.new(1, 0, 0, OptionList.AbsoluteContentSize.Y + 15)
             
             local DropdownFunc = {}
             function DropdownFunc:RefreshDropdown(newlist)
@@ -771,7 +772,8 @@ function Library:Window(title)
                        end)
                     end
                 end
-                OptionHolder:TweenSize(UDim2.new(1, 0, 0, OptionList.AbsoluteContentSize.Y + 15), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, .15, true)
+                -- Update OptionHolder size directly without tweening
+                OptionHolder.Size = UDim2.new(1, 0, 0, OptionList.AbsoluteContentSize.Y + 15)
             end
             return DropdownFunc
         end
