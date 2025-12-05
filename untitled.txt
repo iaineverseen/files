@@ -26,7 +26,7 @@ function Library:Window(Title)
     Main.Parent = Ui
     Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     Main.BorderSizePixel = 0
-    Main.Position = UDim2.new(0.377, 0, 0.368, 0)
+    Main.Position = UDim2.new(0.5, -235, 0.5, -141.5)  -- Centered: (470/2 = 235, 283/2 = 141.5)
     Main.Size = UDim2.new(0, 470, 0, 283)
     Main.Active = true
     Main.Selectable = true
