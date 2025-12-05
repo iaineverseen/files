@@ -603,10 +603,12 @@ function Library:Window(Title)
             SliderClick.AnchorPoint = Vector2.new(0.5, 1)
             SliderClick.BackgroundColor3 = Color3.fromRGB(52, 52, 52)
             SliderClick.Position = UDim2.new(0.5, 0, 1, -8)
-            -- Larger clickable area (increased from 6 to 12)
-            SliderClick.Size = UDim2.new(1, -12, 0, 12)
+            SliderClick.Size = UDim2.new(1, -12, 0, 12) -- Increased height for better touch target
             SliderClick.AutoButtonColor = false
             SliderClick.Text = ""
+            SliderClick.Selectable = false -- Prevent text selection on mobile
+            SliderClick.Active = true -- Ensure it's interactive
+            SliderClick.SelectionImageObject = nil -- Remove selection image on mobile
 
             local SliderClickCorner = Instance.new("UICorner")
             SliderClickCorner.CornerRadius = UDim.new(0, 6)
@@ -615,23 +617,23 @@ function Library:Window(Title)
             local SliderDrag = Instance.new("Frame")
             SliderDrag.Name = "SliderDrag"
             SliderDrag.Parent = SliderClick
-            SliderDrag.AnchorPoint = Vector2.new(0, 0.5)
             SliderDrag.BackgroundColor3 = Color3.fromRGB(188, 14, 69)
-            SliderDrag.Position = UDim2.new(0, 0, 0.5, 0)
-            -- Keep visual height at 6 pixels
-            SliderDrag.Size = UDim2.new((Default - Min) / (Max - Min), 0, 0, 6)
+            SliderDrag.Size = UDim2.new((Default - Min) / (Max - Min), 0, 1, 0)
 
             local SliderDragCorner = Instance.new("UICorner")
             SliderDragCorner.CornerRadius = UDim.new(0, 6)
             SliderDragCorner.Parent = SliderDrag
 
             local SliderDragging = false
+            local CurrentInput = nil
 
             local function Slide(Input)
-                local Percent = math.clamp((Input.Position.X - SliderClick.AbsolutePosition.X) / SliderClick.AbsoluteSize.X, 0, 1)
-                local Pos = UDim2.new(Percent, 0, 0.5, 0)
-                SliderDrag:TweenPosition(Pos, Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.15, true)
-                SliderDrag.Size = UDim2.new(Percent, 0, 0, 6)
+                local Percent = math.clamp(
+                    (Input.Position.X - SliderClick.AbsolutePosition.X) / SliderClick.AbsoluteSize.X,
+                    0,
+                    1
+                )
+                SliderDrag.Size = UDim2.new(Percent, 0, 1, 0)
                 local SliderValue = math.floor(Min + (Percent * (Max - Min)))
                 Value.Text = tostring(SliderValue)
                 if Callback then
@@ -639,22 +641,111 @@ function Library:Window(Title)
                 end
             end
 
+            local function SlideFromPosition(Position)
+                local Percent = math.clamp(
+                    (Position.X - SliderClick.AbsolutePosition.X) / SliderClick.AbsoluteSize.X,
+                    0,
+                    1
+                )
+                SliderDrag.Size = UDim2.new(Percent, 0, 1, 0)
+                local SliderValue = math.floor(Min + (Percent * (Max - Min)))
+                Value.Text = tostring(SliderValue)
+                if Callback then
+                    Callback(SliderValue)
+                end
+            end
+
+            -- Handle touch/mouse input with better mobile support
             SliderClick.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-                    Slide(Input)
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 or 
+                   Input.UserInputType == Enum.UserInputType.Touch then
                     SliderDragging = true
-                end
-            end)
-
-            SliderClick.InputEnded:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-                    SliderDragging = false
-                end
-            end)
-
-            UserInputService.InputChanged:Connect(function(Input)
-                if SliderDragging and (Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch) then
+                    CurrentInput = Input
                     Slide(Input)
+                    
+                    -- Create a connection to handle input changed
+                    local connection
+                    connection = Input.Changed:Connect(function()
+                        if Input.UserInputState == Enum.UserInputState.End then
+                            SliderDragging = false
+                            CurrentInput = nil
+                            if connection then
+                                connection:Disconnect()
+                            end
+                        end
+                    end)
+                end
+            end)
+
+            -- Handle direct touch on the slider track (not just the button)
+            SliderClick.TouchTap:Connect(function(Position)
+                if not SliderDragging then
+                    SlideFromPosition(Position)
+                end
+            end)
+
+            -- Handle input changed for both mouse and touch
+            UserInputService.InputChanged:Connect(function(Input)
+                if SliderDragging and (Input == CurrentInput) and
+                   (Input.UserInputType == Enum.UserInputType.MouseMovement or 
+                    Input.UserInputType == Enum.UserInputType.Touch) then
+                    Slide(Input)
+                end
+            end)
+
+            -- Additional mobile optimization: Handle touch input anywhere on the slider area
+            local TouchArea = Instance.new("TextButton")
+            TouchArea.Name = "TouchArea"
+            TouchArea.Parent = SliderClick
+            TouchArea.BackgroundTransparency = 1
+            TouchArea.Size = UDim2.new(1, 0, 1, 0)
+            TouchArea.Text = ""
+            TouchArea.ZIndex = 2
+            TouchArea.Active = true
+            TouchArea.Selectable = false
+            TouchArea.SelectionImageObject = nil
+
+            TouchArea.InputBegan:Connect(function(Input)
+                if Input.UserInputType == Enum.UserInputType.Touch then
+                    SliderDragging = true
+                    CurrentInput = Input
+                    Slide(Input)
+                    
+                    local connection
+                    connection = Input.Changed:Connect(function()
+                        if Input.UserInputState == Enum.UserInputState.End then
+                            SliderDragging = false
+                            CurrentInput = nil
+                            if connection then
+                                connection:Disconnect()
+                            end
+                        end
+                    end)
+                end
+            end)
+
+            -- Also make the entire slider frame respond to touch
+            local SliderTouchArea = Instance.new("TextButton")
+            SliderTouchArea.Name = "SliderTouchArea"
+            SliderTouchArea.Parent = Slider
+            SliderTouchArea.BackgroundTransparency = 1
+            SliderTouchArea.Size = UDim2.new(1, 0, 1, 0)
+            SliderTouchArea.Text = ""
+            SliderTouchArea.ZIndex = 0
+            SliderTouchArea.Active = false -- We don't want this to steal focus, just detect touch
+            
+            SliderTouchArea.InputBegan:Connect(function(Input)
+                if Input.UserInputType == Enum.UserInputType.Touch then
+                    -- Convert touch position to slider position
+                    local touchPos = Input.Position
+                    local sliderAbsPos = SliderClick.AbsolutePosition
+                    local sliderAbsSize = SliderClick.AbsoluteSize
+                    
+                    -- Check if touch is near the slider area
+                    if touchPos.X >= sliderAbsPos.X and touchPos.X <= sliderAbsPos.X + sliderAbsSize.X and
+                       touchPos.Y >= sliderAbsPos.Y - 10 and touchPos.Y <= sliderAbsPos.Y + sliderAbsSize.Y + 10 then
+                        SlideFromPosition(touchPos)
+                    end
                 end
             end)
         end
