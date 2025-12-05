@@ -9,17 +9,6 @@ local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
 
 function Library:Window(Title)
-    -- Remove old UI instances if they exist
-    local existingUI = CoreGui:FindFirstChild("UI")
-    if existingUI then
-        existingUI:Destroy()
-    end
-    
-    local existingMinIcon = CoreGui:FindFirstChild("MinimizedIcon")
-    if existingMinIcon then
-        existingMinIcon:Destroy()
-    end
-
     local Ui = Instance.new("ScreenGui")
     Ui.Name = "UI"
     Ui.Parent = CoreGui
@@ -614,7 +603,8 @@ function Library:Window(Title)
             SliderClick.AnchorPoint = Vector2.new(0.5, 1)
             SliderClick.BackgroundColor3 = Color3.fromRGB(52, 52, 52)
             SliderClick.Position = UDim2.new(0.5, 0, 1, -8)
-            SliderClick.Size = UDim2.new(1, -12, 0, 6)
+            -- Larger clickable area (increased from 6 to 12)
+            SliderClick.Size = UDim2.new(1, -12, 0, 12)
             SliderClick.AutoButtonColor = false
             SliderClick.Text = ""
 
@@ -622,21 +612,14 @@ function Library:Window(Title)
             SliderClickCorner.CornerRadius = UDim.new(0, 6)
             SliderClickCorner.Parent = SliderClick
 
-            -- Make the draggable area larger (extending above and below the visible track)
-            local SliderDragArea = Instance.new("Frame")
-            SliderDragArea.Name = "SliderDragArea"
-            SliderDragArea.Parent = SliderClick
-            SliderDragArea.BackgroundTransparency = 1
-            SliderDragArea.Position = UDim2.new(0, 0, -2, 0) -- Extend upward
-            SliderDragArea.Size = UDim2.new(1, 0, 5, 0) -- Make taller for easier dragging
-            SliderDragArea.ZIndex = 5
-
             local SliderDrag = Instance.new("Frame")
             SliderDrag.Name = "SliderDrag"
             SliderDrag.Parent = SliderClick
+            SliderDrag.AnchorPoint = Vector2.new(0, 0.5)
             SliderDrag.BackgroundColor3 = Color3.fromRGB(188, 14, 69)
-            SliderDrag.Size = UDim2.new((Default - Min) / (Max - Min), 0, 1, 0)
-            SliderDrag.ZIndex = 2
+            SliderDrag.Position = UDim2.new(0, 0, 0.5, 0)
+            -- Keep visual height at 6 pixels
+            SliderDrag.Size = UDim2.new((Default - Min) / (Max - Min), 0, 0, 6)
 
             local SliderDragCorner = Instance.new("UICorner")
             SliderDragCorner.CornerRadius = UDim.new(0, 6)
@@ -646,8 +629,9 @@ function Library:Window(Title)
 
             local function Slide(Input)
                 local Percent = math.clamp((Input.Position.X - SliderClick.AbsolutePosition.X) / SliderClick.AbsoluteSize.X, 0, 1)
-                local Pos = UDim2.new(Percent, 0, 0, 6)
-                SliderDrag:TweenSize(Pos, Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.15, true)
+                local Pos = UDim2.new(Percent, 0, 0.5, 0)
+                SliderDrag:TweenPosition(Pos, Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.15, true)
+                SliderDrag.Size = UDim2.new(Percent, 0, 0, 6)
                 local SliderValue = math.floor(Min + (Percent * (Max - Min)))
                 Value.Text = tostring(SliderValue)
                 if Callback then
@@ -655,15 +639,14 @@ function Library:Window(Title)
                 end
             end
 
-            -- Use the larger drag area for input detection
-            SliderDragArea.InputBegan:Connect(function(Input)
+            SliderClick.InputBegan:Connect(function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                     Slide(Input)
                     SliderDragging = true
                 end
             end)
 
-            SliderDragArea.InputEnded:Connect(function(Input)
+            SliderClick.InputEnded:Connect(function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                     SliderDragging = false
                 end
@@ -850,7 +833,7 @@ function Library:Window(Title)
                     if Child:IsA("TextButton") or Child:IsA("TextLabel") then
                         Child:Destroy()
                     end
-                }
+                end
                 
                 Title.Text = Text or "Dropdown"
                 
