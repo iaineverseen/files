@@ -38,7 +38,7 @@ function Library:Window(Title)
     Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     Main.BorderSizePixel = 0
     Main.Position = UDim2.new(0.5, -235, 0.5, -141.5)
-    Main.Size = UDim2.new(0, 470, 0, 350) -- Increased height from 283 to 350
+    Main.Size = UDim2.new(0, 470, 0, 283)
     Main.Active = true
     Main.Selectable = true
 
@@ -287,7 +287,7 @@ function Library:Window(Title)
     Pages.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     Pages.BorderSizePixel = 0
     Pages.Position = UDim2.new(0, 130, 0, 42)
-    Pages.Size = UDim2.new(1, -138, 1, -60) -- Increased bottom margin from -50 to -60
+    Pages.Size = UDim2.new(1, -138, 1, -50)
 
     local PagesCorner = Instance.new("UICorner")
     PagesCorner.CornerRadius = UDim.new(0, 6)
@@ -335,9 +335,8 @@ function Library:Window(Title)
         Page.BorderSizePixel = 0
         Page.Size = UDim2.new(1, 0, 1, 0)
         Page.CanvasPosition = Vector2.new(0, 0)
-        Page.ScrollBarThickness = 5 -- Made scrollbar visible
-        Page.ScrollBarImageTransparency = 0.5
-        Page.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+        Page.ScrollBarThickness = 0
+        Page.ScrollBarImageTransparency = 1
 
         local PageList = Instance.new("UIListLayout")
         PageList.Parent = Page
@@ -348,10 +347,10 @@ function Library:Window(Title)
         local PagePadding = Instance.new("UIPadding")
         PagePadding.Parent = Page
         PagePadding.PaddingTop = UDim.new(0, 5)
-        PagePadding.PaddingBottom = UDim.new(0, 15) -- Added more bottom padding
+        PagePadding.PaddingBottom = UDim.new(0, 15)
 
         PageList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            Page.CanvasSize = UDim2.new(0, 0, 0, PageList.AbsoluteContentSize.Y + 10)
+            Page.CanvasSize = UDim2.new(0, 0, 0, PageList.AbsoluteContentSize.Y + 20)
         end)
 
         TabButton.MouseButton1Click:Connect(function()
