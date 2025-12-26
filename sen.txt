@@ -1,0 +1,1036 @@
+local TweenService = cloneref(game:GetService("TweenService"))
+local UserInputService = cloneref(game:GetService("UserInputService"))
+local CoreGui = cloneref(game:GetService("CoreGui"))
+
+local SentinelLib = {}
+local Colors = {
+    MainBackground = Color3.fromRGB(30, 30, 30),
+    TopBar = Color3.fromRGB(24, 24, 24),
+    TabsBackground = Color3.fromRGB(33, 33, 33),
+    ElementBackground = Color3.fromRGB(35, 35, 35),
+    ElementHover = Color3.fromRGB(40, 40, 40),
+    Primary = Color3.fromRGB(17, 85, 232),
+    PrimaryDark = Color3.fromRGB(10, 49, 134),
+    PrimaryHover = Color3.fromRGB(12, 59, 160),
+    SecondaryButton = Color3.fromRGB(14, 69, 188),
+    TextPrimary = Color3.fromRGB(255, 255, 255),
+    TextSecondary = Color3.fromRGB(72, 72, 72),
+    TextPlaceholder = Color3.fromRGB(150, 150, 150),
+    DarkElement = Color3.fromRGB(43, 43, 43),
+    MediumElement = Color3.fromRGB(52, 52, 52),
+    MinimizeIcon = Color3.fromRGB(199, 199, 199)
+}
+
+local TweenCache = {}
+local function GetCachedTween(instance, tweenInfo, properties)
+    local key = instance
+    if not TweenCache[key] then
+        TweenCache[key] = TweenService:Create(instance, tweenInfo, properties)
+    end
+    return TweenCache[key]
+end
+
+local DefaultTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local FastTweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+function SentinelLib:Window(title)
+    if CoreGui:FindFirstChild("SentinelLib") then
+        CoreGui.SentinelLib:Destroy()
+    end
+
+    local MainGui = Instance.new("ScreenGui")
+    MainGui.Name = "SentinelLib"
+    MainGui.Parent = CoreGui
+    MainGui.IgnoreGuiInset = true
+    MainGui.ResetOnSpawn = false
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "Main"
+    MainFrame.Parent = MainGui
+    MainFrame.BackgroundColor3 = Colors.MainBackground
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Size = UDim2.new(0, 470, 0, 283)
+    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    MainFrame.Active = true
+
+    local IsDragging = false
+    local DragStart, InitialPos
+
+    local function UpdatePosition(input)
+        local delta = input.Position - DragStart
+        MainFrame.Position = UDim2.new(
+            InitialPos.X.Scale,
+            InitialPos.X.Offset + delta.X,
+            InitialPos.Y.Scale,
+            InitialPos.Y.Offset + delta.Y
+        )
+    end
+
+    local DragConnection
+    MainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            IsDragging = true
+            DragStart = input.Position
+            InitialPos = MainFrame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    IsDragging = false
+                    if DragConnection then
+                        DragConnection:Disconnect()
+                        DragConnection = nil
+                    end
+                end
+            end)
+        end
+    end)
+
+    DragConnection = UserInputService.InputChanged:Connect(function(input)
+        if IsDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            UpdatePosition(input)
+        end
+    end)
+
+    local MainCorner = Instance.new("UICorner")
+    MainCorner.Name = "MainCorner"
+    MainCorner.CornerRadius = UDim.new(0, 6)
+    MainCorner.Parent = MainFrame
+
+    local Shadow = Instance.new("ImageLabel")
+    Shadow.Name = "Shadow"
+    Shadow.Parent = MainFrame
+    Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+    Shadow.BackgroundTransparency = 1
+    Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+    Shadow.Size = UDim2.new(1, 30, 1, 30)
+    Shadow.ZIndex = 0
+    Shadow.Image = "rbxassetid://5554236805"
+    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    Shadow.ScaleType = Enum.ScaleType.Slice
+    Shadow.SliceCenter = Rect.new(23, 23, 277, 277)
+
+    local TopBar = Instance.new("Frame")
+    TopBar.Name = "Top"
+    TopBar.Parent = MainFrame
+    TopBar.BackgroundColor3 = Colors.TopBar
+    TopBar.BorderSizePixel = 0
+    TopBar.Size = UDim2.new(1, 0, 0, 34)
+
+    local TopCorner = Instance.new("UICorner")
+    TopCorner.Name = "TopCorner"
+    TopCorner.CornerRadius = UDim.new(0, 6)
+    TopCorner.Parent = TopBar
+
+    local Cover = Instance.new("Frame")
+    Cover.Name = "Cover"
+    Cover.Parent = TopBar
+    Cover.AnchorPoint = Vector2.new(0.5, 1)
+    Cover.BackgroundColor3 = Colors.TopBar
+    Cover.BorderSizePixel = 0
+    Cover.Position = UDim2.new(0.5, 0, 1, 0)
+    Cover.Size = UDim2.new(1, 0, 0, 4)
+
+    local Line = Instance.new("Frame")
+    Line.Name = "Line"
+    Line.Parent = TopBar
+    Line.AnchorPoint = Vector2.new(0.5, 1)
+    Line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Line.BackgroundTransparency = 0.92
+    Line.Position = UDim2.new(0.5, 0, 1, 1)
+    Line.Size = UDim2.new(1, 0, 0, 1)
+
+    local Logo = Instance.new("ImageLabel")
+    Logo.Name = "Logo"
+    Logo.Parent = TopBar
+    Logo.AnchorPoint = Vector2.new(0, 0.5)
+    Logo.BackgroundTransparency = 1
+    Logo.Position = UDim2.new(0, 4, 0.5, 0)
+    Logo.Size = UDim2.new(0, 26, 0, 30)
+    Logo.Image = "http://www.roblox.com/asset/?id=7803241868"
+    Logo.ImageColor3 = Colors.Primary
+
+    local MinimizeButton = Instance.new("ImageButton")
+    MinimizeButton.Name = "Minimize"
+    MinimizeButton.Parent = TopBar
+    MinimizeButton.AnchorPoint = Vector2.new(1, 0.5)
+    MinimizeButton.BackgroundTransparency = 1
+    MinimizeButton.Position = UDim2.new(1, -6, 0.5, 0)
+    MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
+    MinimizeButton.Image = "rbxassetid://121304296213645"
+    MinimizeButton.ImageColor3 = Colors.MinimizeIcon
+    MinimizeButton.ScaleType = Enum.ScaleType.Crop
+
+    local MinimizedIcon = Instance.new("ImageButton")
+    MinimizedIcon.Name = "MinimizedIcon"
+    MinimizedIcon.Parent = MainGui
+    MinimizedIcon.AnchorPoint = Vector2.new(1, 0)
+    MinimizedIcon.BackgroundColor3 = Colors.Primary
+    MinimizedIcon.BorderSizePixel = 0
+    MinimizedIcon.Position = UDim2.new(1, -20, 0, 20)
+    MinimizedIcon.Size = UDim2.new(0, 40, 0, 40)
+    MinimizedIcon.Visible = false
+    MinimizedIcon.ZIndex = 10
+    MinimizedIcon.Image = "rbxassetid://7803241868"
+
+    local MinimizedCorner = Instance.new("UICorner")
+    MinimizedCorner.Name = "MinimizedCorner"
+    MinimizedCorner.CornerRadius = UDim.new(0, 8)
+    MinimizedCorner.Parent = MinimizedIcon
+
+    local IsIconDragging = false
+    local IconDragStart, IconInitialPos
+
+    local function UpdateIconPosition(input)
+        local delta = input.Position - IconDragStart
+        MinimizedIcon.Position = UDim2.new(
+            IconInitialPos.X.Scale,
+            IconInitialPos.X.Offset + delta.X,
+            IconInitialPos.Y.Scale,
+            IconInitialPos.Y.Offset + delta.Y
+        )
+    end
+
+    local IconDragConnection
+    MinimizedIcon.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            IsIconDragging = true
+            IconDragStart = input.Position
+            IconInitialPos = MinimizedIcon.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    IsIconDragging = false
+                    if IconDragConnection then
+                        IconDragConnection:Disconnect()
+                        IconDragConnection = nil
+                    end
+                end
+            end)
+        end
+    end)
+
+    IconDragConnection = UserInputService.InputChanged:Connect(function(input)
+        if IsIconDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            UpdateIconPosition(input)
+        end
+    end)
+
+    MinimizeButton.MouseButton1Click:Connect(function()
+        MainFrame.Visible = false
+        MinimizedIcon.Visible = true
+    end)
+
+    MinimizeButton.MouseEnter:Connect(function()
+        TweenService:Create(MinimizeButton, DefaultTweenInfo, {
+            ImageColor3 = Colors.TextPrimary
+        }):Play()
+    end)
+
+    MinimizeButton.MouseLeave:Connect(function()
+        TweenService:Create(MinimizeButton, DefaultTweenInfo, {
+            ImageColor3 = Color3.fromRGB(166, 166, 166)
+        }):Play()
+    end)
+
+    MinimizedIcon.MouseButton1Click:Connect(function()
+        MainFrame.Visible = true
+        MinimizedIcon.Visible = false
+    end)
+
+    local GameTitle = Instance.new("TextLabel")
+    GameTitle.Name = "GameName"
+    GameTitle.Parent = TopBar
+    GameTitle.AnchorPoint = Vector2.new(0, 0.5)
+    GameTitle.BackgroundTransparency = 1
+    GameTitle.Position = UDim2.new(0, 32, 0.5, 0)
+    GameTitle.Size = UDim2.new(0, 165, 0, 22)
+    GameTitle.Font = Enum.Font.Gotham
+    GameTitle.Text = title or "SentinelLib"
+    GameTitle.TextColor3 = Colors.Primary
+    GameTitle.TextSize = 14
+    GameTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+    local TabsFrame = Instance.new("Frame")
+    TabsFrame.Name = "Tabs"
+    TabsFrame.Parent = MainFrame
+    TabsFrame.BackgroundColor3 = Colors.TabsBackground
+    TabsFrame.BorderSizePixel = 0
+    TabsFrame.Position = UDim2.new(0, 0, 0, 35)
+    TabsFrame.Size = UDim2.new(0, 122, 1, -35)
+
+    local TabsCorner = Instance.new("UICorner")
+    TabsCorner.Name = "TabsCorner"
+    TabsCorner.CornerRadius = UDim.new(0, 6)
+    TabsCorner.Parent = TabsFrame
+
+    local TabsCover = Instance.new("Frame")
+    TabsCover.Name = "Cover"
+    TabsCover.Parent = TabsFrame
+    TabsCover.AnchorPoint = Vector2.new(1, 0.5)
+    TabsCover.BackgroundColor3 = Colors.TabsBackground
+    TabsCover.BorderSizePixel = 0
+    TabsCover.Position = UDim2.new(1, 0, 0.5, 0)
+    TabsCover.Size = UDim2.new(0, 5, 1, 0)
+
+    local TabsContainer = Instance.new("ScrollingFrame")
+    TabsContainer.Name = "TabsContainer"
+    TabsContainer.Parent = TabsFrame
+    TabsContainer.BackgroundTransparency = 1
+    TabsContainer.BorderSizePixel = 0
+    TabsContainer.Size = UDim2.new(1, 0, 1, 0)
+    TabsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+    TabsContainer.ScrollBarThickness = 0
+    TabsContainer.ScrollingEnabled = true
+    TabsContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+    local TabsListLayout = Instance.new("UIListLayout")
+    TabsListLayout.Name = "TabsList"
+    TabsListLayout.Parent = TabsContainer
+    TabsListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    TabsListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    TabsListLayout.Padding = UDim.new(0, 5)
+
+    local TabsPadding = Instance.new("UIPadding")
+    TabsPadding.Name = "TabsPadding"
+    TabsPadding.Parent = TabsContainer
+    TabsPadding.PaddingTop = UDim.new(0, 5)
+
+    local PagesFrame = Instance.new("Frame")
+    PagesFrame.Name = "Pages"
+    PagesFrame.Parent = MainFrame
+    PagesFrame.BackgroundColor3 = Colors.MainBackground
+    PagesFrame.BorderSizePixel = 0
+    PagesFrame.Position = UDim2.new(0, 130, 0, 42)
+    PagesFrame.Size = UDim2.new(1, -138, 1, -50)
+
+    local PagesCorner = Instance.new("UICorner")
+    PagesCorner.Name = "PagesCorner"
+    PagesCorner.CornerRadius = UDim.new(0, 6)
+    PagesCorner.Parent = PagesFrame
+
+    local TabFunctions = {}
+    local HasCreatedFirstTab = false
+    local AllTabs = {}
+    local AllPages = {}
+
+    function TabFunctions:Tab(tabName)
+        local TabName = tabName or "Tab"
+        
+        local TabButton = Instance.new("TextButton")
+        TabButton.Name = "TabButton"
+        TabButton.Parent = TabsContainer
+        TabButton.BackgroundColor3 = Colors.Primary
+        TabButton.BackgroundTransparency = 1
+        TabButton.Size = UDim2.new(1, -12, 0, 30)
+        TabButton.AutoButtonColor = false
+        TabButton.Font = Enum.Font.Gotham
+        TabButton.Text = ""
+        TabButton.TextColor3 = Colors.TextSecondary
+        TabButton.TextSize = 14
+
+        local TabButtonCorner = Instance.new("UICorner")
+        TabButtonCorner.Name = "TabButtonCorner"
+        TabButtonCorner.CornerRadius = UDim.new(0, 6)
+        TabButtonCorner.Parent = TabButton
+
+        local TabButtonText = Instance.new("TextLabel")
+        TabButtonText.Name = "TextLabel"
+        TabButtonText.Parent = TabButton
+        TabButtonText.BackgroundTransparency = 1
+        TabButtonText.Size = UDim2.new(1, 0, 1, 0)
+        TabButtonText.Font = Enum.Font.Gotham
+        TabButtonText.Text = TabName
+        TabButtonText.TextColor3 = Colors.TextSecondary
+        TabButtonText.TextSize = 14
+        TabButtonText.TextXAlignment = Enum.TextXAlignment.Center
+
+        local PageFrame = Instance.new("ScrollingFrame")
+        PageFrame.Name = "Page"
+        PageFrame.Visible = false
+        PageFrame.Parent = PagesFrame
+        PageFrame.Active = true
+        PageFrame.BackgroundTransparency = 1
+        PageFrame.BorderSizePixel = 0
+        PageFrame.Size = UDim2.new(1, 0, 1, 0)
+        PageFrame.ScrollBarThickness = 0
+        PageFrame.ClipsDescendants = true
+        PageFrame.ScrollingEnabled = true
+        PageFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+        local PageListLayout = Instance.new("UIListLayout")
+        PageListLayout.Name = "PageListLayout"
+        PageListLayout.Parent = PageFrame
+        PageListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        PageListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        PageListLayout.Padding = UDim.new(0, 6)
+
+        local PagePadding = Instance.new("UIPadding")
+        PagePadding.Name = "PagePadding"
+        PagePadding.Parent = PageFrame
+        PagePadding.PaddingTop = UDim.new(0, 5)
+
+        table.insert(AllTabs, {Button = TabButton, Text = TabButtonText})
+        table.insert(AllPages, PageFrame)
+
+        TabButton.MouseButton1Click:Connect(function()
+            for _, page in ipairs(AllPages) do
+                page.Visible = false
+            end
+            
+            PageFrame.Visible = true
+            
+            for _, tab in ipairs(AllTabs) do
+                TweenService:Create(tab.Button, DefaultTweenInfo, {
+                    BackgroundTransparency = 1
+                }):Play()
+                
+                TweenService:Create(tab.Text, DefaultTweenInfo, {
+                    TextColor3 = Colors.TextSecondary
+                }):Play()
+            end
+            
+            TweenService:Create(TabButton, DefaultTweenInfo, {
+                BackgroundTransparency = 0.6
+            }):Play()
+            
+            TweenService:Create(TabButtonText, DefaultTweenInfo, {
+                TextColor3 = Colors.TextPrimary
+            }):Play()
+        end)
+
+        local PageElements = {}
+        
+        local function SetupHoverAnimation(button, defaultColor, hoverColor)
+            local HoverTween, LeaveTween
+            
+            button.MouseEnter:Connect(function()
+                if LeaveTween then LeaveTween:Cancel() end
+                if not HoverTween then
+                    HoverTween = TweenService:Create(button, DefaultTweenInfo, {BackgroundColor3 = hoverColor})
+                end
+                HoverTween:Play()
+            end)
+            
+            button.MouseLeave:Connect(function()
+                if HoverTween then HoverTween:Cancel() end
+                if not LeaveTween then
+                    LeaveTween = TweenService:Create(button, DefaultTweenInfo, {BackgroundColor3 = defaultColor})
+                end
+                LeaveTween:Play()
+            end)
+        end
+
+        function PageElements:Button(buttonText, callback)
+            local Button = Instance.new("TextButton")
+            Button.Name = "Button"
+            Button.Parent = PageFrame
+            Button.BackgroundColor3 = Colors.PrimaryDark
+            Button.BorderSizePixel = 0
+            Button.Size = UDim2.new(1, -6, 0, 34)
+            Button.AutoButtonColor = false
+            Button.Font = Enum.Font.Gotham
+            Button.Text = buttonText or "Button"
+            Button.TextColor3 = Colors.TextPrimary
+            Button.TextSize = 14
+            Button.TextXAlignment = Enum.TextXAlignment.Center
+
+            local ButtonCorner = Instance.new("UICorner")
+            ButtonCorner.Name = "ButtonCorner"
+            ButtonCorner.CornerRadius = UDim.new(0, 6)
+            ButtonCorner.Parent = Button
+
+            SetupHoverAnimation(Button, Colors.PrimaryDark, Colors.PrimaryHover)
+
+            Button.MouseButton1Click:Connect(function()
+                if callback then
+                    task.spawn(callback)
+                end
+            end)
+        end
+
+        function PageElements:Toggle(toggleText, defaultValue, callback)
+            local Toggle = Instance.new("TextButton")
+            Toggle.Name = "Toggle"
+            Toggle.Parent = PageFrame
+            Toggle.BackgroundColor3 = Colors.ElementBackground
+            Toggle.BorderSizePixel = 0
+            Toggle.Size = UDim2.new(1, -6, 0, 34)
+            Toggle.AutoButtonColor = false
+            Toggle.Text = ""
+
+            local ToggleCorner = Instance.new("UICorner")
+            ToggleCorner.Name = "ToggleCorner"
+            ToggleCorner.CornerRadius = UDim.new(0, 6)
+            ToggleCorner.Parent = Toggle
+
+            local Title = Instance.new("TextLabel")
+            Title.Name = "Title"
+            Title.Parent = Toggle
+            Title.BackgroundTransparency = 1
+            Title.Position = UDim2.new(0, 8, 0, 0)
+            Title.Size = UDim2.new(1, -6, 1, 0)
+            Title.Font = Enum.Font.Gotham
+            Title.Text = toggleText or "Toggle"
+            Title.TextColor3 = Colors.TextPrimary
+            Title.TextSize = 14
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+
+            local ToggleFrame = Instance.new("Frame")
+            ToggleFrame.Name = "ToggleFrame"
+            ToggleFrame.Parent = Toggle
+            ToggleFrame.AnchorPoint = Vector2.new(1, 0.5)
+            ToggleFrame.BackgroundColor3 = Color3.fromRGB(12, 59, 161)
+            ToggleFrame.BackgroundTransparency = 1
+            ToggleFrame.BorderSizePixel = 0
+            ToggleFrame.Position = UDim2.new(1, -8, 0.5, 0)
+            ToggleFrame.Size = UDim2.new(0, 14, 0, 14)
+
+            local ToggleFrameCorner = Instance.new("UICorner")
+            ToggleFrameCorner.Name = "ToggleFrameCorner"
+            ToggleFrameCorner.CornerRadius = UDim.new(0, 3)
+            ToggleFrameCorner.Parent = ToggleFrame
+
+            local CheckIcon = Instance.new("ImageLabel")
+            CheckIcon.Name = "Check"
+            CheckIcon.Parent = ToggleFrame
+            CheckIcon.BackgroundTransparency = 1
+            CheckIcon.Position = UDim2.new(-0.214285731, 0, -0.214285731, 0)
+            CheckIcon.Size = UDim2.new(0, 20, 0, 20)
+            CheckIcon.Image = "http://www.roblox.com/asset/?id=7812909048"
+            CheckIcon.ImageTransparency = 1
+            CheckIcon.ScaleType = Enum.ScaleType.Fit
+
+            local ToggleStroke = Instance.new("UIStroke")
+            ToggleStroke.Name = "ToggleStroke"
+            ToggleStroke.Parent = ToggleFrame
+            ToggleStroke.LineJoinMode = Enum.LineJoinMode.Round
+            ToggleStroke.Thickness = 2
+            ToggleStroke.Color = Color3.fromRGB(12, 59, 161)
+
+            local IsToggled = defaultValue ~= nil and defaultValue or false
+            local FrameOnTween, FrameOffTween, IconOnTween, IconOffTween
+
+            local function UpdateToggle()
+                if IsToggled then
+                    if FrameOffTween then FrameOffTween:Cancel() end
+                    if IconOffTween then IconOffTween:Cancel() end
+                    
+                    if not FrameOnTween then
+                        FrameOnTween = TweenService:Create(ToggleFrame, FastTweenInfo, {BackgroundTransparency = 0})
+                    end
+                    if not IconOnTween then
+                        IconOnTween = TweenService:Create(CheckIcon, FastTweenInfo, {ImageTransparency = 0})
+                    end
+                    
+                    FrameOnTween:Play()
+                    IconOnTween:Play()
+                else
+                    if FrameOnTween then FrameOnTween:Cancel() end
+                    if IconOnTween then IconOnTween:Cancel() end
+                    
+                    if not FrameOffTween then
+                        FrameOffTween = TweenService:Create(ToggleFrame, FastTweenInfo, {BackgroundTransparency = 1})
+                    end
+                    if not IconOffTween then
+                        IconOffTween = TweenService:Create(CheckIcon, FastTweenInfo, {ImageTransparency = 1})
+                    end
+                    
+                    FrameOffTween:Play()
+                    IconOffTween:Play()
+                end
+            end
+
+            if IsToggled then
+                UpdateToggle()
+            end
+
+            SetupHoverAnimation(Toggle, Colors.ElementBackground, Colors.ElementHover)
+
+            Toggle.MouseButton1Click:Connect(function()
+                IsToggled = not IsToggled
+                UpdateToggle()
+                
+                if callback then
+                    task.spawn(callback, IsToggled)
+                end
+            end)
+
+            local ToggleFunctions = {}
+            
+            function ToggleFunctions:Set(value)
+                IsToggled = value
+                UpdateToggle()
+                
+                if callback then
+                    task.spawn(callback, IsToggled)
+                end
+            end
+            
+            return ToggleFunctions
+        end
+
+        function PageElements:Label(labelText)
+            local Label = Instance.new("TextLabel")
+            Label.Name = "Label"
+            Label.Parent = PageFrame
+            Label.BackgroundColor3 = Colors.ElementBackground
+            Label.BorderSizePixel = 0
+            Label.Size = UDim2.new(1, -6, 0, 34)
+            Label.Font = Enum.Font.Gotham
+            Label.Text = labelText or "Label"
+            Label.TextColor3 = Colors.TextPrimary
+            Label.TextSize = 14
+            Label.TextXAlignment = Enum.TextXAlignment.Center
+
+            local LabelCorner = Instance.new("UICorner")
+            LabelCorner.Name = "LabelCorner"
+            LabelCorner.CornerRadius = UDim.new(0, 6)
+            LabelCorner.Parent = Label
+
+            local LabelFunctions = {}
+            
+            function LabelFunctions:Set(newText)
+                Label.Text = newText or "Label"
+            end
+            
+            return LabelFunctions
+        end
+
+        function PageElements:Slider(sliderText, minValue, maxValue, defaultValue, increment, callback)
+            local MinValue = minValue or 0
+            local MaxValue = maxValue or 100
+            local DefaultValue = defaultValue or MinValue
+            local Increment = increment or 1
+            
+            if MinValue >= MaxValue then
+                warn("Slider: Min must be less than Max. Using defaults.")
+                MinValue = 0
+                MaxValue = 100
+            end
+
+            local SliderFrame = Instance.new("Frame")
+            SliderFrame.Name = "Slider"
+            SliderFrame.Parent = PageFrame
+            SliderFrame.BackgroundColor3 = Colors.ElementBackground
+            SliderFrame.BorderSizePixel = 0
+            SliderFrame.Size = UDim2.new(1, -6, 0, 48)
+
+            local SliderCorner = Instance.new("UICorner")
+            SliderCorner.Name = "SliderCorner"
+            SliderCorner.CornerRadius = UDim.new(0, 6)
+            SliderCorner.Parent = SliderFrame
+
+            local Title = Instance.new("TextLabel")
+            Title.Name = "Title"
+            Title.Parent = SliderFrame
+            Title.BackgroundTransparency = 1
+            Title.Position = UDim2.new(0, 8, 0, 0)
+            Title.Size = UDim2.new(1, -6, 0, 34)
+            Title.Font = Enum.Font.Gotham
+            Title.Text = sliderText or "Slider"
+            Title.TextColor3 = Colors.TextPrimary
+            Title.TextSize = 14
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+
+            local ValueLabel = Instance.new("TextLabel")
+            ValueLabel.Name = "Value"
+            ValueLabel.Parent = SliderFrame
+            ValueLabel.AnchorPoint = Vector2.new(1, 0)
+            ValueLabel.BackgroundTransparency = 1
+            ValueLabel.Position = UDim2.new(1, -10, 0, 0)
+            ValueLabel.Size = UDim2.new(1, 0, 0, 34)
+            ValueLabel.Font = Enum.Font.Gotham
+            ValueLabel.Text = tostring(DefaultValue)
+            ValueLabel.TextColor3 = Colors.TextPrimary
+            ValueLabel.TextSize = 14
+            ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+            local SliderClickArea = Instance.new("TextButton")
+            SliderClickArea.Name = "SliderClick"
+            SliderClickArea.Parent = SliderFrame
+            SliderClickArea.AnchorPoint = Vector2.new(0.5, 1)
+            SliderClickArea.BackgroundColor3 = Colors.MediumElement
+            SliderClickArea.BorderSizePixel = 0
+            SliderClickArea.Position = UDim2.new(0.5, 0, 1, -8)
+            SliderClickArea.Size = UDim2.new(1, -12, 0, 6)
+            SliderClickArea.AutoButtonColor = false
+            SliderClickArea.Text = ""
+            SliderClickArea.Active = true
+
+            local SliderClickCorner = Instance.new("UICorner")
+            SliderClickCorner.Name = "SliderClickCorner"
+            SliderClickCorner.CornerRadius = UDim.new(0, 6)
+            SliderClickCorner.Parent = SliderClickArea
+
+            local SliderDrag = Instance.new("Frame")
+            SliderDrag.Name = "SliderDrag"
+            SliderDrag.Parent = SliderClickArea
+            SliderDrag.BackgroundColor3 = Colors.SecondaryButton
+            SliderDrag.BorderSizePixel = 0
+            SliderDrag.Size = UDim2.new((DefaultValue - MinValue) / (MaxValue - MinValue), 0, 1, 0)
+
+            local SliderDragCorner = Instance.new("UICorner")
+            SliderDragCorner.Name = "SliderDragCorner"
+            SliderDragCorner.CornerRadius = UDim.new(0, 6)
+            SliderDragCorner.Parent = SliderDrag
+
+            local IsDragging = false
+            local CurrentValue = DefaultValue
+
+            local function RoundValue(value)
+                return Increment == 0 and value or math.floor(value / Increment + 0.5) * Increment
+            end
+
+            local function FormatValue(value)
+                local formatted = string.format("%.4f", value)
+                formatted = formatted:gsub("0+$", ""):gsub("%.$", "")
+                return formatted
+            end
+
+            local function UpdateSlider(percentage)
+                local rawValue = MinValue + percentage * (MaxValue - MinValue)
+                local roundedValue = RoundValue(rawValue)
+                local newPercentage = (roundedValue - MinValue) / (MaxValue - MinValue)
+                
+                SliderDrag.Size = UDim2.new(newPercentage, 0, 1, 0)
+                ValueLabel.Text = FormatValue(roundedValue)
+                CurrentValue = roundedValue
+                
+                return roundedValue
+            end
+
+            local function HandleDrag(input)
+                local percentage = math.clamp((input.Position.X - SliderClickArea.AbsolutePosition.X) / SliderClickArea.AbsoluteSize.X, 0, 1)
+                UpdateSlider(percentage)
+            end
+
+            local DragConnection
+            local function BeginDrag(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    IsDragging = true
+                    
+                    local endConnection
+                    endConnection = input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            IsDragging = false
+                            
+                            if callback then
+                                task.spawn(callback, CurrentValue)
+                            end
+                            
+                            if DragConnection then
+                                DragConnection:Disconnect()
+                                DragConnection = nil
+                            end
+                            endConnection:Disconnect()
+                        end
+                    end)
+                    
+                    if not DragConnection then
+                        DragConnection = UserInputService.InputChanged:Connect(function(dragInput)
+                            if IsDragging and (dragInput.UserInputType == Enum.UserInputType.MouseMovement or dragInput.UserInputType == Enum.UserInputType.Touch) then
+                                HandleDrag(dragInput)
+                            end
+                        end)
+                    end
+                end
+            end
+
+            SliderClickArea.InputBegan:Connect(BeginDrag)
+        end
+
+        function PageElements:InputBox(boxText, placeholder, callback)
+            local InputFrame = Instance.new("Frame")
+            InputFrame.Name = "InputBox"
+            InputFrame.Parent = PageFrame
+            InputFrame.BackgroundColor3 = Colors.ElementBackground
+            InputFrame.BorderSizePixel = 0
+            InputFrame.Size = UDim2.new(1, -6, 0, 34)
+
+            local InputCorner = Instance.new("UICorner")
+            InputCorner.Name = "InputCorner"
+            InputCorner.CornerRadius = UDim.new(0, 6)
+            InputCorner.Parent = InputFrame
+
+            local Title = Instance.new("TextLabel")
+            Title.Name = "Title"
+            Title.Parent = InputFrame
+            Title.BackgroundTransparency = 1
+            Title.Position = UDim2.new(0, 8, 0, 0)
+            Title.Size = UDim2.new(0.4, -6, 1, 0)
+            Title.Font = Enum.Font.Gotham
+            Title.Text = boxText or "Input"
+            Title.TextColor3 = Colors.TextPrimary
+            Title.TextSize = 14
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+
+            local BoxContainer = Instance.new("Frame")
+            BoxContainer.Name = "BoxContainer"
+            BoxContainer.Parent = InputFrame
+            BoxContainer.BackgroundTransparency = 1
+            BoxContainer.AnchorPoint = Vector2.new(1, 0.5)
+            BoxContainer.Position = UDim2.new(1, -6, 0.5, 0)
+            BoxContainer.Size = UDim2.new(0.55, -12, 0, 24)
+            BoxContainer.ClipsDescendants = true
+
+            local TextBox = Instance.new("TextBox")
+            TextBox.Name = "Box"
+            TextBox.Parent = BoxContainer
+            TextBox.BackgroundColor3 = Colors.DarkElement
+            TextBox.BorderSizePixel = 0
+            TextBox.Size = UDim2.new(1, 0, 1, 0)
+            TextBox.Font = Enum.Font.Gotham
+            TextBox.PlaceholderText = placeholder or "Enter text..."
+            TextBox.PlaceholderColor3 = Colors.TextPlaceholder
+            TextBox.Text = ""
+            TextBox.TextColor3 = Colors.TextPrimary
+            TextBox.TextSize = 14
+            TextBox.TextXAlignment = Enum.TextXAlignment.Center
+            TextBox.ClearTextOnFocus = false
+
+            local TextBoxCorner = Instance.new("UICorner")
+            TextBoxCorner.Name = "TextBoxCorner"
+            TextBoxCorner.CornerRadius = UDim.new(0, 4)
+            TextBoxCorner.Parent = TextBox
+
+            TextBox.FocusLost:Connect(function(enterPressed)
+                if callback and enterPressed then
+                    task.spawn(callback, TextBox.Text)
+                end
+            end)
+
+            local HoverFrame = Instance.new("TextButton")
+            HoverFrame.Name = "HoverFrame"
+            HoverFrame.Parent = InputFrame
+            HoverFrame.BackgroundColor3 = Colors.ElementBackground
+            HoverFrame.BorderSizePixel = 0
+            HoverFrame.Size = UDim2.new(1, 0, 1, 0)
+            HoverFrame.AutoButtonColor = false
+            HoverFrame.Text = ""
+            HoverFrame.ZIndex = 0
+
+            SetupHoverAnimation(InputFrame, Colors.ElementBackground, Colors.ElementHover)
+
+            HoverFrame.MouseButton1Click:Connect(function()
+                TextBox:CaptureFocus()
+            end)
+        end
+
+        function PageElements:Dropdown(dropdownText, options, callback)
+            local Options = options or {}
+
+            local DropdownFrame = Instance.new("Frame")
+            DropdownFrame.Name = "Dropdown"
+            DropdownFrame.Parent = PageFrame
+            DropdownFrame.BackgroundTransparency = 1
+            DropdownFrame.BorderSizePixel = 0
+            DropdownFrame.ClipsDescendants = false
+            DropdownFrame.Size = UDim2.new(1, -6, 0, 34)
+
+            local ChooseFrame = Instance.new("Frame")
+            ChooseFrame.Name = "Choose"
+            ChooseFrame.Parent = DropdownFrame
+            ChooseFrame.BackgroundColor3 = Colors.ElementBackground
+            ChooseFrame.BorderSizePixel = 0
+            ChooseFrame.Size = UDim2.new(1, 0, 0, 34)
+
+            local ChooseCorner = Instance.new("UICorner")
+            ChooseCorner.Name = "ChooseCorner"
+            ChooseCorner.CornerRadius = UDim.new(0, 6)
+            ChooseCorner.Parent = ChooseFrame
+
+            local Title = Instance.new("TextLabel")
+            Title.Name = "Title"
+            Title.Parent = ChooseFrame
+            Title.BackgroundTransparency = 1
+            Title.Position = UDim2.new(0, 8, 0, 0)
+            Title.Size = UDim2.new(1, -46, 1, 0)
+            Title.Font = Enum.Font.Gotham
+            Title.Text = dropdownText or "Dropdown"
+            Title.TextColor3 = Colors.TextPrimary
+            Title.TextSize = 14
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+
+            local Arrow = Instance.new("ImageButton")
+            Arrow.Name = "Arrow"
+            Arrow.Parent = ChooseFrame
+            Arrow.AnchorPoint = Vector2.new(1, 0.5)
+            Arrow.BackgroundTransparency = 1
+            Arrow.Position = UDim2.new(1, -8, 0.5, 0)
+            Arrow.Size = UDim2.new(0, 20, 0, 20)
+            Arrow.Image = "rbxassetid://3926307971"
+            Arrow.ImageColor3 = Color3.fromRGB(12, 59, 161)
+            Arrow.ImageRectOffset = Vector2.new(324, 524)
+            Arrow.ImageRectSize = Vector2.new(36, 36)
+            Arrow.ScaleType = Enum.ScaleType.Fit
+
+            local OptionHolder = Instance.new("Frame")
+            OptionHolder.Name = "OptionHolder"
+            OptionHolder.Parent = PageFrame
+            OptionHolder.BackgroundColor3 = Colors.ElementBackground
+            OptionHolder.BorderSizePixel = 0
+            OptionHolder.Position = UDim2.new(0, 0, 0, 0)
+            OptionHolder.Size = UDim2.new(1, -6, 0, 0)
+            OptionHolder.Visible = false
+            OptionHolder.ZIndex = 100
+            OptionHolder.ClipsDescendants = false
+
+            local OptionHolderCorner = Instance.new("UICorner")
+            OptionHolderCorner.Name = "OptionHolderCorner"
+            OptionHolderCorner.CornerRadius = UDim.new(0, 6)
+            OptionHolderCorner.Parent = OptionHolder
+
+            local OptionListLayout = Instance.new("UIListLayout")
+            OptionListLayout.Name = "OptionList"
+            OptionListLayout.Parent = OptionHolder
+            OptionListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            OptionListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            OptionListLayout.Padding = UDim.new(0, 5)
+
+            local OptionPadding = Instance.new("UIPadding")
+            OptionPadding.Name = "OptionPadding"
+            OptionPadding.Parent = OptionHolder
+            OptionPadding.PaddingTop = UDim.new(0, 8)
+            OptionPadding.PaddingLeft = UDim.new(0, 8)
+            OptionPadding.PaddingRight = UDim.new(0, 8)
+            OptionPadding.PaddingBottom = UDim.new(0, 8)
+
+            local IsDropdownOpen = false
+            local OptionButtons = {}
+
+            local SizeConnection = OptionListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                local contentHeight = OptionListLayout.AbsoluteContentSize.Y + 16
+                OptionHolder.Size = UDim2.new(1, -6, 0, contentHeight)
+            end)
+
+            local function PopulateDropdown(optionList)
+                local OptionList = optionList or {}
+                
+                for _, btn in ipairs(OptionButtons) do
+                    btn:Destroy()
+                end
+                OptionButtons = {}
+                
+                Title.Text = dropdownText or "Dropdown"
+                
+                if #OptionList == 0 then
+                    local NoOptionButton = Instance.new("TextButton")
+                    NoOptionButton.Name = "NoOption"
+                    NoOptionButton.Parent = OptionHolder
+                    NoOptionButton.BackgroundColor3 = Colors.MediumElement
+                    NoOptionButton.BorderSizePixel = 0
+                    NoOptionButton.Size = UDim2.new(1, -16, 0, 30)
+                    NoOptionButton.Font = Enum.Font.Gotham
+                    NoOptionButton.Text = "No Options Available"
+                    NoOptionButton.TextColor3 = Colors.TextPlaceholder
+                    NoOptionButton.TextSize = 14
+                    NoOptionButton.TextXAlignment = Enum.TextXAlignment.Center
+                    NoOptionButton.AutoButtonColor = false
+
+                    local NoOptionCorner = Instance.new("UICorner")
+                    NoOptionCorner.Name = "NoOptionCorner"
+                    NoOptionCorner.CornerRadius = UDim.new(0, 6)
+                    NoOptionCorner.Parent = NoOptionButton
+                    
+                    table.insert(OptionButtons, NoOptionButton)
+                else
+                    for _, optionText in ipairs(OptionList) do
+                        local OptionButton = Instance.new("TextButton")
+                        OptionButton.Name = "Option"
+                        OptionButton.Parent = OptionHolder
+                        OptionButton.BackgroundColor3 = Colors.PrimaryDark
+                        OptionButton.BorderSizePixel = 0
+                        OptionButton.Size = UDim2.new(1, -16, 0, 30)
+                        OptionButton.AutoButtonColor = false
+                        OptionButton.Font = Enum.Font.Gotham
+                        OptionButton.Text = optionText
+                        OptionButton.TextColor3 = Colors.TextPrimary
+                        OptionButton.TextSize = 14
+                        OptionButton.TextXAlignment = Enum.TextXAlignment.Center
+
+                        local OptionCorner = Instance.new("UICorner")
+                        OptionCorner.Name = "OptionCorner"
+                        OptionCorner.CornerRadius = UDim.new(0, 6)
+                        OptionCorner.Parent = OptionButton
+
+                        OptionButton.MouseButton1Click:Connect(function()
+                            if callback then
+                                task.spawn(callback, optionText)
+                            end
+                            
+                            Title.Text = (dropdownText or "Dropdown") .. ": " .. optionText
+                            IsDropdownOpen = false
+                            OptionHolder.Visible = false
+                            Arrow.Rotation = 0
+                        end)
+
+                        SetupHoverAnimation(OptionButton, Colors.PrimaryDark, Colors.PrimaryHover)
+                        table.insert(OptionButtons, OptionButton)
+                    end
+                end
+            end
+
+            PopulateDropdown(Options)
+
+            Arrow.MouseButton1Click:Connect(function()
+                IsDropdownOpen = not IsDropdownOpen
+                
+                if IsDropdownOpen then
+                    OptionHolder.Visible = true
+                    Arrow.Rotation = 180
+                    
+                    task.wait()
+                    
+                    local choosePosition = ChooseFrame.AbsolutePosition
+                    local chooseSize = ChooseFrame.AbsoluteSize
+                    local pagePosition = PageFrame.AbsolutePosition
+                    
+                    local offsetX = choosePosition.X - pagePosition.X
+                    local offsetY = choosePosition.Y - pagePosition.Y + chooseSize.Y + 5
+                    
+                    OptionHolder.Position = UDim2.new(0, offsetX, 0, offsetY)
+                else
+                    OptionHolder.Visible = false
+                    Arrow.Rotation = 0
+                end
+            end)
+
+            local DropdownFunctions = {}
+            
+            function DropdownFunctions:Refresh(newOptions)
+                PopulateDropdown(newOptions)
+                IsDropdownOpen = false
+                OptionHolder.Visible = false
+                Arrow.Rotation = 0
+            end
+            
+            function DropdownFunctions:Destroy()
+                if SizeConnection then
+                    SizeConnection:Disconnect()
+                end
+            end
+            
+            return DropdownFunctions
+        end
+
+        if not HasCreatedFirstTab then
+            HasCreatedFirstTab = true
+            PageFrame.Visible = true
+            
+            TweenService:Create(TabButton, DefaultTweenInfo, {
+                BackgroundTransparency = 0.6
+            }):Play()
+            
+            TweenService:Create(TabButtonText, DefaultTweenInfo, {
+                TextColor3 = Colors.TextPrimary
+            }):Play()
+        end
+
+        return PageElements
+    end
+
+    return TabFunctions
+end
+
+return SentinelLib
