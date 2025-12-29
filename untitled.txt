@@ -1,10 +1,8 @@
 local TweenService = cloneref(game:GetService("TweenService"))
 local UserInputService = cloneref(game:GetService("UserInputService"))
-local Players = cloneref(game:GetService("Players"))
 local CoreGui = cloneref(game:GetService("CoreGui"))
 
 local Library = {}
-local Player = Players.LocalPlayer
 
 if CoreGui:FindFirstChild("SentinelLIB") then
     CoreGui.SentinelLIB:Destroy()
@@ -15,7 +13,6 @@ function Library:Window(Title)
     Ui.Name = "SentinelLIB"
     Ui.Parent = CoreGui
     Ui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    Ui.IgnoreGuiInset = true
     Ui.ResetOnSpawn = false
 
     local Main = Instance.new("Frame")
@@ -74,19 +71,6 @@ function Library:Window(Title)
     UiCorner.CornerRadius = UDim.new(0, 6)
     UiCorner.Parent = Main
 
-    local Shadow = Instance.new("ImageLabel")
-    Shadow.Name = "Shadow"
-    Shadow.Parent = Main
-    Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-    Shadow.BackgroundTransparency = 1
-    Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-    Shadow.Size = UDim2.new(1, 30, 1, 30)
-    Shadow.ZIndex = 0
-    Shadow.Image = "rbxassetid://5554236805"
-    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    Shadow.ScaleType = Enum.ScaleType.Slice
-    Shadow.SliceCenter = Rect.new(23, 23, 277, 277)
-
     local Top = Instance.new("Frame")
     Top.Name = "Top"
     Top.Parent = Main
@@ -135,16 +119,14 @@ function Library:Window(Title)
     Minimize.Size = UDim2.new(0, 20, 0, 20)
     Minimize.Image = "rbxassetid://7733771811"
     Minimize.ImageColor3 = Color3.fromRGB(199, 199, 199)
-    Minimize.ScaleType = Enum.ScaleType.Crop
 
-    -- Changed position from bottom-right to top-right corner
     local MinimizedIcon = Instance.new("ImageButton")
     MinimizedIcon.Name = "MinimizedIcon"
     MinimizedIcon.Parent = Ui
-    MinimizedIcon.AnchorPoint = Vector2.new(1, 0)  -- Changed from (1, 1) to (1, 0)
+    MinimizedIcon.AnchorPoint = Vector2.new(1, 0)
     MinimizedIcon.BackgroundColor3 = Color3.fromRGB(17, 85, 232)
     MinimizedIcon.BorderSizePixel = 0
-    MinimizedIcon.Position = UDim2.new(1, -20, 0, 20)  -- Changed from (1, -20, 1, -20) to (1, -20, 0, 20)
+    MinimizedIcon.Position = UDim2.new(1, -20, 0, 20)
     MinimizedIcon.Size = UDim2.new(0, 40, 0, 40)
     MinimizedIcon.Visible = false
     MinimizedIcon.ZIndex = 10
@@ -255,7 +237,6 @@ function Library:Window(Title)
     TabsContainer.Size = UDim2.new(1, 0, 1, 0)
     TabsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
     TabsContainer.ScrollBarThickness = 0
-    TabsContainer.ScrollBarImageTransparency = 1
 
     local TabsList = Instance.new("UIListLayout")
     TabsList.Name = "TabsList"
@@ -299,7 +280,6 @@ function Library:Window(Title)
         TabButton.AutoButtonColor = false
         TabButton.Font = Enum.Font.Gotham
         TabButton.Text = ""
-        TabButton.TextColor3 = Color3.fromRGB(72, 72, 72)
         TabButton.TextSize = 14
 
         local TabCorner = Instance.new("UICorner")
@@ -326,7 +306,6 @@ function Library:Window(Title)
         Page.BorderSizePixel = 0
         Page.Size = UDim2.new(1, 0, 1, 0)
         Page.ScrollBarThickness = 0
-        Page.ScrollBarImageTransparency = 1
 
         local PageList = Instance.new("UIListLayout")
         PageList.Parent = Page
@@ -385,7 +364,6 @@ function Library:Window(Title)
             Button.Text = Text or "Button"
             Button.TextColor3 = Color3.fromRGB(255, 255, 255)
             Button.TextSize = 14
-            Button.TextXAlignment = Enum.TextXAlignment.Center
 
             local ButtonCorner = Instance.new("UICorner")
             ButtonCorner.CornerRadius = UDim.new(0, 6)
@@ -458,23 +436,12 @@ function Library:Window(Title)
             Check.Size = UDim2.new(0, 20, 0, 20)
             Check.Image = "http://www.roblox.com/asset/?id=7812909048"
             Check.ImageTransparency = 1
-            Check.ScaleType = Enum.ScaleType.Fit
-
-            local ToggleStroke = Instance.new("UIStroke")
-            ToggleStroke.Parent = ToggleFrame
-            ToggleStroke.LineJoinMode = Enum.LineJoinMode.Round
-            ToggleStroke.Thickness = 2
-            ToggleStroke.Color = Color3.fromRGB(12, 59, 161)
 
             local Toggled = Default or false
 
             if Toggled then
-                TweenService:Create(ToggleFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundTransparency = 0
-                }):Play()
-                TweenService:Create(Check, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    ImageTransparency = 0
-                }):Play()
+                ToggleFrame.BackgroundTransparency = 0
+                Check.ImageTransparency = 0
             end
 
             Toggle.MouseEnter:Connect(function()
@@ -517,19 +484,11 @@ function Library:Window(Title)
             function ToggleFunctions:Set(Value)
                 Toggled = Value
                 if Toggled then
-                    TweenService:Create(ToggleFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        BackgroundTransparency = 0
-                    }):Play()
-                    TweenService:Create(Check, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        ImageTransparency = 0
-                    }):Play()
+                    ToggleFrame.BackgroundTransparency = 0
+                    Check.ImageTransparency = 0
                 else
-                    TweenService:Create(ToggleFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        BackgroundTransparency = 1
-                    }):Play()
-                    TweenService:Create(Check, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        ImageTransparency = 1
-                    }):Play()
+                    ToggleFrame.BackgroundTransparency = 1
+                    Check.ImageTransparency = 1
                 end
                 if Callback then
                     Callback(Toggled)
@@ -549,7 +508,6 @@ function Library:Window(Title)
             Label.Text = Text or "Label"
             Label.TextColor3 = Color3.fromRGB(255, 255, 255)
             Label.TextSize = 14
-            Label.TextXAlignment = Enum.TextXAlignment.Center
 
             local LabelCorner = Instance.new("UICorner")
             LabelCorner.CornerRadius = UDim.new(0, 6)
@@ -613,9 +571,6 @@ function Library:Window(Title)
             SliderClick.Size = UDim2.new(1, -12, 0, 6)
             SliderClick.AutoButtonColor = false
             SliderClick.Text = ""
-            SliderClick.Selectable = false
-            SliderClick.Active = true
-            SliderClick.SelectionImageObject = nil
 
             local SliderClickCorner = Instance.new("UICorner")
             SliderClickCorner.CornerRadius = UDim.new(0, 6)
@@ -634,7 +589,6 @@ function Library:Window(Title)
             local SliderDragging = false
             local CurrentInput = nil
             local LastValue = Default
-            local ValueChangedDuringDrag = false
 
             local function RoundToIncrement(value)
                 if Increment == 0 then return value end
@@ -658,7 +612,9 @@ function Library:Window(Title)
                 
                 if SliderValue ~= LastValue then
                     LastValue = SliderValue
-                    ValueChangedDuringDrag = true
+                    if Callback then
+                        Callback(SliderValue)
+                    end
                 end
                 
                 return SliderValue
@@ -678,23 +634,13 @@ function Library:Window(Title)
                    Input.UserInputType == Enum.UserInputType.Touch then
                     SliderDragging = true
                     CurrentInput = Input
-                    ValueChangedDuringDrag = false
                     
                     Slide(Input)
                     
-                    local Connection
-                    Connection = Input.Changed:Connect(function()
+                    Input.Changed:Connect(function()
                         if Input.UserInputState == Enum.UserInputState.End then
                             SliderDragging = false
                             CurrentInput = nil
-                            
-                            if ValueChangedDuringDrag and Callback then
-                                Callback(LastValue)
-                            end
-                            
-                            if Connection then
-                                Connection:Disconnect()
-                            end
                         end
                     end)
                 end
@@ -705,43 +651,6 @@ function Library:Window(Title)
                    (Input.UserInputType == Enum.UserInputType.MouseMovement or 
                     Input.UserInputType == Enum.UserInputType.Touch) then
                     Slide(Input)
-                end
-            end)
-
-            local TouchArea = Instance.new("TextButton")
-            TouchArea.Name = "TouchArea"
-            TouchArea.Parent = SliderClick
-            TouchArea.BackgroundTransparency = 1
-            TouchArea.Size = UDim2.new(1, 0, 1, 0)
-            TouchArea.Text = ""
-            TouchArea.ZIndex = 2
-            TouchArea.Active = true
-            TouchArea.Selectable = false
-            TouchArea.SelectionImageObject = nil
-
-            TouchArea.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.Touch then
-                    SliderDragging = true
-                    CurrentInput = Input
-                    ValueChangedDuringDrag = false
-                    
-                    Slide(Input)
-                    
-                    local Connection
-                    Connection = Input.Changed:Connect(function()
-                        if Input.UserInputState == Enum.UserInputState.End then
-                            SliderDragging = false
-                            CurrentInput = nil
-                            
-                            if ValueChangedDuringDrag and Callback then
-                                Callback(LastValue)
-                            end
-                            
-                            if Connection then
-                                Connection:Disconnect()
-                            end
-                        end
-                    end)
                 end
             end)
         end
@@ -777,7 +686,6 @@ function Library:Window(Title)
             BoxContainer.AnchorPoint = Vector2.new(1, 0.5)
             BoxContainer.Position = UDim2.new(1, -6, 0.5, 0)
             BoxContainer.Size = UDim2.new(0.55, -12, 0, 24)
-            BoxContainer.ClipsDescendants = true
             
             local Box = Instance.new("TextBox")
             Box.Name = "Box"
@@ -791,42 +699,27 @@ function Library:Window(Title)
             Box.Text = ""
             Box.TextColor3 = Color3.fromRGB(255, 255, 255)
             Box.TextSize = 14
-            Box.TextXAlignment = Enum.TextXAlignment.Center
             
             local BoxCorner = Instance.new("UICorner")
             BoxCorner.CornerRadius = UDim.new(0, 4)
             BoxCorner.Parent = Box
             
             Box.FocusLost:Connect(function(EnterPressed)
-                if Callback and (EnterPressed or not Box:IsFocused()) then
+                if Callback and EnterPressed then
                     Callback(Box.Text)
                 end
             end)
             
-            local HoverFrame = Instance.new("TextButton")
-            HoverFrame.Name = "HoverFrame"
-            HoverFrame.Parent = InputBox
-            HoverFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-            HoverFrame.BorderSizePixel = 0
-            HoverFrame.Size = UDim2.new(1, 0, 1, 0)
-            HoverFrame.AutoButtonColor = false
-            HoverFrame.Text = ""
-            HoverFrame.ZIndex = 0
-            
-            HoverFrame.MouseEnter:Connect(function()
+            InputBox.MouseEnter:Connect(function()
                 TweenService:Create(InputBox, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 }):Play()
             end)
             
-            HoverFrame.MouseLeave:Connect(function()
+            InputBox.MouseLeave:Connect(function()
                 TweenService:Create(InputBox, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                     BackgroundColor3 = Color3.fromRGB(35, 35, 35)
                 }):Play()
-            end)
-            
-            HoverFrame.MouseButton1Click:Connect(function()
-                Box:CaptureFocus()
             end)
         end
 
@@ -875,7 +768,6 @@ function Library:Window(Title)
             Arrow.ImageColor3 = Color3.fromRGB(12, 59, 161)
             Arrow.ImageRectOffset = Vector2.new(324, 524)
             Arrow.ImageRectSize = Vector2.new(36, 36)
-            Arrow.ScaleType = Enum.ScaleType.Fit
             
             local OptionHolder = Instance.new("Frame")
             OptionHolder.Name = "OptionHolder"
@@ -934,10 +826,7 @@ function Library:Window(Title)
                     NoOption.Text = "No Options Available"
                     NoOption.TextColor3 = Color3.fromRGB(150, 150, 150)
                     NoOption.TextSize = 14
-                    NoOption.TextXAlignment = Enum.TextXAlignment.Center
                     NoOption.AutoButtonColor = false
-                    NoOption.Selectable = false
-                    NoOption.Active = false
                     
                     local NoOptionCorner = Instance.new("UICorner")
                     NoOptionCorner.CornerRadius = UDim.new(0, 6)
@@ -955,7 +844,6 @@ function Library:Window(Title)
                         OptionButton.Text = Option
                         OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
                         OptionButton.TextSize = 14
-                        OptionButton.TextXAlignment = Enum.TextXAlignment.Center
                         
                         local OptionCorner = Instance.new("UICorner")
                         OptionCorner.CornerRadius = UDim.new(0, 6)
@@ -1011,14 +899,6 @@ function Library:Window(Title)
                 end
             end)
             
-            local function CloseDropdown()
-                if Dropped then
-                    Dropped = false
-                    OptionHolder.Visible = false
-                    Arrow.Rotation = 0
-                end
-            end
-            
             UserInputService.InputBegan:Connect(function(Input)
                 if Dropped and Input.UserInputType == Enum.UserInputType.MouseButton1 then
                     local MousePos = Input.Position
@@ -1034,7 +914,9 @@ function Library:Window(Title)
                                           MousePos.Y >= OptionHolderAbsPos.Y and MousePos.Y <= OptionHolderAbsPos.Y + OptionHolderAbsSize.Y
                     
                     if not (ClickInDropdown or ClickInOptions) then
-                        CloseDropdown()
+                        Dropped = false
+                        OptionHolder.Visible = false
+                        Arrow.Rotation = 0
                     end
                 end
             end)
@@ -1053,12 +935,8 @@ function Library:Window(Title)
         if not FirstTabCreated then
             FirstTabCreated = true
             Page.Visible = true
-            TweenService:Create(TabButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                BackgroundTransparency = 0.6
-            }):Play()
-            TweenService:Create(TextLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                TextColor3 = Color3.fromRGB(255, 255, 255)
-            }):Play()
+            TabButton.BackgroundTransparency = 0.6
+            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         end
 
         return Elements
