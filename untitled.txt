@@ -107,7 +107,7 @@ function Library:Window(Title)
     Logo.BackgroundTransparency = 1
     Logo.Position = UDim2.new(0, 4, 0.5, 0)
     Logo.Size = UDim2.new(0, 26, 0, 30)
-    Logo.Image = "http://www.roblox.com/asset/?id=7803241868"
+    Logo.Image = "rbxassetid://7803241868"
     Logo.ImageColor3 = Color3.fromRGB(17, 85, 232)
 
     local Minimize = Instance.new("ImageButton")
@@ -130,7 +130,7 @@ function Library:Window(Title)
     MinimizedIcon.Size = UDim2.new(0, 40, 0, 40)
     MinimizedIcon.Visible = false
     MinimizedIcon.ZIndex = 10
-    MinimizedIcon.Image = "http://www.roblox.com/asset/?id=7803241868"
+    MinimizedIcon.Image = "rbxassetid://7803241868"
 
     local MinimizedCorner = Instance.new("UICorner")
     MinimizedCorner.CornerRadius = UDim.new(0, 8)
@@ -434,7 +434,7 @@ function Library:Window(Title)
             Check.BackgroundTransparency = 1
             Check.Position = UDim2.new(-0.214285731, 0, -0.214285731, 0)
             Check.Size = UDim2.new(0, 20, 0, 20)
-            Check.Image = "http://www.roblox.com/asset/?id=7812909048"
+            Check.Image = "rbxassetid://7812909048"
             Check.ImageTransparency = 1
 
             local Toggled = Default or false
@@ -896,28 +896,6 @@ function Library:Window(Title)
                 else
                     OptionHolder.Visible = false
                     Arrow.Rotation = 0
-                end
-            end)
-            
-            UserInputService.InputBegan:Connect(function(Input)
-                if Dropped and Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local MousePos = Input.Position
-                    local OptionHolderAbsPos = OptionHolder.AbsolutePosition
-                    local OptionHolderAbsSize = OptionHolder.AbsoluteSize
-                    local ChooseAbsPos = Choose.AbsolutePosition
-                    local ChooseAbsSize = Choose.AbsoluteSize
-                    
-                    local ClickInDropdown = MousePos.X >= ChooseAbsPos.X and MousePos.X <= ChooseAbsPos.X + ChooseAbsSize.X and
-                                           MousePos.Y >= ChooseAbsPos.Y and MousePos.Y <= ChooseAbsPos.Y + ChooseAbsSize.Y
-                    
-                    local ClickInOptions = MousePos.X >= OptionHolderAbsPos.X and MousePos.X <= OptionHolderAbsPos.X + OptionHolderAbsSize.X and
-                                          MousePos.Y >= OptionHolderAbsPos.Y and MousePos.Y <= OptionHolderAbsPos.Y + OptionHolderAbsSize.Y
-                    
-                    if not (ClickInDropdown or ClickInOptions) then
-                        Dropped = false
-                        OptionHolder.Visible = false
-                        Arrow.Rotation = 0
-                    end
                 end
             end)
             
