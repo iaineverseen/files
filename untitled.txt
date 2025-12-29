@@ -871,10 +871,10 @@ function Library:Window(Title)
 			Arrow.ImageRectSize = Vector2.new(36, 36)
 			Arrow.ScaleType = Enum.ScaleType.Fit
 
-			-- Optimization: Create dropdown container at UI root level for proper layering
+			-- Create dropdown container with proper layering
 			local OptionHolder = Instance.new("Frame")
 			OptionHolder.Name = "OptionHolder"
-			OptionHolder.Parent = Main
+			OptionHolder.Parent = Page
 			OptionHolder.BackgroundColor3 = Colors.ElementBackground
 			OptionHolder.BorderSizePixel = 0
 			OptionHolder.Position = UDim2.new(0, 0, 0, 0)
@@ -982,14 +982,14 @@ function Library:Window(Title)
 					OptionHolder.Visible = true
 					Arrow.Rotation = 180
 					
-					-- Optimization: Defer position calculation with proper coordinates
+					-- Optimization: Defer position calculation
 					task.defer(function()
 						if not OptionHolder.Parent or not Choose.Parent then return end
 						local ChooseAbsolutePosition = Choose.AbsolutePosition
 						local ChooseAbsoluteSize = Choose.AbsoluteSize
-						local MainAbsolutePosition = Main.AbsolutePosition
-						local XPos = ChooseAbsolutePosition.X - MainAbsolutePosition.X
-						local YPos = (ChooseAbsolutePosition.Y - MainAbsolutePosition.Y) + ChooseAbsoluteSize.Y + 5
+						local PageAbsolutePosition = Page.AbsolutePosition
+						local XPos = ChooseAbsolutePosition.X - PageAbsolutePosition.X
+						local YPos = (ChooseAbsolutePosition.Y - PageAbsolutePosition.Y) + ChooseAbsoluteSize.Y + 5
 						OptionHolder.Position = UDim2.new(0, XPos, 0, YPos)
 					end)
 				else
