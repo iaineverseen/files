@@ -357,6 +357,18 @@ function Library:Window(Title)
             ButtonCorner.CornerRadius = UDim.new(0, 6)
             ButtonCorner.Parent = Button
 
+            Button.MouseEnter:Connect(function()
+                TweenService:Create(Button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = Color3.fromRGB(12, 59, 160)
+                }):Play()
+            end)
+
+            Button.MouseLeave:Connect(function()
+                TweenService:Create(Button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = Color3.fromRGB(10, 49, 134)
+                }):Play()
+            end)
+
             Button.MouseButton1Click:Connect(function()
                 if Callback then
                     Callback()
@@ -578,10 +590,10 @@ function Library:Window(Title)
                 local RawValue = Min + (Percent * (Max - Min))
                 local SliderValue = RoundToIncrement(RawValue)
                 local AdjustedPercent = (SliderValue - Min) / (Max - Min)
-                
+
                 SliderDrag.Size = UDim2.new(AdjustedPercent, 0, 1, 0)
                 Value.Text = FormatNumber(SliderValue)
-                
+
                 if SliderValue ~= LastValue then
                     LastValue = SliderValue
                     if CallOnChange then
@@ -593,7 +605,7 @@ function Library:Window(Title)
                         LastCallbackValue = SliderValue
                     end
                 end
-                
+
                 return SliderValue
             end
 
@@ -611,20 +623,20 @@ function Library:Window(Title)
                    Input.UserInputType == Enum.UserInputType.Touch then
                     SliderDragging = true
                     CurrentInput = Input
-                    
+
                     Slide(Input)
-                    
+
                     local Connection
                     Connection = Input.Changed:Connect(function()
                         if Input.UserInputState == Enum.UserInputState.End then
                             SliderDragging = false
                             CurrentInput = nil
-                            
+
                             if PendingCallback and Callback then
                                 Callback(LastCallbackValue)
                                 PendingCallback = false
                             end
-                            
+
                             if Connection then
                                 Connection:Disconnect()
                             end
@@ -649,11 +661,11 @@ function Library:Window(Title)
             InputBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             InputBox.BorderSizePixel = 0
             InputBox.Size = UDim2.new(1, -6, 0, 34)
-            
+
             local InputBoxCorner = Instance.new("UICorner")
             InputBoxCorner.CornerRadius = UDim.new(0, 6)
             InputBoxCorner.Parent = InputBox
-            
+
             local Title = Instance.new("TextLabel")
             Title.Name = "Title"
             Title.Parent = InputBox
@@ -665,7 +677,7 @@ function Library:Window(Title)
             Title.TextColor3 = Color3.fromRGB(255, 255, 255)
             Title.TextSize = 14
             Title.TextXAlignment = Enum.TextXAlignment.Left
-            
+
             local BoxContainer = Instance.new("Frame")
             BoxContainer.Name = "BoxContainer"
             BoxContainer.Parent = InputBox
@@ -673,7 +685,7 @@ function Library:Window(Title)
             BoxContainer.AnchorPoint = Vector2.new(1, 0.5)
             BoxContainer.Position = UDim2.new(1, -6, 0.5, 0)
             BoxContainer.Size = UDim2.new(0.45, -12, 0, 24)
-            
+
             local Box = Instance.new("TextBox")
             Box.Name = "Box"
             Box.Parent = BoxContainer
@@ -686,21 +698,22 @@ function Library:Window(Title)
             Box.Text = ""
             Box.TextColor3 = Color3.fromRGB(255, 255, 255)
             Box.TextSize = 14
-            
+
             local BoxCorner = Instance.new("UICorner")
             BoxCorner.CornerRadius = UDim.new(0, 4)
             BoxCorner.Parent = Box
-            
+
             Box.FocusLost:Connect(function(EnterPressed)
                 if Callback and EnterPressed then
                     Callback(Box.Text)
                 end
             end)
+
         end
 
         function Elements:Dropdown(Text, Options, Callback)
             Options = Options or {}
-            
+
             local Dropdown = Instance.new("Frame")
             Dropdown.Name = "Dropdown"
             Dropdown.Parent = Page
@@ -708,18 +721,18 @@ function Library:Window(Title)
             Dropdown.BorderSizePixel = 0
             Dropdown.ClipsDescendants = false
             Dropdown.Size = UDim2.new(1, -6, 0, 34)
-            
+
             local Choose = Instance.new("Frame")
             Choose.Name = "Choose"
             Choose.Parent = Dropdown
             Choose.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             Choose.BorderSizePixel = 0
             Choose.Size = UDim2.new(1, 0, 0, 34)
-            
+
             local ChooseCorner = Instance.new("UICorner")
             ChooseCorner.CornerRadius = UDim.new(0, 6)
             ChooseCorner.Parent = Choose
-            
+
             local Title = Instance.new("TextLabel")
             Title.Name = "Title"
             Title.Parent = Choose
@@ -731,7 +744,7 @@ function Library:Window(Title)
             Title.TextColor3 = Color3.fromRGB(255, 255, 255)
             Title.TextSize = 14
             Title.TextXAlignment = Enum.TextXAlignment.Left
-            
+
             local Arrow = Instance.new("ImageButton")
             Arrow.Name = "Arrow"
             Arrow.Parent = Choose
@@ -743,7 +756,7 @@ function Library:Window(Title)
             Arrow.ImageColor3 = Color3.fromRGB(12, 59, 161)
             Arrow.ImageRectOffset = Vector2.new(324, 524)
             Arrow.ImageRectSize = Vector2.new(36, 36)
-            
+
             local OptionHolder = Instance.new("Frame")
             OptionHolder.Name = "OptionHolder"
             OptionHolder.Parent = Page
@@ -753,43 +766,43 @@ function Library:Window(Title)
             OptionHolder.Size = UDim2.new(1, -6, 0, 0)
             OptionHolder.Visible = false
             OptionHolder.ZIndex = 100
-            
+
             local OptionHolderCorner = Instance.new("UICorner")
             OptionHolderCorner.CornerRadius = UDim.new(0, 6)
             OptionHolderCorner.Parent = OptionHolder
-            
+
             local OptionList = Instance.new("UIListLayout")
             OptionList.Name = "OptionList"
             OptionList.Parent = OptionHolder
             OptionList.HorizontalAlignment = Enum.HorizontalAlignment.Center
             OptionList.SortOrder = Enum.SortOrder.LayoutOrder
             OptionList.Padding = UDim.new(0, 5)
-            
+
             local OptionPadding = Instance.new("UIPadding")
             OptionPadding.Parent = OptionHolder
             OptionPadding.PaddingTop = UDim.new(0, 8)
             OptionPadding.PaddingLeft = UDim.new(0, 8)
             OptionPadding.PaddingRight = UDim.new(0, 8)
             OptionPadding.PaddingBottom = UDim.new(0, 8)
-            
+
             OptionList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 local ContentHeight = OptionList.AbsoluteContentSize.Y + 16
                 OptionHolder.Size = UDim2.new(1, -6, 0, ContentHeight)
             end)
-            
+
             local Dropped = false
-            
+
             local function RefreshOptions(NewOptions)
                 NewOptions = NewOptions or {}
-                
+
                 for _, Child in ipairs(OptionHolder:GetChildren()) do
                     if Child:IsA("TextButton") then
                         Child:Destroy()
                     end
                 end
-                
+
                 Title.Text = Text or "Dropdown"
-                
+
                 if #NewOptions == 0 then
                     local NoOption = Instance.new("TextButton")
                     NoOption.Name = "NoOption"
@@ -802,7 +815,7 @@ function Library:Window(Title)
                     NoOption.TextColor3 = Color3.fromRGB(150, 150, 150)
                     NoOption.TextSize = 14
                     NoOption.AutoButtonColor = false
-                    
+
                     local NoOptionCorner = Instance.new("UICorner")
                     NoOptionCorner.CornerRadius = UDim.new(0, 6)
                     NoOptionCorner.Parent = NoOption
@@ -819,11 +832,11 @@ function Library:Window(Title)
                         OptionButton.Text = Option
                         OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
                         OptionButton.TextSize = 14
-                        
+
                         local OptionCorner = Instance.new("UICorner")
                         OptionCorner.CornerRadius = UDim.new(0, 6)
                         OptionCorner.Parent = OptionButton
-                        
+
                         OptionButton.MouseButton1Click:Connect(function()
                             if Callback then
                                 Callback(Option)
@@ -833,35 +846,36 @@ function Library:Window(Title)
                             OptionHolder.Visible = false
                             Arrow.Rotation = 0
                         end)
+
                     end
                 end
             end
-            
+
             RefreshOptions(Options)
-            
+
             Arrow.MouseButton1Click:Connect(function()
                 Dropped = not Dropped
-                
+
                 if Dropped then
                     OptionHolder.Visible = true
                     Arrow.Rotation = 180
-                    
+
                     task.wait(0.01)
-                    
+
                     local ChooseAbsolutePosition = Choose.AbsolutePosition
                     local ChooseAbsoluteSize = Choose.AbsoluteSize
                     local PageAbsolutePosition = Page.AbsolutePosition
-                    
+
                     local XPos = ChooseAbsolutePosition.X - PageAbsolutePosition.X
                     local YPos = (ChooseAbsolutePosition.Y - PageAbsolutePosition.Y) + ChooseAbsoluteSize.Y + 5
-                    
+
                     OptionHolder.Position = UDim2.new(0, XPos, 0, YPos)
                 else
                     OptionHolder.Visible = false
                     Arrow.Rotation = 0
                 end
             end)
-            
+
             local DropdownFunctions = {}
             function DropdownFunctions:Refresh(NewOptions)
                 RefreshOptions(NewOptions)
@@ -869,7 +883,7 @@ function Library:Window(Title)
                 OptionHolder.Visible = false
                 Arrow.Rotation = 0
             end
-            
+
             return DropdownFunctions
         end
 
