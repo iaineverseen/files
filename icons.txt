@@ -1856,7 +1856,6 @@ return {
         "rbxassetid://117789618723068",
         "rbxassetid://134710777209413",
         "rbxassetid://136385631189327",
-        "rbxassetid://121808839832144",
         "rbxassetid://85082019959457",
         "rbxassetid://71009733505593",
         "rbxassetid://103111188546225",
