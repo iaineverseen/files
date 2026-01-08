@@ -287,7 +287,6 @@ return {
         "rbxassetid://6026568231",
         "rbxassetid://6031079156",
         "rbxassetid://6031086173",
-        "rbxassetid://6031260785",
         "rbxassetid://6031289450",
         "rbxassetid://6031075926",
         "rbxassetid://6026568207",
