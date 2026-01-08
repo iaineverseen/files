@@ -1,5 +1,4 @@
-return function()
-    return {
+return {
         "rbxassetid://6031215982",
         "rbxassetid://6031265972",
         "rbxassetid://6023565902",
@@ -2612,5 +2611,4 @@ return function()
         "rbxassetid://127696372451750",
         "rbxassetid://120978111007514",
         "rbxassetid://90569677179169"
-    }
-end
+}
