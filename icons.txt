@@ -1,6 +1,4 @@
-local LucideIcons = {}
-
-function LucideIcons.GetIcons()
+return function()
     return {
         "rbxassetid://6031215982",
         "rbxassetid://6031265972",
@@ -2616,5 +2614,3 @@ function LucideIcons.GetIcons()
         "rbxassetid://90569677179169"
     }
 end
-
-return LucideIcons
