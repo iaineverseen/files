@@ -113,12 +113,13 @@ local Library = {}
 
 function Library:Window(Title)
 	Title = Title or "DZ HUB"
-	local WindowSize = UDim2.new(0, 490, 0, 330)
+	local WindowSize = UDIM2(0, 490, 0, 330)
 	local TabWidth = 130
 	local UiTab = {}
 	local FirstTabCreated = false
 	local CurrentPage = ""
 	local Connections = {}
+
 	local MainGui = NEW("ScreenGui")
 	MainGui.Name = "DzHub"
 	MainGui.Parent = CoreGui
@@ -321,6 +322,7 @@ function Library:Window(Title)
 		PageListLayout.Parent = PageFrame
 		PageListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		PageListLayout.Padding = UDIM(0, 3)
+
 		Connections[#Connections + 1] = PageListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			PageFrame.CanvasSize = UDIM2(0, 0, 0, PageListLayout.AbsoluteContentSize.Y)
 		end)
@@ -409,6 +411,7 @@ function Library:Window(Title)
 			BtnText.TextYAlignment = Enum.TextYAlignment.Center
 			BtnText.TextColor3 = Color.White
 			BtnText.TextSize = 15
+
 			Connections[#Connections + 1] = Btn.MouseButton1Click:Connect(function() pcall(callback) end)
 		end
 
@@ -608,6 +611,7 @@ function Library:Window(Title)
 				OptionBtn.TextXAlignment = Enum.TextXAlignment.Center
 				OptionBtn.ZIndex = 4
 				CreateRounded(OptionBtn, 5)
+
 				Connections[#Connections + 1] = OptionBtn.MouseButton1Click:Connect(function()
 					ActiveItem = OptionBtn.Text
 					UpdateItemsVisual()
@@ -620,6 +624,7 @@ function Library:Window(Title)
 			if defaultValue then
 				ActiveItem = tostring(defaultValue)
 			end
+
 			for i = 1, #options do CreateOption(tostring(options[i])) end
 			UpdateItemsVisual()
 			UpdateSelectedText()
@@ -643,6 +648,7 @@ function Library:Window(Title)
 			DropdownClickArea.Text = ""
 			DropdownClickArea.ZIndex = 2
 			DropdownClickArea.AutoButtonColor = false
+
 			Connections[#Connections + 1] = DropdownClickArea.MouseButton1Click:Connect(ToggleDropdown)
 			Connections[#Connections + 1] = SelectedLabel.MouseButton1Click:Connect(ToggleDropdown)
 
@@ -681,20 +687,27 @@ function Library:Window(Title)
 			return DropFunc
 		end
 
-		function Page:Slider(text, minValue, maxValue, defaultValue, callback, decimalPlaces)
+		function Page:Slider(text, minValue, maxValue, defaultValue, decimalPlaces, callback)
 			local RoundingPlaces = decimalPlaces or 0
 			minValue = tonumber(minValue) or 0
 			maxValue = tonumber(maxValue) or 100
 			defaultValue = math.clamp(tonumber(defaultValue) or minValue, minValue, maxValue)
 
 			local function RoundValue(value)
-				if RoundingPlaces == 0 then return math.floor(value + 0.5)
-				else local multiplier = 10 ^ RoundingPlaces return math.floor(value * multiplier + 0.5) / multiplier end
+				if RoundingPlaces == 0 then
+					return math.floor(value + 0.5)
+				else
+					local multiplier = 10 ^ RoundingPlaces
+					return math.floor(value * multiplier + 0.5) / multiplier
+				end
 			end
 
 			local function FormatValue(value)
-				if RoundingPlaces == 0 then return tostring(math.floor(value + 0.5))
-				else return string.format("%." .. RoundingPlaces .. "f", RoundValue(value)) end
+				if RoundingPlaces == 0 then
+					return tostring(math.floor(value + 0.5))
+				else
+					return string.format("%." .. RoundingPlaces .. "f", RoundValue(value))
+				end
 			end
 
 			local SliderFrame = NEW("Frame")
@@ -757,16 +770,17 @@ function Library:Window(Title)
 			ValueDisplay.Text = FormatValue(CurrentValue)
 
 			local Dragging = false
+			local PendingValue = CurrentValue
+
 			local function UpdateSlider(input)
 				local barPosition = SliderBar.AbsolutePosition.X
 				local barSize = SliderBar.AbsoluteSize.X
 				local mouseX = input.Position.X
 				local percentage = math.clamp((mouseX - barPosition) / barSize, 0, 1)
 				local rawValue = minValue + (maxValue - minValue) * percentage
-				CurrentValue = RoundValue(rawValue)
-				ValueDisplay.Text = FormatValue(CurrentValue)
+				PendingValue = RoundValue(rawValue)
+				ValueDisplay.Text = FormatValue(PendingValue)
 				SliderFill.Size = UDIM2(0, percentage * 150, 0, 8)
-				pcall(callback, CurrentValue)
 			end
 
 			Connections[#Connections + 1] = SliderBar.InputBegan:Connect(function(input)
@@ -775,11 +789,17 @@ function Library:Window(Title)
 					UpdateSlider(input)
 				end
 			end)
+
 			Connections[#Connections + 1] = UserInputService.InputEnded:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					Dragging = false
+					if Dragging then
+						Dragging = false
+						CurrentValue = PendingValue
+						pcall(callback, CurrentValue)
+					end
 				end
 			end)
+
 			Connections[#Connections + 1] = UserInputService.InputChanged:Connect(function(input)
 				if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 					UpdateSlider(input)
@@ -787,17 +807,20 @@ function Library:Window(Title)
 			end)
 
 			local SliderFunc = { Value = CurrentValue }
+
 			function SliderFunc:Set(newValue)
 				local rawValue = tonumber(newValue) or CurrentValue
 				local clampedValue = math.clamp(rawValue, minValue, maxValue)
 				local roundedValue = RoundValue(clampedValue)
 				local percentage = (roundedValue - minValue) / (maxValue - minValue)
 				CurrentValue = roundedValue
+				PendingValue = roundedValue
 				self.Value = roundedValue
 				ValueDisplay.Text = FormatValue(roundedValue)
 				SliderFill.Size = UDIM2(0, percentage * 150, 0, 8)
 				pcall(callback, roundedValue)
 			end
+
 			return SliderFunc
 		end
 
