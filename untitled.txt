@@ -489,215 +489,273 @@ function Library:CreateWindow(title)
         end
         
         -- Dropdown
-        function Tab:AddDropdown(text, defaultValue, options, callback)
-            local IsOpen = false
-            local Selected = nil
+        -- Dropdown
+function Tab:AddDropdown(text, defaultValue, options, callback)
+    local IsOpen = false
+    local Selected = nil
+    
+    -- Handle optional parameter order
+    if type(options) == 'function' then
+        callback = options
+        options = defaultValue
+        defaultValue = nil
+    end
+    
+    local DropFrame = CreateElement('Frame', {
+        Name = 'Dropdown',
+        Parent = PageScroll,
+        BackgroundColor3 = Colors.Primary,
+        BackgroundTransparency = 0.8,
+        Size = UDim2New(1, 0, 0, 36)
+    })
+    AddCorner(DropFrame, 5)
+    
+    local TopSection = CreateElement('Frame', {
+        Name = 'TopSection',
+        Parent = DropFrame,
+        BackgroundTransparency = 1,
+        Size = UDim2New(1, 0, 0, 36)
+    })
+    
+    local DropLabel = CreateElement('TextLabel', {
+        Name = 'DropdownTitle',
+        Parent = TopSection,
+        BackgroundTransparency = 1,
+        Position = UDim2New(0, 15, 0.5, 0),
+        Size = UDim2New(0, 150, 0, 36),
+        Font = Enum.Font.Cartoon,
+        Text = text .. ' - ',
+        AnchorPoint = Vec2(0, 0.5),
+        TextColor3 = Colors.White,
+        TextSize = 15,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+    
+    local SelectedLabel = CreateElement('TextLabel', {
+        Name = 'SelectedLabel',
+        Parent = TopSection,
+        BackgroundTransparency = 1,
+        Position = UDim2New(0, 15, 0.5, 0),
+        Size = UDim2New(0.6, 0, 0, 36),
+        AnchorPoint = Vec2(0, 0.5),
+        Font = Enum.Font.Cartoon,
+        TextSize = 15,
+        TextColor3 = Colors.White,
+        TextTransparency = 0.6,
+        Text = 'None',
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+    
+    local Arrow = CreateElement('ImageLabel', {
+        Name = 'ArrowIcon',
+        Parent = TopSection,
+        BackgroundTransparency = 1,
+        AnchorPoint = Vec2(1, 0.5),
+        Position = UDim2New(1, -10, 0.5, 0),
+        Size = UDim2New(0, 20, 0, 20),
+        Image = Icons.Arrow,
+        ImageColor3 = Colors.White
+    })
+    
+    local DropContainer = CreateElement('Frame', {
+        Name = 'DropdownScrollContainer',
+        Parent = DropFrame,
+        BackgroundColor3 = Colors.Background,
+        Size = UDim2New(1, -10, 0, 0),
+        Position = UDim2New(0, 5, 0, 36),
+        Visible = false
+    })
+    AddCorner(DropContainer, 5)
+    
+    local DropScroll = CreateElement('ScrollingFrame', {
+        Name = 'DropdownScroll',
+        Parent = DropContainer,
+        BackgroundTransparency = 1,
+        Position = UDim2New(0, 0, 0, 10),
+        Size = UDim2New(1, 0, 1, -15),
+        ScrollBarThickness = 0
+    })
+    
+    local DropList = CreateElement('UIListLayout', {
+        Parent = DropScroll,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDimNew(0, 1)
+    })
+    
+    -- "No options available" label
+    local NoOptions = CreateElement('TextLabel', {
+        Name = 'NoOptionsLabel',
+        Parent = DropScroll,
+        BackgroundTransparency = 1,
+        Size = UDim2New(1, 0, 0, 30),
+        Font = Enum.Font.Cartoon,
+        Text = 'No options available',
+        TextColor3 = Colors.DarkGray,
+        TextSize = 13,
+        TextTransparency = 0.5,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        Visible = false
+    })
+    
+    local function UpdateText()
+        if Selected and Selected ~= "" then
+            local titleText = text .. ' - '
+            local titleSize = TextService:GetTextSize(titleText, 15, Enum.Font.Cartoon, Vec2(9999, 9999))
             
-            -- Handle optional parameter order
-            if type(options) == 'function' then
-                callback = options
-                options = defaultValue
-                defaultValue = nil
+            DropLabel.Text = titleText
+            DropLabel.Size = UDim2New(0, titleSize.X, 0, 36)
+            SelectedLabel.Text = Selected
+            SelectedLabel.Position = UDim2New(0, 15 + titleSize.X, 0.5, 0)
+            SelectedLabel.TextTransparency = 0
+        else
+            DropLabel.Text = text .. ' - '
+            SelectedLabel.Text = 'None'
+            SelectedLabel.TextTransparency = 0.6
+            
+            local titleText = text .. ' - '
+            local titleSize = TextService:GetTextSize(titleText, 15, Enum.Font.Cartoon, Vec2(9999, 9999))
+            DropLabel.Size = UDim2New(0, titleSize.X, 0, 36)
+            SelectedLabel.Position = UDim2New(0, 15 + titleSize.X, 0.5, 0)
+        end
+    end
+    
+    local function UpdateVisuals()
+        for _, btn in ipairs(DropScroll:GetChildren()) do
+            if btn:IsA('TextButton') then
+                local isSelected = Selected == btn.Text
+                btn.BackgroundTransparency = isSelected and 0.5 or 1
+                btn.TextTransparency = isSelected and 0 or 0.5
             end
-            
-            local DropFrame = CreateElement('Frame', {
-                Name = 'Dropdown',
-                Parent = PageScroll,
-                BackgroundColor3 = Colors.Primary,
-                BackgroundTransparency = 0.8,
-                Size = UDim2New(1, 0, 0, 36)
-            })
-            AddCorner(DropFrame, 5)
-            
-            local TopSection = CreateElement('Frame', {
-                Name = 'TopSection',
-                Parent = DropFrame,
-                BackgroundTransparency = 1,
-                Size = UDim2New(1, 0, 0, 36)
-            })
-            
-            local DropLabel = CreateElement('TextLabel', {
-                Name = 'DropdownTitle',
-                Parent = TopSection,
-                BackgroundTransparency = 1,
-                Position = UDim2New(0, 15, 0.5, 0),
-                Size = UDim2New(0, 150, 0, 36),
-                Font = Enum.Font.Cartoon,
-                Text = text .. ' - ',
-                AnchorPoint = Vec2(0, 0.5),
-                TextColor3 = Colors.White,
-                TextSize = 15,
-                TextXAlignment = Enum.TextXAlignment.Left
-            })
-            
-            local SelectedLabel = CreateElement('TextLabel', {
-                Name = 'SelectedLabel',
-                Parent = TopSection,
-                BackgroundTransparency = 1,
-                Position = UDim2New(0, 15, 0.5, 0),
-                Size = UDim2New(0.6, 0, 0, 36),
-                AnchorPoint = Vec2(0, 0.5),
-                Font = Enum.Font.Cartoon,
-                TextSize = 15,
-                TextColor3 = Colors.White,
-                TextTransparency = 0.6,
-                Text = 'None',
-                TextXAlignment = Enum.TextXAlignment.Left
-            })
-            
-            local Arrow = CreateElement('ImageLabel', {
-                Name = 'ArrowIcon',
-                Parent = TopSection,
-                BackgroundTransparency = 1,
-                AnchorPoint = Vec2(1, 0.5),
-                Position = UDim2New(1, -10, 0.5, 0),
-                Size = UDim2New(0, 20, 0, 20),
-                Image = Icons.Arrow,
-                ImageColor3 = Colors.White
-            })
-            
-            local DropContainer = CreateElement('Frame', {
-                Name = 'DropdownScrollContainer',
-                Parent = DropFrame,
-                BackgroundColor3 = Colors.Background,
-                Size = UDim2New(1, -10, 0, 0),
-                Position = UDim2New(0, 5, 0, 36),
-                Visible = false
-            })
-            AddCorner(DropContainer, 5)
-            
-            local DropScroll = CreateElement('ScrollingFrame', {
-                Name = 'DropdownScroll',
-                Parent = DropContainer,
-                BackgroundTransparency = 1,
-                Position = UDim2New(0, 0, 0, 10),
-                Size = UDim2New(1, 0, 1, -15),
-                ScrollBarThickness = 0
-            })
-            
-            local DropList = CreateElement('UIListLayout', {
-                Parent = DropScroll,
-                SortOrder = Enum.SortOrder.LayoutOrder,
-                Padding = UDimNew(0, 1)
-            })
-            
-            local function UpdateText()
-                if Selected and Selected ~= "" then
-                    local titleText = text .. ' - '
-                    local titleSize = TextService:GetTextSize(titleText, 15, Enum.Font.Cartoon, Vec2(9999, 9999))
-                    
-                    DropLabel.Text = titleText
-                    DropLabel.Size = UDim2New(0, titleSize.X, 0, 36)
-                    SelectedLabel.Text = Selected
-                    SelectedLabel.Position = UDim2New(0, 15 + titleSize.X, 0.5, 0)
-                    SelectedLabel.TextTransparency = 0
-                else
-                    DropLabel.Text = text .. ' - '
-                    SelectedLabel.Text = 'None'
-                    SelectedLabel.TextTransparency = 0.6
-                    
-                    local titleText = text .. ' - '
-                    local titleSize = TextService:GetTextSize(titleText, 15, Enum.Font.Cartoon, Vec2(9999, 9999))
-                    DropLabel.Size = UDim2New(0, titleSize.X, 0, 36)
-                    SelectedLabel.Position = UDim2New(0, 15 + titleSize.X, 0.5, 0)
-                end
+        end
+    end
+    
+    local function AddOption(optionText)
+        local OptionBtn = CreateElement('TextButton', {
+            Name = 'Option',
+            Parent = DropScroll,
+            BackgroundColor3 = Colors.Primary,
+            BackgroundTransparency = 1,
+            Size = UDim2New(1, 0, 0, 30),
+            Font = Enum.Font.Cartoon,
+            Text = tostring(optionText),
+            TextColor3 = Colors.White,
+            TextSize = 13,
+            TextTransparency = 0.5,
+            TextXAlignment = Enum.TextXAlignment.Center
+        })
+        AddCorner(OptionBtn, 5)
+        
+        Connections[#Connections + 1] = OptionBtn.MouseButton1Click:Connect(function()
+            Selected = OptionBtn.Text
+            UpdateVisuals()
+            UpdateText()
+            pcall(callback, Selected)
+        end)
+    end
+    
+    if defaultValue ~= nil and defaultValue ~= "" then
+        Selected = tostring(defaultValue)
+    end
+    
+    if type(options) == 'table' then
+        for i = 1, #options do
+            AddOption(tostring(options[i]))
+        end
+    else
+        warn('Dropdown: options parameter must be a table')
+        options = {}
+    end
+    
+    -- Count options and show/hide "No options" label
+    local function CountOptions()
+        local count = 0
+        for _, child in ipairs(DropScroll:GetChildren()) do
+            if child:IsA('TextButton') and child.Name == 'Option' then
+                count = count + 1
             end
+        end
+        return count
+    end
+    
+    NoOptions.Visible = CountOptions() == 0
+    UpdateText()
+    UpdateVisuals()
+    
+    local function Toggle()
+        IsOpen = not IsOpen
+        local targetSize = IsOpen and UDim2New(1, 0, 0, 150) or UDim2New(1, 0, 0, 36)
+        local containerSize = IsOpen and UDim2New(1, -10, 0, 110) or UDim2New(1, -10, 0, 0)
+        local rotation = IsOpen and 180 or 0
+        
+        CreateTween(DropFrame, 0.3, {Size = targetSize}):Play()
+        CreateTween(DropContainer, 0.3, {Size = containerSize}):Play()
+        CreateTween(Arrow, 0.3, {Rotation = rotation}):Play()
+        DropContainer.Visible = IsOpen
+    end
+    
+    local ClickArea = CreateElement('TextButton', {
+        Name = 'DropdownClickArea',
+        Parent = TopSection,
+        BackgroundTransparency = 1,
+        Size = UDim2New(1, 0, 0, 36),
+        Text = ''
+    })
+    
+    Connections[#Connections + 1] = ClickArea.MouseButton1Click:Connect(Toggle)
+    Connections[#Connections + 1] = DropList:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+        DropScroll.CanvasSize = UDim2New(0, 0, 0, DropList.AbsoluteContentSize.Y + 10)
+    end)
+    
+    local Dropdown = {}
+    
+    function Dropdown:Add(option)
+        AddOption(tostring(option))
+        UpdateVisuals()
+        NoOptions.Visible = false
+    end
+    
+    function Dropdown:Clear()
+        Selected = nil
+        UpdateText()
+        
+        for _, child in ipairs(DropScroll:GetChildren()) do
+            if child:IsA('TextButton') then
+                child:Destroy()
+            end
+        end
+        
+        NoOptions.Visible = true
+    end
+    
+    -- ADDED BACK: Refresh method
+    function Dropdown:Refresh(newOptions)
+        if type(newOptions) == 'table' then
+            local prevSelection = Selected
+            self:Clear()
             
-            local function UpdateVisuals()
-                for _, btn in ipairs(DropScroll:GetChildren()) do
-                    if btn:IsA('TextButton') then
-                        local isSelected = Selected == btn.Text
-                        btn.BackgroundTransparency = isSelected and 0.5 or 1
-                        btn.TextTransparency = isSelected and 0 or 0.5
+            -- Try to restore previous selection if it exists in new options
+            if prevSelection then
+                for _, option in ipairs(newOptions) do
+                    if tostring(option) == prevSelection then
+                        Selected = prevSelection
+                        break
                     end
                 end
             end
             
-            local function AddOption(optionText)
-                local OptionBtn = CreateElement('TextButton', {
-                    Name = 'Option',
-                    Parent = DropScroll,
-                    BackgroundColor3 = Colors.Primary,
-                    BackgroundTransparency = 1,
-                    Size = UDim2New(1, 0, 0, 30),
-                    Font = Enum.Font.Cartoon,
-                    Text = tostring(optionText),
-                    TextColor3 = Colors.White,
-                    TextSize = 13,
-                    TextTransparency = 0.5,
-                    TextXAlignment = Enum.TextXAlignment.Center
-                })
-                AddCorner(OptionBtn, 5)
-                
-                Connections[#Connections + 1] = OptionBtn.MouseButton1Click:Connect(function()
-                    Selected = OptionBtn.Text
-                    UpdateVisuals()
-                    UpdateText()
-                    pcall(callback, Selected)
-                end)
+            -- Add all new options
+            for i = 1, #newOptions do
+                self:Add(newOptions[i])
             end
             
-            if defaultValue ~= nil and defaultValue ~= "" then
-                Selected = tostring(defaultValue)
-            end
-            
-            if type(options) == 'table' then
-                for i = 1, #options do
-                    AddOption(tostring(options[i]))
-                end
-            else
-                warn('Dropdown: options parameter must be a table')
-                options = {}
-            end
-            
+            NoOptions.Visible = #newOptions == 0
             UpdateText()
             UpdateVisuals()
-            
-            local function Toggle()
-                IsOpen = not IsOpen
-                local targetSize = IsOpen and UDim2New(1, 0, 0, 150) or UDim2New(1, 0, 0, 36)
-                local containerSize = IsOpen and UDim2New(1, -10, 0, 110) or UDim2New(1, -10, 0, 0)
-                local rotation = IsOpen and 180 or 0
-                
-                CreateTween(DropFrame, 0.3, {Size = targetSize}):Play()
-                CreateTween(DropContainer, 0.3, {Size = containerSize}):Play()
-                CreateTween(Arrow, 0.3, {Rotation = rotation}):Play()
-                DropContainer.Visible = IsOpen
-            end
-            
-            local ClickArea = CreateElement('TextButton', {
-                Name = 'DropdownClickArea',
-                Parent = TopSection,
-                BackgroundTransparency = 1,
-                Size = UDim2New(1, 0, 0, 36),
-                Text = ''
-            })
-            
-            Connections[#Connections + 1] = ClickArea.MouseButton1Click:Connect(Toggle)
-            Connections[#Connections + 1] = DropList:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
-                DropScroll.CanvasSize = UDim2New(0, 0, 0, DropList.AbsoluteContentSize.Y + 10)
-            end)
-            
-            local Dropdown = {}
-            
-            function Dropdown:Add(option)
-                AddOption(tostring(option))
-                UpdateVisuals()
-            end
-            
-            function Dropdown:Clear()
-                Selected = nil
-                UpdateText()
-                
-                for _, child in ipairs(DropScroll:GetChildren()) do
-                    if child:IsA('TextButton') then
-                        child:Destroy()
-                    end
-                end
-            end
-            
-            return Dropdown
         end
+    end
+    
+    return Dropdown
+end
         
         -- Slider
         function Tab:AddSlider(text, minValue, maxValue, defaultValue, increment, callback)
