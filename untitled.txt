@@ -528,7 +528,7 @@ function Library:CreateWindow(title)
     DropList.Padding = UDimNew(0, 1)
 
     local function UpdateText()
-        if Selected then
+        if Selected and Selected ~= "" then
             local titleText = text .. ' - '
             local titleSize = TextService:GetTextSize(titleText, 15, Enum.Font.Cartoon, Vec2(9999, 9999))
             
@@ -597,7 +597,7 @@ function Library:CreateWindow(title)
     NoOptions.ZIndex = 4
     NoOptions.Visible = false
 
-    if defaultValue ~= nil then
+    if defaultValue ~= nil and defaultValue ~= "" then
         Selected = tostring(defaultValue)
     end
 
