@@ -163,6 +163,7 @@ function Library:CreateWindow(title)
     local TopBar = CreateElement('Frame', {
         Name = 'TopBar',
         Parent = MainFrame,
+        BackgroundTransparency = 1,
         BackgroundColor3 = Colors.Topbar,
         Size = UDim2New(1, 0, 0, 40)
     })
